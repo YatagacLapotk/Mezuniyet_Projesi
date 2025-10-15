@@ -1,3 +1,3 @@
 # Mezuniyet_Projesi
-Yatagac Lapotk /n
+Yatagac Lapotk 
 Faruk Sæit Star
