@@ -1,2 +1,3 @@
 # Mezuniyet_Projesi
-Çağatay K
+Yatagac Lapotk
+Faruk Sæit Star
