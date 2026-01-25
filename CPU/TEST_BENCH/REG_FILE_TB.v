@@ -2,12 +2,12 @@ module REG_FILE_TB ();
 
 reg          clk;
 reg          res;
-wire [4:0]    A1;
-wire [4:0]    A2;
-wire [4:0]    A3;
-wire [31:0]   WD;
-reg  [31:0]   RD1;
-reg  [31:0]   RD2;
+reg [4:0]    A1;
+reg [4:0]    A2;
+reg [4:0]    A3;
+reg [31:0]   WD;
+wire  [31:0]   RD1;
+wire  [31:0]   RD2;
 
 REG_FILE U_REG_FILE (
     .clk(clk),
@@ -56,5 +56,9 @@ initial begin
     forever #5 clk = ~clk;
 end
 
+initial begin
+    $dumpfile("REG_FILE_TB.vcd");
+    $dumpvars(0, REG_FILE_TB);
+end
 
 endmodule
