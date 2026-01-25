@@ -2,6 +2,7 @@ module REG_FILE_TB ();
 
 reg          clk;
 reg          res;
+reg          we;
 reg [4:0]    A1;
 reg [4:0]    A2;
 reg [4:0]    A3;
@@ -12,6 +13,7 @@ wire  [31:0]   RD2;
 REG_FILE U_REG_FILE (
     .clk(clk),
     .res(res),
+    .we(we),
     .A1(A1),
     .A2(A2),
     .A3(A3),
@@ -25,27 +27,28 @@ initial begin
     res = 1;
     #10;
     res = 0;
-    
+    we = 1;
     // Test writing and reading from the register file
     // Write 42 to register 5
     #10;
     A3 = 5'd5;
     WD = 32'd42;
-    
+    we = 1;
     // Read from register 5 and register 0
     #10;
     A1 = 5'd5;
     A2 = 5'd0;
-    
+    we = 0;
     // Write 100 to register 10
     #10;
     A3 = 5'd10;
     WD = 32'd100;
-    
+    we = 1;
     // Read from register 10 and register 5
     #10;
     A1 = 5'd10;
     A2 = 5'd5;
+    we = 0;
     
     // Finish simulation
     #20;
