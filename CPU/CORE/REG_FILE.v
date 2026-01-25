@@ -1,6 +1,7 @@
 module REG_FILE (
     input           clk,
     input           res,
+    input           we,
     input  [4:0]    A1,
     input  [4:0]    A2,
     input  [4:0]    A3,
@@ -19,7 +20,7 @@ always @(posedge clk) begin
         end
     end
     else begin
-        if(A3 != 5'b0)begin
+        if(we && A3 != 5'b0)begin
             REG32[A3] <= WD;
         end
     end
