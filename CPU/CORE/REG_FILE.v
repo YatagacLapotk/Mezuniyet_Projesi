@@ -14,7 +14,7 @@ reg [31:0] REG32[31:0] ;
 
 always @(posedge clk) begin
     if(res)begin 
-        for (integer i=0;i<32;i++) begin
+        for (integer i=0;i<32;i+=1) begin
             REG32[i] <= 32'b0;
         end
         RD1 <= 32'b0;
