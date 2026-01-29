@@ -7,7 +7,7 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x14b108f50 .scope module, "REG_FILE" "REG_FILE" 2 1;
+S_0x13d004cb0 .scope module, "REG_FILE" "REG_FILE" 2 1;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "res";
@@ -18,79 +18,79 @@ S_0x14b108f50 .scope module, "REG_FILE" "REG_FILE" 2 1;
     .port_info 6 /INPUT 32 "WD";
     .port_info 7 /OUTPUT 32 "RD1";
     .port_info 8 /OUTPUT 32 "RD2";
-L_0x14b119fb0 .functor BUFZ 32, L_0x14b119dd0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-L_0x14b11a2a0 .functor BUFZ 32, L_0x14b11a060, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-o0x140008040 .functor BUFZ 5, c4<zzzzz>; HiZ drive
-v0x14b119190_0 .net "A1", 4 0, o0x140008040;  0 drivers
-o0x140008070 .functor BUFZ 5, c4<zzzzz>; HiZ drive
-v0x14b119250_0 .net "A2", 4 0, o0x140008070;  0 drivers
-o0x1400080a0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
-v0x14b1192f0_0 .net "A3", 4 0, o0x1400080a0;  0 drivers
-v0x14b1193a0_0 .net "RD1", 31 0, L_0x14b119fb0;  1 drivers
-v0x14b119450_0 .net "RD2", 31 0, L_0x14b11a2a0;  1 drivers
-v0x14b119540 .array "REG32", 0 31, 31 0;
-o0x140008130 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x14b1195e0_0 .net "WD", 31 0, o0x140008130;  0 drivers
-v0x14b119690_0 .net *"_ivl_0", 31 0, L_0x14b119dd0;  1 drivers
-v0x14b119740_0 .net *"_ivl_10", 6 0, L_0x14b11a140;  1 drivers
-L_0x140040058 .functor BUFT 1, C4<00>, C4<0>, C4<0>, C4<0>;
-v0x14b119850_0 .net *"_ivl_13", 1 0, L_0x140040058;  1 drivers
-v0x14b119900_0 .net *"_ivl_2", 6 0, L_0x14b119e70;  1 drivers
-L_0x140040010 .functor BUFT 1, C4<00>, C4<0>, C4<0>, C4<0>;
-v0x14b1199b0_0 .net *"_ivl_5", 1 0, L_0x140040010;  1 drivers
-v0x14b119a60_0 .net *"_ivl_8", 31 0, L_0x14b11a060;  1 drivers
-o0x140008280 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14b119b10_0 .net "clk", 0 0, o0x140008280;  0 drivers
-o0x1400082b0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14b119bb0_0 .net "res", 0 0, o0x1400082b0;  0 drivers
-o0x1400082e0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14b119c50_0 .net "we", 0 0, o0x1400082e0;  0 drivers
-E_0x14b105370 .event posedge, v0x14b119b10_0;
-L_0x14b119dd0 .array/port v0x14b119540, L_0x14b119e70;
-L_0x14b119e70 .concat [ 5 2 0 0], o0x140008040, L_0x140040010;
-L_0x14b11a060 .array/port v0x14b119540, L_0x14b11a140;
-L_0x14b11a140 .concat [ 5 2 0 0], o0x140008070, L_0x140040058;
-S_0x14b1091e0 .scope begin, "$ivl_for_loop0" "$ivl_for_loop0" 2 18, 2 18 0, S_0x14b108f50;
+L_0x13d01dc90 .functor BUFZ 32, L_0x13d01dab0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
+L_0x13d01df80 .functor BUFZ 32, L_0x13d01dd40, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
+o0x140030040 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x13d01ce70_0 .net "A1", 4 0, o0x140030040;  0 drivers
+o0x140030070 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x13d01cf30_0 .net "A2", 4 0, o0x140030070;  0 drivers
+o0x1400300a0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x13d01cfd0_0 .net "A3", 4 0, o0x1400300a0;  0 drivers
+v0x13d01d080_0 .net "RD1", 31 0, L_0x13d01dc90;  1 drivers
+v0x13d01d130_0 .net "RD2", 31 0, L_0x13d01df80;  1 drivers
+v0x13d01d220 .array "REG32", 0 31, 31 0;
+o0x140030130 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x13d01d2c0_0 .net "WD", 31 0, o0x140030130;  0 drivers
+v0x13d01d370_0 .net *"_ivl_0", 31 0, L_0x13d01dab0;  1 drivers
+v0x13d01d420_0 .net *"_ivl_10", 6 0, L_0x13d01de20;  1 drivers
+L_0x140068058 .functor BUFT 1, C4<00>, C4<0>, C4<0>, C4<0>;
+v0x13d01d530_0 .net *"_ivl_13", 1 0, L_0x140068058;  1 drivers
+v0x13d01d5e0_0 .net *"_ivl_2", 6 0, L_0x13d01db50;  1 drivers
+L_0x140068010 .functor BUFT 1, C4<00>, C4<0>, C4<0>, C4<0>;
+v0x13d01d690_0 .net *"_ivl_5", 1 0, L_0x140068010;  1 drivers
+v0x13d01d740_0 .net *"_ivl_8", 31 0, L_0x13d01dd40;  1 drivers
+o0x140030280 .functor BUFZ 1, c4<z>; HiZ drive
+v0x13d01d7f0_0 .net "clk", 0 0, o0x140030280;  0 drivers
+o0x1400302b0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x13d01d890_0 .net "res", 0 0, o0x1400302b0;  0 drivers
+o0x1400302e0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x13d01d930_0 .net "we", 0 0, o0x1400302e0;  0 drivers
+E_0x13d006a50 .event posedge, v0x13d01d7f0_0;
+L_0x13d01dab0 .array/port v0x13d01d220, L_0x13d01db50;
+L_0x13d01db50 .concat [ 5 2 0 0], o0x140030040, L_0x140068010;
+L_0x13d01dd40 .array/port v0x13d01d220, L_0x13d01de20;
+L_0x13d01de20 .concat [ 5 2 0 0], o0x140030070, L_0x140068058;
+S_0x13d004e20 .scope begin, "$ivl_for_loop0" "$ivl_for_loop0" 2 18, 2 18 0, S_0x13d004cb0;
  .timescale 0 0;
-v0x14b109350_0 .var/i "i", 31 0;
-    .scope S_0x14b108f50;
+v0x13d00d1e0_0 .var/i "i", 31 0;
+    .scope S_0x13d004cb0;
 T_0 ;
-    %wait E_0x14b105370;
-    %load/vec4 v0x14b119bb0_0;
+    %wait E_0x13d006a50;
+    %load/vec4 v0x13d01d890_0;
     %flag_set/vec4 8;
     %jmp/0xz  T_0.0, 8;
-    %fork t_1, S_0x14b1091e0;
+    %fork t_1, S_0x13d004e20;
     %jmp t_0;
-    .scope S_0x14b1091e0;
+    .scope S_0x13d004e20;
 t_1 ;
     %pushi/vec4 0, 0, 32;
-    %store/vec4 v0x14b109350_0, 0, 32;
+    %store/vec4 v0x13d00d1e0_0, 0, 32;
 T_0.2 ; Top of for-loop
-    %load/vec4 v0x14b109350_0;
+    %load/vec4 v0x13d00d1e0_0;
     %cmpi/s 32, 0, 32;
 	  %jmp/0xz T_0.3, 5;
     %pushi/vec4 0, 0, 32;
-    %ix/getv/s 3, v0x14b109350_0;
+    %ix/getv/s 3, v0x13d00d1e0_0;
     %ix/load 4, 0, 0; Constant delay
-    %assign/vec4/a/d v0x14b119540, 0, 4;
+    %assign/vec4/a/d v0x13d01d220, 0, 4;
 T_0.4 ; for-loop step statement
     ; show_stmt_assign_vector: Get l-value for compressed += operand
-    %load/vec4 v0x14b109350_0;
+    %load/vec4 v0x13d00d1e0_0;
     %pushi/vec4 1, 0, 32;
     %add;
-    %store/vec4 v0x14b109350_0, 0, 32;
+    %store/vec4 v0x13d00d1e0_0, 0, 32;
     %jmp T_0.2;
 T_0.3 ; for-loop exit label
     %end;
-    .scope S_0x14b108f50;
+    .scope S_0x13d004cb0;
 t_0 %join;
     %jmp T_0.1;
 T_0.0 ;
-    %load/vec4 v0x14b119c50_0;
+    %load/vec4 v0x13d01d930_0;
     %flag_set/vec4 9;
     %flag_get/vec4 9;
     %jmp/0 T_0.7, 9;
-    %load/vec4 v0x14b1192f0_0;
+    %load/vec4 v0x13d01cfd0_0;
     %pushi/vec4 0, 0, 5;
     %cmp/ne;
     %flag_get/vec4 4;
@@ -98,12 +98,12 @@ T_0.0 ;
 T_0.7;
     %flag_set/vec4 8;
     %jmp/0xz  T_0.5, 8;
-    %load/vec4 v0x14b1195e0_0;
-    %load/vec4 v0x14b1192f0_0;
+    %load/vec4 v0x13d01d2c0_0;
+    %load/vec4 v0x13d01cfd0_0;
     %pad/u 7;
     %ix/vec4 3;
     %ix/load 4, 0, 0; Constant delay
-    %assign/vec4/a/d v0x14b119540, 0, 4;
+    %assign/vec4/a/d v0x13d01d220, 0, 4;
 T_0.5 ;
 T_0.1 ;
     %jmp T_0;

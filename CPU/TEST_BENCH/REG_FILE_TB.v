@@ -28,29 +28,38 @@ initial begin
     #10;
     res = 0;
     we = 1;
-    // Test writing and reading from the register file
-    // Write 42 to register 5
+
     #10;
     A3 = 5'd5;
     WD = 32'd42;
     we = 1;
-    // Read from register 5 and register 0
+
     #10;
     A1 = 5'd5;
     A2 = 5'd0;
     we = 0;
-    // Write 100 to register 10
+
     #10;
     A3 = 5'd10;
     WD = 32'd100;
     we = 1;
-    // Read from register 10 and register 5
+    
     #10;
     A1 = 5'd10;
     A2 = 5'd5;
     we = 0;
     
-    // Finish simulation
+    #10;
+    A3 = 5'd00;
+    WD = 32'd2;
+    we = 1;
+
+    #10;
+    A1 = 5'd00;
+    A2 = 5'd5;
+    we = 0;
+    
+
     #20;
     $finish;
 end
