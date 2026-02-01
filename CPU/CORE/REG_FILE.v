@@ -1,4 +1,4 @@
-`include "/MEZUNIYET_PROJESI/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 module REG_FILE (
     input           clk,
     input           res,
