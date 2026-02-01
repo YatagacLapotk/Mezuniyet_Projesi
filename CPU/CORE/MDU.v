@@ -34,7 +34,4 @@ assign d3 = funct3 == MUL[14:12] ? mul_result[31:0] :
             funct3 == REM[14:12] ? (s2 == 32'b0 ? s1 : $signed(s1) % $signed(s2)):
             funct3 == REMU[14:12] ? (s2 == 32'b0 ? s1 : $unsigned(s1) % $unsigned(s2)):
             32'b0;
-
-
-    
 endmodule
