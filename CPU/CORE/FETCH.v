@@ -3,10 +3,12 @@
 module FETCH (
     input clk,
     input reset,
-    input [`DATA_WIDTH-1:0] CACHE_IN,
+    input stall,
+    input [`DATA_WIDTH-1:0] MEMORY_IN,
     input [`DATA_WIDTH-1:0] BRANCH_TARGET,
     input BRANCH,
-    output [`DATA_WIDTH-1:0] PC_FETCH_OUT
+    output [`DATA_WIDTH-1:0] PC_OUT,
+    output [`DATA_WIDTH-1:0] INSTRUCTION_OUT
 );
     
 endmodule
