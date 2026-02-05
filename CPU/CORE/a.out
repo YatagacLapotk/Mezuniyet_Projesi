@@ -7,26 +7,67 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x141705d40 .scope module, "FETCH" "FETCH" 2 3;
+S_0x121f099b0 .scope module, "FETCH" "FETCH" 2 3;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
-    .port_info 2 /INPUT 32 "CACHE_IN";
-    .port_info 3 /INPUT 32 "BRANCH_TARGET";
-    .port_info 4 /INPUT 1 "BRANCH";
-    .port_info 5 /OUTPUT 32 "PC_FETCH_OUT";
-o0x148040010 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1417081f0_0 .net "BRANCH", 0 0, o0x148040010;  0 drivers
-o0x148040040 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x141718080_0 .net "BRANCH_TARGET", 31 0, o0x148040040;  0 drivers
-o0x148040070 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x141718120_0 .net "CACHE_IN", 31 0, o0x148040070;  0 drivers
-o0x1480400a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x1417181d0_0 .net "PC_FETCH_OUT", 31 0, o0x1480400a0;  0 drivers
-o0x1480400d0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x141718280_0 .net "clk", 0 0, o0x1480400d0;  0 drivers
-o0x148040100 .functor BUFZ 1, c4<z>; HiZ drive
-v0x141718360_0 .net "reset", 0 0, o0x148040100;  0 drivers
+    .port_info 2 /INPUT 1 "stall";
+    .port_info 3 /INPUT 32 "memory_in";
+    .port_info 4 /INPUT 32 "branch_target";
+    .port_info 5 /INPUT 1 "branch";
+    .port_info 6 /OUTPUT 32 "pc_out";
+    .port_info 7 /OUTPUT 32 "branch_reg_addr";
+    .port_info 8 /OUTPUT 32 "instruction_out";
+o0x118030130 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+L_0x121f1b3b0 .functor BUFZ 32, o0x118030130, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
+L_0x118068010 .functor BUFT 1, C4<00000000000000000000000000000100>, C4<0>, C4<0>, C4<0>;
+v0x121f04890_0 .net/2u *"_ivl_4", 31 0, L_0x118068010;  1 drivers
+o0x118030040 .functor BUFZ 1, c4<z>; HiZ drive
+v0x121f1ab30_0 .net "branch", 0 0, o0x118030040;  0 drivers
+v0x121f1abd0_0 .net "branch_reg_addr", 31 0, L_0x121f1b490;  1 drivers
+o0x1180300a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x121f1ac70_0 .net "branch_target", 31 0, o0x1180300a0;  0 drivers
+o0x1180300d0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x121f1ad20_0 .net "clk", 0 0, o0x1180300d0;  0 drivers
+v0x121f1ae00_0 .net "instruction_out", 31 0, L_0x121f1b3b0;  1 drivers
+v0x121f1aeb0_0 .net "memory_in", 31 0, o0x118030130;  0 drivers
+v0x121f1af60_0 .net "pc_out", 31 0, v0x121f1b010_0;  1 drivers
+v0x121f1b010_0 .var "pc_reg", 31 0;
+o0x1180301c0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x121f1b120_0 .net "reset", 0 0, o0x1180301c0;  0 drivers
+o0x1180301f0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x121f1b1c0_0 .net "stall", 0 0, o0x1180301f0;  0 drivers
+E_0x121f06730 .event posedge, v0x121f1ad20_0;
+L_0x121f1b490 .arith/sum 32, v0x121f1b010_0, L_0x118068010;
+    .scope S_0x121f099b0;
+T_0 ;
+    %wait E_0x121f06730;
+    %load/vec4 v0x121f1b120_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.0, 8;
+    %pushi/vec4 0, 0, 32;
+    %assign/vec4 v0x121f1b010_0, 0;
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x121f1b1c0_0;
+    %inv;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.2, 8;
+    %load/vec4 v0x121f1ab30_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.4, 8;
+    %load/vec4 v0x121f1ac70_0;
+    %assign/vec4 v0x121f1b010_0, 0;
+    %jmp T_0.5;
+T_0.4 ;
+    %load/vec4 v0x121f1b010_0;
+    %addi 4, 0, 32;
+    %assign/vec4 v0x121f1b010_0, 0;
+T_0.5 ;
+T_0.2 ;
+T_0.1 ;
+    %jmp T_0;
+    .thread T_0;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
