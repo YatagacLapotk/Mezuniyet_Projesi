@@ -1,14 +1,16 @@
-`include "Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 
 module FETCH (
     input clk,
     input reset,
     input stall,
-    input [`DATA_WIDTH-1:0] memory_in,
+    input flush,
+    input [`DATA_WIDTH-1:0] cache_in,
+    input cache_valid,
     input [`DATA_WIDTH-1:0] branch_target,
     input branch,
-    output [`DATA_WIDTH-1:0] pc_out,
-    output [`DATA_WIDTH-1:0] branch_reg_addr,
+    output [`DATA_WIDTH-1:0] instruction_address_out,
+    output [`DATA_WIDTH-1:0] pc_plus_4_out,
     output [`DATA_WIDTH-1:0] instruction_out
 );
     
@@ -17,7 +19,7 @@ module FETCH (
 
     always @(posedge clk) begin
         if(reset)begin
-            pc_reg <= 0;
+            pc_reg <= `FIRST_ADDR;
         end
         else begin
             if (~stall) begin
@@ -27,9 +29,9 @@ module FETCH (
         end
     end
 
-    assign pc_out = pc_reg;
-    assign instruction_out = memory_in;
-    assign branch_reg_addr = pc_out+4;
+    assign instruction_address_out = pc_reg;
+    assign instruction_out = cache_in;
+    assign pc_plus_4_out = pc_reg + 4;
 
 
 endmodule

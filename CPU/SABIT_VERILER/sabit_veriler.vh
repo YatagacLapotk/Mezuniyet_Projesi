@@ -1,6 +1,8 @@
 `ifndef sabit_veriler_VH
 `define sabit_veriler_VH
 
+`define FIRST_ADDR 32'h00000000
+
 `define ADDRESS_WIDTH 5
 `define DATA_WIDTH 32
 `define REG_FILE_DEPTH 32
@@ -9,6 +11,7 @@
 `define OPCODE_WIDTH 7
 `define FUNCT3_WIDTH 3
 `define FUNCT7_WIDTH 7
+
 
 
 
