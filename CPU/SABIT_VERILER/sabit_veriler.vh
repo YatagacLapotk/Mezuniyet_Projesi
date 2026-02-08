@@ -11,7 +11,7 @@
 `define OPCODE_WIDTH 7
 `define FUNCT3_WIDTH 3
 `define FUNCT7_WIDTH 7
-
+`define ALU_CNTR 4
 
 
 

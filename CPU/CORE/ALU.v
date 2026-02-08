@@ -2,9 +2,7 @@
 module ALU ( 
     input [`DATA_WIDTH-1:0] s1,
     input [`DATA_WIDTH-1:0] s2,
-    input [`OPCODE_WIDTH-1:0] opcode,
-    input [`FUNCT3_WIDTH-1:0] f3,
-    input [`FUNCT7_WIDTH-1:0] f7,
+    input [`ALU_CNTR-1:0] ALU_CNTR,
     output [`DATA_WIDTH-1:0] d3
 
 );
