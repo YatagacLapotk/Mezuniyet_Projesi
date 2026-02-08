@@ -7,74 +7,137 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x14180ae90 .scope module, "FETCH" "FETCH" 2 3;
+S_0x153e0f900 .scope module, "FETCH" "FETCH" 2 3;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
     .port_info 2 /INPUT 1 "stall";
     .port_info 3 /INPUT 1 "flush";
-    .port_info 4 /INPUT 32 "cache_in";
-    .port_info 5 /INPUT 1 "cache_valid";
-    .port_info 6 /INPUT 32 "branch_target";
-    .port_info 7 /INPUT 1 "branch";
-    .port_info 8 /OUTPUT 32 "instruction_address_out";
-    .port_info 9 /OUTPUT 32 "pc_plus_4_out";
-    .port_info 10 /OUTPUT 32 "instruction_out";
-L_0x14181bd50 .functor BUFZ 32, v0x14181ba50_0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-o0x1480400a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-L_0x14181bdc0 .functor BUFZ 32, o0x1480400a0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-L_0x148078010 .functor BUFT 1, C4<00000000000000000000000000000100>, C4<0>, C4<0>, C4<0>;
-v0x14180b8a0_0 .net/2u *"_ivl_4", 31 0, L_0x148078010;  1 drivers
-o0x148040040 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181b3d0_0 .net "branch", 0 0, o0x148040040;  0 drivers
-o0x148040070 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x14181b470_0 .net "branch_target", 31 0, o0x148040070;  0 drivers
-v0x14181b510_0 .net "cache_in", 31 0, o0x1480400a0;  0 drivers
-o0x1480400d0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181b5c0_0 .net "cache_valid", 0 0, o0x1480400d0;  0 drivers
-o0x148040100 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181b6a0_0 .net "clk", 0 0, o0x148040100;  0 drivers
-o0x148040130 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181b740_0 .net "flush", 0 0, o0x148040130;  0 drivers
-v0x14181b7e0_0 .net "instruction_address_out", 31 0, L_0x14181bd50;  1 drivers
-v0x14181b890_0 .net "instruction_out", 31 0, L_0x14181bdc0;  1 drivers
-v0x14181b9a0_0 .net "pc_plus_4_out", 31 0, L_0x14181be80;  1 drivers
-v0x14181ba50_0 .var "pc_reg", 31 0;
-o0x148040220 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181bb00_0 .net "reset", 0 0, o0x148040220;  0 drivers
-o0x148040250 .functor BUFZ 1, c4<z>; HiZ drive
-v0x14181bba0_0 .net "stall", 0 0, o0x148040250;  0 drivers
-E_0x141809130 .event posedge, v0x14181b6a0_0;
-L_0x14181be80 .arith/sum 32, v0x14181ba50_0, L_0x148078010;
-    .scope S_0x14180ae90;
+    .port_info 4 /INPUT 1 "exception";
+    .port_info 5 /INPUT 32 "exception_handler_address";
+    .port_info 6 /INPUT 32 "cache_in";
+    .port_info 7 /INPUT 1 "cache_valid";
+    .port_info 8 /INPUT 32 "branch_target";
+    .port_info 9 /INPUT 1 "branch";
+    .port_info 10 /OUTPUT 32 "instruction_address_out";
+    .port_info 11 /OUTPUT 32 "pc_plus_4_out";
+    .port_info 12 /OUTPUT 32 "instruction_out";
+    .port_info 13 /OUTPUT 1 "instruction_valid_out";
+L_0x153e10ce0 .functor BUFZ 32, v0x153e21d90_0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
+L_0x158078010 .functor BUFT 1, C4<00000000000000000000000000000100>, C4<0>, C4<0>, C4<0>;
+v0x153e0a1d0_0 .net/2u *"_ivl_2", 31 0, L_0x158078010;  1 drivers
+o0x158040040 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e21520_0 .net "branch", 0 0, o0x158040040;  0 drivers
+o0x158040070 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x153e215c0_0 .net "branch_target", 31 0, o0x158040070;  0 drivers
+o0x1580400a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x153e21660_0 .net "cache_in", 31 0, o0x1580400a0;  0 drivers
+o0x1580400d0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e21710_0 .net "cache_valid", 0 0, o0x1580400d0;  0 drivers
+o0x158040100 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e217f0_0 .net "clk", 0 0, o0x158040100;  0 drivers
+o0x158040130 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e21890_0 .net "exception", 0 0, o0x158040130;  0 drivers
+o0x158040160 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x153e21930_0 .net "exception_handler_address", 31 0, o0x158040160;  0 drivers
+o0x158040190 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e219e0_0 .net "flush", 0 0, o0x158040190;  0 drivers
+v0x153e21af0_0 .net "instruction_address_out", 31 0, L_0x153e10ce0;  1 drivers
+v0x153e21b90_0 .var "instruction_out", 31 0;
+v0x153e21c40_0 .var "instruction_valid_out", 0 0;
+v0x153e21ce0_0 .net "pc_plus_4_out", 31 0, L_0x153e22140;  1 drivers
+v0x153e21d90_0 .var "pc_reg", 31 0;
+o0x1580402b0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e21e40_0 .net "reset", 0 0, o0x1580402b0;  0 drivers
+o0x1580402e0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x153e21ee0_0 .net "stall", 0 0, o0x1580402e0;  0 drivers
+E_0x153e083c0 .event posedge, v0x153e217f0_0;
+L_0x153e22140 .arith/sum 32, v0x153e21d90_0, L_0x158078010;
+    .scope S_0x153e0f900;
 T_0 ;
-    %wait E_0x141809130;
-    %load/vec4 v0x14181bb00_0;
+    %wait E_0x153e083c0;
+    %load/vec4 v0x153e21e40_0;
     %flag_set/vec4 8;
     %jmp/0xz  T_0.0, 8;
     %pushi/vec4 0, 0, 32;
-    %assign/vec4 v0x14181ba50_0, 0;
+    %assign/vec4 v0x153e21d90_0, 0;
     %jmp T_0.1;
 T_0.0 ;
-    %load/vec4 v0x14181bba0_0;
-    %inv;
+    %load/vec4 v0x153e21890_0;
     %flag_set/vec4 8;
     %jmp/0xz  T_0.2, 8;
-    %load/vec4 v0x14181b3d0_0;
+    %load/vec4 v0x153e21930_0;
+    %assign/vec4 v0x153e21d90_0, 0;
+    %jmp T_0.3;
+T_0.2 ;
+    %load/vec4 v0x153e21ee0_0;
+    %inv;
     %flag_set/vec4 8;
     %jmp/0xz  T_0.4, 8;
-    %load/vec4 v0x14181b470_0;
-    %assign/vec4 v0x14181ba50_0, 0;
-    %jmp T_0.5;
-T_0.4 ;
-    %load/vec4 v0x14181ba50_0;
+    %load/vec4 v0x153e21520_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.6, 8;
+    %load/vec4 v0x153e215c0_0;
+    %assign/vec4 v0x153e21d90_0, 0;
+    %jmp T_0.7;
+T_0.6 ;
+    %load/vec4 v0x153e21d90_0;
     %addi 4, 0, 32;
-    %assign/vec4 v0x14181ba50_0, 0;
-T_0.5 ;
-T_0.2 ;
+    %assign/vec4 v0x153e21d90_0, 0;
+T_0.7 ;
+T_0.4 ;
+T_0.3 ;
 T_0.1 ;
     %jmp T_0;
     .thread T_0;
+    .scope S_0x153e0f900;
+T_1 ;
+    %wait E_0x153e083c0;
+    %load/vec4 v0x153e21e40_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.0, 8;
+    %pushi/vec4 19, 0, 32;
+    %assign/vec4 v0x153e21b90_0, 0;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x153e21c40_0, 0;
+    %jmp T_1.1;
+T_1.0 ;
+    %load/vec4 v0x153e219e0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.2, 8;
+    %pushi/vec4 19, 0, 32;
+    %assign/vec4 v0x153e21b90_0, 0;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x153e21c40_0, 0;
+    %jmp T_1.3;
+T_1.2 ;
+    %load/vec4 v0x153e21ee0_0;
+    %inv;
+    %flag_set/vec4 9;
+    %flag_get/vec4 9;
+    %jmp/0 T_1.6, 9;
+    %load/vec4 v0x153e21710_0;
+    %and;
+T_1.6;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.4, 8;
+    %load/vec4 v0x153e21660_0;
+    %assign/vec4 v0x153e21b90_0, 0;
+    %pushi/vec4 1, 0, 1;
+    %assign/vec4 v0x153e21c40_0, 0;
+    %jmp T_1.5;
+T_1.4 ;
+    %load/vec4 v0x153e21ee0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.7, 8;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x153e21c40_0, 0;
+T_1.7 ;
+T_1.5 ;
+T_1.3 ;
+T_1.1 ;
+    %jmp T_1;
+    .thread T_1;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
