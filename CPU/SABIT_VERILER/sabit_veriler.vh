@@ -1,5 +1,5 @@
-`ifndef sabit_veriler
-`define sabit_veriler
+`ifndef sabit_veriler_VH
+`define sabit_veriler_VH
 
 `define FIRST_ADDR 32'h00000000
 

@@ -1,10 +1,10 @@
-`include "CPU\SABIT_VERILER\sabit_veriler.vh"
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 
 module ALU ( 
     input [`DATA_WIDTH-1:0] s1,
     input [`DATA_WIDTH-1:0] s2,
     input [`ALU_CNTR-1:0] ALU_CNTR,
-    output [`DATA_WIDTH-1:0] ALU_OUT  
+    output reg [`DATA_WIDTH-1:0] ALU_OUT  
 );
 
 
@@ -36,7 +36,7 @@ always @ (*) begin
         SLT: ALU_OUT =  ($signed(s1) < $signed(s2)) ? 32'b1 : 32'b0;
         SLTU: ALU_OUT = ($unsigned(s1) < $unsigned(s2)) ? 32'b1 : 32'b0;   
         // Shift Operations 
-        SLL: ALU_OUT = s1 <<  [4:0];
+        SLL: ALU_OUT = s1 <<  s2[4:0];
         SRL: ALU_OUT = s1 >> s2[4:0];
         SRA: ALU_OUT = $signed(s1) >>> s2[4:0];
         // Branch Operations

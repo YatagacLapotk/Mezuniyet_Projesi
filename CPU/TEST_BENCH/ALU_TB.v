@@ -1,4 +1,4 @@
-`include "E:/RV32IM/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.v"
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 `timescale 1ns / 1ps
 
 module ALU_tb;
