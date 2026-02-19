@@ -12,7 +12,10 @@
 `define FUNCT3_WIDTH        3
 `define FUNCT7_WIDTH        7
 `define ALU_CNTR            4
+`define MDU_CNTRL           3
 `define CSR_ADDR_WIDTH     12
+`define CSR_CNTRL           2
+`define SHAMT_WIDTH         5
 
 `define NOP 32'h00000013
 
