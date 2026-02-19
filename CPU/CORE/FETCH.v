@@ -12,7 +12,6 @@ module FETCH (
     input [`DATA_WIDTH-1:0] branch_target,
     input branch,
     output [`DATA_WIDTH-1:0] instruction_address_out,
-    output [`DATA_WIDTH-1:0] pc_plus_4_out,
     output reg [`DATA_WIDTH-1:0] instruction_out,
     output reg instruction_valid_out                       
 );
@@ -53,7 +52,6 @@ module FETCH (
     end
 
     assign instruction_address_out = pc_reg;
-    assign pc_plus_4_out = pc_reg + 4;
 
 
 endmodule
