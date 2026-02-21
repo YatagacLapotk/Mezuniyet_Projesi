@@ -24,7 +24,7 @@
 //    WRITE=2'b00, SET=2'b01, CLEAR=2'b10
 // =============================================================================
 
-module DECODE (
+module DECODE_yz (
     // ---- Pipeline handshake ------------------------------------------------
     input                           clk,
     input                           reset,
