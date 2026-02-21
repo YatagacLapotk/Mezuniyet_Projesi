@@ -1,11 +1,8 @@
 `include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 module DECODE (
     input clk,
-    input reset,
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
-    input flush,
-    input stall,
     output [`DATA_WIDTH-1:0] rd1,
     output [`DATA_WIDTH-1:0] rd2,
     output [`ALU_CNTR-1:0] alu_control,
@@ -74,8 +71,30 @@ always @ (posedge clk) begin
     end
 end
 
+//Alu contol signal
+//Hepsi R tip buyruk, önce funct7'nin 5. biti kontrol edilir, daha sonra ise funt3 kontrol edilir.
+always @  (*) begin
+    if (opcode == 7'b0110011) begin
+        if (funct7[5] == 1'b1)
+            alu_control = (funct3 == 3'b000) ? 4'b0001 :  4'b1000; //SUB ve SRA
+        else if begin
+            case (funct3)
+                3'b000: alu_control = 4'b0000; //ADD
+                3'b001: alu_control = 4'b0101; //SLL
+                3'b010: alu_control = 4'b1000; //SLT
+                3'b011: alu_control = 4'b1001; //SLTU
+                3'b100: alu_control = 4'b0100; //XOR
+                3'b101: alu_control = 4'b0110; //SRL
+                3'b110: alu_control = 4'b0010; //OR
+                3'b111: alu_contorl = 4'b0011; //AND
+            endcase    
+        end
+    end
+end
+
 //alu_control, mdu_control, csr_control ayrı ayrı hesaplanabilir.
 // veya micro code ile bütün kontrol sinyalleri tek bir sinyal olarak hesaplanabilir.
+
  
     
 endmodule
