@@ -32,7 +32,7 @@ localparam [6:0] b_logic = 7'b1100011;
 
 
 wire [`OPCODE_WIDTH-1:0] opcode;
-wire  [`FUNCT3_WIDTH-1:0] funct3;
+wire [`FUNCT3_WIDTH-1:0] funct3;
 wire [`FUNCT7_WIDTH-1:0] funct7;
 wire [`SHAMT_WIDTH-1:0] shamt;
 wire [`ADDRESS_WIDTH-1:0] rd_addr;
@@ -120,33 +120,46 @@ always @  (*) begin
                 3'b111: alu_control = 4'b0011; //AND
             endcase    
         end
-    end else if (opcode == 7'b1100011) begin
+    end 
+    else if (opcode == b_logic) begin // B tipi buyruklarda da immidiate kullanılmıyor mu ? 
+        alu_imm_en = 1'b1;
+        imm = imm_b; // B tipi buyruklar için immidiate tipi.
         case (funct3)
             3'b000: alu_control = 4'b0111; //BEQ
             3'b001: alu_control = 4'b1010; //BNE
             3'b100: alu_control = 4'b1100; //BLT
             3'b101: alu_control = 4'b1101; //BGE
-            3'b110: alu_control = 4'b1110; //BLTU
-            3'b111: alu_control = 4'b1111; //BGEU
+            3'b110: begin 
+                alu_control = 4'b1110; //BLTU (Burada da aşağıdaki gibi yaptım düzeltileblir.)
+                imm = immu_b; 
+            end
+            3'b111: begin
+                alu_control = 4'b1111; //BGEU (Burda da aynı şekil)
+                imm = immu_b;
+            end
         endcase
     end
     else if (opcode == i_logic) begin
         alu_imm_en = 1'b1;
+        imm = imm_i; // I tipi buyruklar için immidiate tipi.
         if(funct7[5]) begin
-            alu_control = 4'b1000; //burada funct3 değerine göre bir atama yapsam mı bilemedim?
+            alu_control = 4'b0111; //burada funct3 değerine göre bir atama yapsam mı bilemedim? // Buranın SRA olması gerekmiyor mu ? alu_controlü ona göre düzelttim.
         end
         else begin
             case (funct3)
-                3'b000: alu_control = 4'b0000; //ADD
-                3'b001: alu_control = 4'b0101; //SLL
-                3'b010: alu_control = 4'b1000; //SLT
-                3'b011: alu_control = 4'b1001; //SLTU
-                3'b100: alu_control = 4'b0100; //XOR
-                3'b101: alu_control = 4'b0110; //SRL
-                3'b110: alu_control = 4'b0010; //OR
-                3'b111: alu_control = 4'b0011; //AND
+                3'b000: alu_control = 4'b0000; //ADDI
+                3'b001: alu_control = 4'b0101; //SLLI
+                3'b010: alu_control = 4'b1000; //SLTI
+                3'b011: begin 
+                    alu_control = 4'b1001; //SLTIU
+                    imm = immu_i; // SLTIU unsigned olduğundan immu_i ekledim. Ama yukarda da ayrı bir atama olduğu için bu şekilde uygun olur mu emin değilim, gerekirse düzeltililebilir.
+                end 
+                3'b100: alu_control = 4'b0100; //XORI
+                3'b101: alu_control = 4'b0110; //SRLI
+                3'b110: alu_control = 4'b0010; //ORI
+                3'b111: alu_control = 4'b0011; //ANDI
             endcase  
-        end
+        end 
     end
     else if(opcode == s_logic)begin
         alu_imm_en = 1'b1;
