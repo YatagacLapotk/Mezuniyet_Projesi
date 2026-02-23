@@ -82,6 +82,7 @@ assign immu_b = {{19{1'b0}}, instruction[7], instruction[30:25], instruction[11:
 assign immu_u = {instruction[31:12], 12'b0};
 assign immu_j = {{12{1'b0}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
+// Reset durumu için bütün kontrol sinyallerini ve imm'leri sıfıra çekiyoruz, değişebilir.
 always @ (posedge clk) begin
     if (flush) begin
         imm <= 32'b0;
@@ -96,8 +97,9 @@ always @ (posedge clk) begin
     end
 end
 
-//Alu contol signal
-//Hepsi R tip buyruk, önce funct7'nin 5. biti kontrol edilir, daha sonra ise funt3 kontrol edilir.
+//ALU contol signal
+//Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5. biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
+//Branch işlemleri ise opcode kontrol edilerek ayrılır, daha sonra ise funct3e göre ayrılır.
 always @  (*) begin
     if (opcode == r_logic) begin
         if (funct7[5] == 1'b1)
@@ -126,6 +128,15 @@ always @  (*) begin
                 3'b111: alu_control = 4'b0011; //AND
             endcase    
         end
+    end else if (opcode == 7'b1100011) begin
+        case (funct3)
+            3'b000: alu_control = 4'b0111; //BEQ
+            3'b001: alu_control = 4'b1010; //BNE
+            3'b100: alu_control = 4'b1100; //BLT
+            3'b101: alu_control = 4'b1101; //BGE
+            3'b110: alu_control = 4'b1110; //BLTU
+            3'b111: alu_control = 4'b1111; //BGEU
+        endcase
     end
     else if (opcode == i_logic) begin
         
@@ -133,9 +144,14 @@ always @  (*) begin
     end
 end
 
-//alu_control, mdu_control, csr_control ayrı ayrı hesaplanabilir.
-// veya micro code ile bütün kontrol sinyalleri tek bir sinyal olarak hesaplanabilir.
+//alu_control, mdu_control, csr_control ayrı ayrı hesaplanabilir veya micro code ile bütün kontrol sinyalleri tek bir sinyal olarak hesaplanabilir.
 
+//MDU control sinyali (MDU modülü içinde mdu_control sinyali bulunmuyor, bu kısım gerekmeyebilir. Veya MDU modülüne mdu_control sinyali eklenebilir.) 
+always @ (*)  begin
+    if (opcode == 7'b0110011 && funct7[0] == 1'b1) begin
+        mdu_control = funct3;
+    end
+end
  
     
 endmodule
