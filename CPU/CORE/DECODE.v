@@ -148,10 +148,13 @@ always @  (*) begin
             endcase  
         end
     end
+    else if(opcode == s_logic)begin
+        alu_imm_en = 1'b1;
+        reg_write = 1'b1;
+        alu_control = 4'b0000; 
+        // yaptıkları hep aynı olduğu için ayırmadan store dendiğinde hep aynı şeyi yapıyor olacak.
+    end 
 end
 
-//alu_control, mdu_control, csr_control ayrı ayrı hesaplanabilir veya micro code ile bütün kontrol sinyalleri tek bir sinyal olarak hesaplanabilir.
-
- 
     
 endmodule
