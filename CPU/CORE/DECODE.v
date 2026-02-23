@@ -12,7 +12,7 @@ module DECODE (
     output reg_write,
     output mem_write,
     output branch,
-    output jump
+    output jump,
     output reg [`DATA_WIDTH-1:0] imm;
 );
 
