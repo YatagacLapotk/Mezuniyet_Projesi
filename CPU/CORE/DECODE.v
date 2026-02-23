@@ -13,6 +13,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] rd2,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
     output reg [`ALU_CNTR-1:0] alu_control,
+    output reg alu_imm_en,
     output reg [`MDU_CNTRL-1:0] mdu_control,
     output reg [`CSR_CNTRL-1:0] csr_control,
     output reg [`CSR_ADDR_WIDTH-1:0] csr_addr,
@@ -130,8 +131,22 @@ always @  (*) begin
         endcase
     end
     else if (opcode == i_logic) begin
-        
-        
+        alu_imm_en = 1'b1;
+        if(funct7[5]) begin
+            alu_control = (funct3 == 3'b101) ? 4'b1000 : 4'b????;
+        end
+        else begin
+            case (funct3)
+                3'b000: alu_control = 4'b0000; //ADD
+                3'b001: alu_control = 4'b0101; //SLL
+                3'b010: alu_control = 4'b1000; //SLT
+                3'b011: alu_control = 4'b1001; //SLTU
+                3'b100: alu_control = 4'b0100; //XOR
+                3'b101: alu_control = 4'b0110; //SRL
+                3'b110: alu_control = 4'b0010; //OR
+                3'b111: alu_control = 4'b0011; //AND
+            endcase  
+        end
     end
 end
 
