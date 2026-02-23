@@ -105,16 +105,7 @@ always @  (*) begin
         if (funct7[5] == 1'b1)
             alu_control = (funct3 == 3'b000) ? 4'b0001 :  4'b1000; //SUB ve SRA
         else if(funct7[0])begin
-             case (funct3)
-                3'b000: mdu_control = 3'b000; //MUL
-                3'b001: mdu_control = 3'b001; //MULH
-                3'b010: mdu_control = 3'b010; //MULHSU
-                3'b011: mdu_control = 3'b011; //MULHU
-                3'b100: mdu_control = 3'b100; //DIV
-                3'b101: mdu_control = 3'b101; //DIVU
-                3'b110: mdu_control = 3'b110; //REM
-                3'b111: mdu_control = 3'b111; //REMU
-            endcase 
+            mdu_control = funct3; 
         end
         else begin
             case (funct3)
@@ -146,12 +137,6 @@ end
 
 //alu_control, mdu_control, csr_control ayrı ayrı hesaplanabilir veya micro code ile bütün kontrol sinyalleri tek bir sinyal olarak hesaplanabilir.
 
-//MDU control sinyali (MDU modülü içinde mdu_control sinyali bulunmuyor, bu kısım gerekmeyebilir. Veya MDU modülüne mdu_control sinyali eklenebilir.) 
-always @ (*)  begin
-    if (opcode == 7'b0110011 && funct7[0] == 1'b1) begin
-        mdu_control = funct3;
-    end
-end
  
     
 endmodule
