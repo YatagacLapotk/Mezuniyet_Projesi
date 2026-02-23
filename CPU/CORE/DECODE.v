@@ -133,7 +133,7 @@ always @  (*) begin
     else if (opcode == i_logic) begin
         alu_imm_en = 1'b1;
         if(funct7[5]) begin
-            alu_control = (funct3 == 3'b101) ? 4'b1000 : 4'b????;
+            alu_control = 4'b1000; //burada funct3 değerine göre bir atama yapsam mı bilemedim?
         end
         else begin
             case (funct3)
@@ -154,6 +154,9 @@ always @  (*) begin
         alu_control = 4'b0000; 
         // yaptıkları hep aynı olduğu için ayırmadan store dendiğinde hep aynı şeyi yapıyor olacak.
     end 
+    else if (opcode == l_logic) begin
+        
+    end
 end
 
     
