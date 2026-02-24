@@ -1,4 +1,6 @@
+
 `include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+
 module DECODE (
     input clk,
     input reset,
@@ -9,8 +11,8 @@ module DECODE (
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] wd,
-    output reg [`DATA_WIDTH-1:0] rd1,
-    output reg [`DATA_WIDTH-1:0] rd2,
+    output wire [`DATA_WIDTH-1:0] rd1,
+    output wire [`DATA_WIDTH-1:0] rd2,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
     output reg [`ALU_CNTR-1:0] alu_control,
     output reg alu_imm_en,
@@ -115,12 +117,12 @@ assign un_sign = (instruction == `SLTIU)
                | (instruction == `LUI)
                | (instruction == `JAL);
                
-
-assign imm_i = (un_sign==1'b0)?  immu_i : imm_i;
-assign imm_s = (un_sign==1'b0)?  immu_s : imm_s;
-assign imm_b = (un_sign==1'b0)?  immu_b : imm_b;
-assign imm_u = (un_sign==1'b0)?  immu_u : imm_u;
-assign imm_j = (un_sign==1'b0)?  immu_j : imm_j;
+//Burda Unsigned ile signedlar ın ters olması gerekmiyo mu sanki ? değiştirdim ama yanlışsa düzeltirsin.
+assign imm_i = (un_sign==1'b0)?  imms_i : immu_i;
+assign imm_s = (un_sign==1'b0)?  imms_s : immu_s;
+assign imm_b = (un_sign==1'b0)?  imms_b : immu_b;
+assign imm_u = (un_sign==1'b0)?  imms_u : immu_u;
+assign imm_j = (un_sign==1'b0)?  imms_j : immu_j;
 
 //ALU contol signal
 //Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5. biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
@@ -158,7 +160,7 @@ always @  (*) begin
     else if ((opcode == i_logic)) begin
         if(funct7[5]) begin
             alu_control_reg = 4'b0111; //burada funct3 değerine göre bir atama yapsam mı bilemedim? // Buranın SRA olması gerekmiyor mu ? alu_controlü ona göre düzelttim.
-            // Burası SRA evet ama SUB'un imm'i yok, o yüzden dedim funct3 değeri önemsiz kalıyor.
+            // Burası SRA evet ama SUB'un imm'i yok, o yüzden dedim funct3 değeri önemsiz kalıyor. // Ok, control sinali SRA'nın değildi o yüzden yazdım sıkıntı yok.
         end
         else begin
             case (funct3)
@@ -181,15 +183,29 @@ always @  (*) begin
         
     end
 end
+/* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapay zeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
+direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptı o çözdü ama emin değilim.
+*/
+always @ (*) begin
+         imm_reg =  (opcode == i_logic) ? imm_i :
+                    (opcode == s_logic) ? imm_s :      
+                    (opcode == b_logic) ? imm_b :
+                    (opcode == 7'b0010111) ? imm_u : //AUIPC
+                    (opcode == 7'b0110111) ? imm_u : //LUI
+                    (opcode == 7'b1101111) ? imm_j : //JAL
+                    (opcode == 7'b1100111) ? imm_i : //JALR
+                    32'b0;
 
-/*assign imm_reg = ((opcode==i_logic)) ? imm_i
-                :(opcode==s_logic) ? imm_s
-                :(opcode==l_logic) ? imm_b
-                :(opcode==b_logic) ? imm_b
-                :(opcode==7'b1101111) ? imm_j
-                :(opcode==7'b1101111) ? imm_j;
-                bir şeyler denedim ama bilemiyorum olur mu hata alıyorum buradan düzeltemedim.*/
-// Reset durumu için bütün kontrol sinyallerini ve imm'leri sıfıra çekiyoruz, değişebilir.
+         alu_imm_en_reg  = (opcode == i_logic)
+                         | (opcode == s_logic)
+                         | (opcode == b_logic)
+                         | (opcode == 7'b0010111) 
+                         | (opcode == 7'b0110111)
+                         | (opcode == 7'b1101111)
+                         | (opcode == 7'b1100111);
+end
+
+
 always @ (posedge clk) begin
     if (flush) begin
         imm_reg <= 32'b0;
@@ -205,6 +221,7 @@ always @ (posedge clk) begin
     else begin
         imm <= imm_reg;
         alu_control <= alu_control_reg;
+        alu_imm_en <= alu_imm_en_reg;
         mdu_control <= mdu_control_reg;
         csr_control <= csr_control_reg;
         csr_addr <= csr_addr_reg;
