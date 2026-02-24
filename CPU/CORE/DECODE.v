@@ -22,6 +22,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] imm, 
     output reg reg_write,
     output reg mem_write,
+    output reg exception,
     output reg branch,
     output reg jump
 );
@@ -117,7 +118,7 @@ assign un_sign = (instruction == `SLTIU)
                | (instruction == `LUI)
                | (instruction == `JAL);
                
-//Burda Unsigned ile signedlar ın ters olması gerekmiyo mu sanki ? değiştirdim ama yanlışsa düzeltirsin.
+//Burda Unsigned ile signedlar ın ters olması gerekmiyo mu sanki ? değiştirdim ama yanlışsa düzeltirsin.//Doğru yapmışsın sıkıntı yok.
 assign imm_i = (un_sign==1'b0)?  imms_i : immu_i;
 assign imm_s = (un_sign==1'b0)?  imms_s : immu_s;
 assign imm_b = (un_sign==1'b0)?  imms_b : immu_b;
@@ -130,7 +131,7 @@ assign imm_j = (un_sign==1'b0)?  imms_j : immu_j;
 always @  (*) begin
     if (opcode == r_logic) begin
         if (funct7[5] == 1'b1)
-            alu_control_reg = (funct3 == 3'b000) ? 4'b0001 :  4'b1000; //SUB ve SRA
+            alu_control_reg = (funct3 == 3'b000) ? 4'b0001 :  4'b0111; //SUB ve SRA
         else if(funct7[0])begin
             mdu_control_reg = funct3; 
         end
@@ -159,8 +160,7 @@ always @  (*) begin
     end
     else if ((opcode == i_logic)) begin
         if(funct7[5]) begin
-            alu_control_reg = 4'b0111; //burada funct3 değerine göre bir atama yapsam mı bilemedim? // Buranın SRA olması gerekmiyor mu ? alu_controlü ona göre düzelttim.
-            // Burası SRA evet ama SUB'un imm'i yok, o yüzden dedim funct3 değeri önemsiz kalıyor. // Ok, control sinali SRA'nın değildi o yüzden yazdım sıkıntı yok.
+            alu_control_reg = 4'b0111; 
         end
         else begin
             case (funct3)
@@ -186,23 +186,25 @@ end
 /* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapay zeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
 direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptı o çözdü ama emin değilim.
 */
-always @ (*) begin
-         imm_reg =  (opcode == i_logic) ? imm_i :
-                    (opcode == s_logic) ? imm_s :      
-                    (opcode == b_logic) ? imm_b :
-                    (opcode == 7'b0010111) ? imm_u : //AUIPC
-                    (opcode == 7'b0110111) ? imm_u : //LUI
-                    (opcode == 7'b1101111) ? imm_j : //JAL
-                    (opcode == 7'b1100111) ? imm_i : //JALR
-                    32'b0;
 
-         alu_imm_en_reg  = (opcode == i_logic)
-                         | (opcode == s_logic)
-                         | (opcode == b_logic)
-                         | (opcode == 7'b0010111) 
-                         | (opcode == 7'b0110111)
-                         | (opcode == 7'b1101111)
-                         | (opcode == 7'b1100111);
+//Ben açıklamamışım ama tek bitlik işlemleri burada ayptığımız gibi ayrı ayrı hesaplarsak daha az kafa karışır diye düşünüyorum.
+always @ (*) begin
+    imm_reg =   (opcode == i_logic) ? imm_i :
+                (opcode == s_logic) ? imm_s :      
+                (opcode == b_logic) ? imm_b :
+                (opcode == 7'b0010111) ? imm_u : //AUIPC
+                (opcode == 7'b0110111) ? imm_u : //LUI
+                (opcode == 7'b1101111) ? imm_j : //JAL
+                (opcode == 7'b1100111) ? imm_i : //JALR
+                32'b0;
+
+    alu_imm_en_reg  = (opcode == i_logic)
+                    | (opcode == s_logic)
+                    | (opcode == b_logic)
+                    | (opcode == 7'b0010111) 
+                    | (opcode == 7'b0110111)
+                    | (opcode == 7'b1101111)
+                    | (opcode == 7'b1100111);
 end
 
 
