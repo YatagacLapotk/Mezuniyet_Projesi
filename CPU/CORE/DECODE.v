@@ -118,7 +118,7 @@ assign un_sign = (instruction == `SLTIU)
                | (instruction == `LUI)
                | (instruction == `JAL);
                
-//Burda Unsigned ile signedlar ın ters olması gerekmiyo mu sanki ? değiştirdim ama yanlışsa düzeltirsin.//Doğru yapmışsın sıkıntı yok.
+
 assign imm_i = (un_sign==1'b0)?  imms_i : immu_i;
 assign imm_s = (un_sign==1'b0)?  imms_s : immu_s;
 assign imm_b = (un_sign==1'b0)?  imms_b : immu_b;
@@ -126,8 +126,8 @@ assign imm_u = (un_sign==1'b0)?  imms_u : immu_u;
 assign imm_j = (un_sign==1'b0)?  imms_j : immu_j;
 
 //ALU contol signal
-//Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5. biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
-//Branch işlemleri ise opcode kontrol edilerek ayrılır, daha sonra ise funct3e göre ayrılır.
+/*Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5.biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
+Branch işlemleri ise opcode kontrol edilerek ayrılır, daha sonra ise funct3e göre ayrılır.*/
 always @  (*) begin
     if (opcode == r_logic) begin
         if (funct7[5] == 1'b1)
@@ -148,14 +148,14 @@ always @  (*) begin
             endcase    
         end
     end 
-    else if (opcode == b_logic) begin // B tipi buyruklarda da immidiate kullanılmıyor mu ? 
+    else if (opcode == b_logic) begin 
         case (funct3)
             3'b000: alu_control_reg = 4'b0111; //BEQ
             3'b001: alu_control_reg = 4'b1010; //BNE
             3'b100: alu_control_reg = 4'b1100; //BLT
             3'b101: alu_control_reg = 4'b1101; //BGE
-            3'b110: alu_control_reg = 4'b1110; //BLTU (Burada da aşağıdaki gibi yaptım düzeltileblir.)
-            3'b111: alu_control_reg = 4'b1111; //BGEU (Burda da aynı şekil)
+            3'b110: alu_control_reg = 4'b1110; //BLTU 
+            3'b111: alu_control_reg = 4'b1111; //BGEU 
         endcase
     end
     else if ((opcode == i_logic)) begin
@@ -183,8 +183,8 @@ always @  (*) begin
         
     end
 end
-/* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapay zeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
-direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptı o çözdü ama emin değilim.
+/* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapayzeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
+direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptım o çözdü ama emin değilim.
 */
 
 //Ben açıklamamışım ama tek bitlik işlemleri burada ayptığımız gibi ayrı ayrı hesaplarsak daha az kafa karışır diye düşünüyorum.
