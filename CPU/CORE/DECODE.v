@@ -43,11 +43,34 @@ wire [`DATA_WIDTH-1:0] imm_s;
 wire [`DATA_WIDTH-1:0] imm_b;
 wire [`DATA_WIDTH-1:0] imm_u;
 wire [`DATA_WIDTH-1:0] imm_j;
+wire [`DATA_WIDTH-1:0] imms_i;
+wire [`DATA_WIDTH-1:0] imms_s;
+wire [`DATA_WIDTH-1:0] imms_b;
+wire [`DATA_WIDTH-1:0] imms_u;
+wire [`DATA_WIDTH-1:0] imms_j;
 wire [`DATA_WIDTH-1:0] immu_i;
 wire [`DATA_WIDTH-1:0] immu_s;
 wire [`DATA_WIDTH-1:0] immu_b;
 wire [`DATA_WIDTH-1:0] immu_u;
 wire [`DATA_WIDTH-1:0] immu_j;
+wire un_sign;
+
+
+reg [`DATA_WIDTH-1:0] rd1_reg;
+reg [`DATA_WIDTH-1:0] rd2_reg;
+reg [`ADDRESS_WIDTH-1:0] rd_addr_d_reg;
+reg [`ALU_CNTR-1:0] alu_control_reg;
+reg alu_imm_en_reg;
+reg [`MDU_CNTRL-1:0] mdu_control_reg;
+reg [`CSR_CNTRL-1:0] csr_control_reg;
+reg [`CSR_ADDR_WIDTH-1:0] csr_addr_reg;
+reg [`DATA_WIDTH-1:0] imm_reg; 
+reg reg_write_reg;
+reg mem_write_reg;
+reg branch_reg;
+reg jump_reg;
+
+
 
 
 assign opcode = instruction[6:0];
@@ -71,11 +94,11 @@ REG_FILE REG_FILE(
 );
 
 //Sign extention for immediate values
-assign imm_i = {{20{instruction[31]}}, instruction[31:20]};
-assign imm_s = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
-assign imm_b = {{19{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
-assign imm_u = {instruction[31:12], 12'b0};
-assign imm_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+assign imms_i = {{20{instruction[31]}}, instruction[31:20]};
+assign imms_s = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
+assign imms_b = {{19{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+assign imms_u = {instruction[31:12], 12'b0};
+assign imms_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
 assign immu_i = {{20{1'b0}}, instruction[31:20]};
 assign immu_s = {{20{1'b0}}, instruction[31:25], instruction[11:7]};
@@ -83,20 +106,21 @@ assign immu_b = {{19{1'b0}}, instruction[7], instruction[30:25], instruction[11:
 assign immu_u = {instruction[31:12], 12'b0};
 assign immu_j = {{12{1'b0}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
-// Reset durumu için bütün kontrol sinyallerini ve imm'leri sıfıra çekiyoruz, değişebilir.
-always @ (posedge clk) begin
-    if (flush) begin
-        imm <= 32'b0;
-        alu_control <= 4'b0;
-        mdu_control <= 3'b0;
-        csr_control <= 3'b0;
-        csr_addr <= 12'b0;
-        reg_write <= 1'b0;
-        mem_write <= 1'b0;
-        branch <= 1'b0;
-        jump <= 1'b0;
-    end
-end
+assign un_sign = (instruction == `SLTIU) 
+               | (instruction == `LHU)
+               | (instruction == `LBU)
+               | (instruction == `BLTU)
+               | (instruction == `BGEU)
+               | (instruction == `AUIPC)
+               | (instruction == `LUI)
+               | (instruction == `JAL);
+               
+
+assign imm_i = (un_sign==1'b0)?  immu_i : imm_i;
+assign imm_s = (un_sign==1'b0)?  immu_s : imm_s;
+assign imm_b = (un_sign==1'b0)?  immu_b : imm_b;
+assign imm_u = (un_sign==1'b0)?  immu_u : imm_u;
+assign imm_j = (un_sign==1'b0)?  immu_j : imm_j;
 
 //ALU contol signal
 //Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5. biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
@@ -104,67 +128,53 @@ end
 always @  (*) begin
     if (opcode == r_logic) begin
         if (funct7[5] == 1'b1)
-            alu_control = (funct3 == 3'b000) ? 4'b0001 :  4'b1000; //SUB ve SRA
+            alu_control_reg = (funct3 == 3'b000) ? 4'b0001 :  4'b1000; //SUB ve SRA
         else if(funct7[0])begin
-            mdu_control = funct3; 
+            mdu_control_reg = funct3; 
         end
         else begin
             case (funct3)
-                3'b000: alu_control = 4'b0000; //ADD
-                3'b001: alu_control = 4'b0101; //SLL
-                3'b010: alu_control = 4'b1000; //SLT
-                3'b011: alu_control = 4'b1001; //SLTU
-                3'b100: alu_control = 4'b0100; //XOR
-                3'b101: alu_control = 4'b0110; //SRL
-                3'b110: alu_control = 4'b0010; //OR
-                3'b111: alu_control = 4'b0011; //AND
+                3'b000: alu_control_reg = 4'b0000; //ADD
+                3'b001: alu_control_reg = 4'b0101; //SLL
+                3'b010: alu_control_reg = 4'b1000; //SLT
+                3'b011: alu_control_reg = 4'b1001; //SLTU
+                3'b100: alu_control_reg = 4'b0100; //XOR
+                3'b101: alu_control_reg = 4'b0110; //SRL
+                3'b110: alu_control_reg = 4'b0010; //OR
+                3'b111: alu_control_reg = 4'b0011; //AND
             endcase    
         end
     end 
     else if (opcode == b_logic) begin // B tipi buyruklarda da immidiate kullanılmıyor mu ? 
-        alu_imm_en = 1'b1;
-        imm = imm_b; // B tipi buyruklar için immidiate tipi.
         case (funct3)
-            3'b000: alu_control = 4'b0111; //BEQ
-            3'b001: alu_control = 4'b1010; //BNE
-            3'b100: alu_control = 4'b1100; //BLT
-            3'b101: alu_control = 4'b1101; //BGE
-            3'b110: begin 
-                alu_control = 4'b1110; //BLTU (Burada da aşağıdaki gibi yaptım düzeltileblir.)
-                imm = immu_b; 
-            end
-            3'b111: begin
-                alu_control = 4'b1111; //BGEU (Burda da aynı şekil)
-                imm = immu_b;
-            end
+            3'b000: alu_control_reg = 4'b0111; //BEQ
+            3'b001: alu_control_reg = 4'b1010; //BNE
+            3'b100: alu_control_reg = 4'b1100; //BLT
+            3'b101: alu_control_reg = 4'b1101; //BGE
+            3'b110: alu_control_reg = 4'b1110; //BLTU (Burada da aşağıdaki gibi yaptım düzeltileblir.)
+            3'b111: alu_control_reg = 4'b1111; //BGEU (Burda da aynı şekil)
         endcase
     end
-    else if (opcode == i_logic) begin
-        alu_imm_en = 1'b1;
-        imm = imm_i; // I tipi buyruklar için immidiate tipi.
+    else if ((opcode == i_logic)) begin
         if(funct7[5]) begin
-            alu_control = 4'b0111; //burada funct3 değerine göre bir atama yapsam mı bilemedim? // Buranın SRA olması gerekmiyor mu ? alu_controlü ona göre düzelttim.
+            alu_control_reg = 4'b0111; //burada funct3 değerine göre bir atama yapsam mı bilemedim? // Buranın SRA olması gerekmiyor mu ? alu_controlü ona göre düzelttim.
+            // Burası SRA evet ama SUB'un imm'i yok, o yüzden dedim funct3 değeri önemsiz kalıyor.
         end
         else begin
             case (funct3)
-                3'b000: alu_control = 4'b0000; //ADDI
-                3'b001: alu_control = 4'b0101; //SLLI
-                3'b010: alu_control = 4'b1000; //SLTI
-                3'b011: begin 
-                    alu_control = 4'b1001; //SLTIU
-                    imm = immu_i; // SLTIU unsigned olduğundan immu_i ekledim. Ama yukarda da ayrı bir atama olduğu için bu şekilde uygun olur mu emin değilim, gerekirse düzeltililebilir.
-                end 
-                3'b100: alu_control = 4'b0100; //XORI
-                3'b101: alu_control = 4'b0110; //SRLI
-                3'b110: alu_control = 4'b0010; //ORI
-                3'b111: alu_control = 4'b0011; //ANDI
+                3'b000: alu_control_reg = 4'b0000; //ADDI
+                3'b001: alu_control_reg = 4'b0101; //SLLI
+                3'b010: alu_control_reg = 4'b1000; //SLTI
+                3'b011: alu_control_reg = 4'b1001; //SLTIU
+                3'b100: alu_control_reg = 4'b0100; //XORI
+                3'b101: alu_control_reg = 4'b0110; //SRLI
+                3'b110: alu_control_reg = 4'b0010; //ORI
+                3'b111: alu_control_reg = 4'b0011; //ANDI
             endcase  
         end 
     end
     else if(opcode == s_logic)begin
-        alu_imm_en = 1'b1;
-        reg_write = 1'b1;
-        alu_control = 4'b0000; 
+        alu_control_reg = 4'b0000; 
         // yaptıkları hep aynı olduğu için ayırmadan store dendiğinde hep aynı şeyi yapıyor olacak.
     end 
     else if (opcode == l_logic) begin
@@ -172,5 +182,38 @@ always @  (*) begin
     end
 end
 
-    
+/*assign imm_reg = ((opcode==i_logic)) ? imm_i
+                :(opcode==s_logic) ? imm_s
+                :(opcode==l_logic) ? imm_b
+                :(opcode==b_logic) ? imm_b
+                :(opcode==7'b1101111) ? imm_j
+                :(opcode==7'b1101111) ? imm_j;
+                bir şeyler denedim ama bilemiyorum olur mu hata alıyorum buradan düzeltemedim.*/
+// Reset durumu için bütün kontrol sinyallerini ve imm'leri sıfıra çekiyoruz, değişebilir.
+always @ (posedge clk) begin
+    if (flush) begin
+        imm_reg <= 32'b0;
+        alu_control_reg <= 4'b0;
+        mdu_control_reg <= 3'b0;
+        csr_control_reg <= 3'b0;
+        csr_addr_reg <= 12'b0;
+        reg_write_reg <= 1'b0;
+        mem_write_reg <= 1'b0;
+        branch_reg <= 1'b0;
+        jump_reg <= 1'b0;
+    end
+    else begin
+        imm <= imm_reg;
+        alu_control <= alu_control_reg;
+        mdu_control <= mdu_control_reg;
+        csr_control <= csr_control_reg;
+        csr_addr <= csr_addr_reg;
+        reg_write <= reg_write_reg;
+        mem_write <= mem_write_reg;
+        branch <= branch_reg;
+        jump <= jump_reg; 
+    end
+end
+
+
 endmodule
