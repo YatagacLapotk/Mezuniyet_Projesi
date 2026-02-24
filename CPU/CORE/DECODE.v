@@ -20,6 +20,8 @@ module DECODE (
     output reg [`CSR_CNTRL-1:0] csr_control,
     output reg [`CSR_ADDR_WIDTH-1:0] csr_addr,
     output reg [`DATA_WIDTH-1:0] imm, 
+    output reg [`WB_CNTRL-1:0] wb_cntrl,
+    output reg [`ISA_SLCT-1:0] isa_slct,
     output reg reg_write,
     output reg mem_write,
     output reg exception,
@@ -27,11 +29,12 @@ module DECODE (
     output reg jump
 );
 
-localparam [6:0] r_logic = 7'b0110011;
-localparam [6:0] i_logic = 7'b0010011;
-localparam [6:0] s_logic = 7'b0100011;
-localparam [6:0] l_logic = 7'b0000011;
-localparam [6:0] b_logic = 7'b1100011;
+localparam [6:0] r_logic   = 7'b0110011;
+localparam [6:0] i_logic   = 7'b0010011;
+localparam [6:0] s_logic   = 7'b0100011;
+localparam [6:0] l_logic   = 7'b0000011;
+localparam [6:0] b_logic   = 7'b1100011;
+localparam [6:0] sys_logic = 7'b1110011;
 
 
 wire [`OPCODE_WIDTH-1:0] opcode;
@@ -68,12 +71,12 @@ reg [`MDU_CNTRL-1:0] mdu_control_reg;
 reg [`CSR_CNTRL-1:0] csr_control_reg;
 reg [`CSR_ADDR_WIDTH-1:0] csr_addr_reg;
 reg [`DATA_WIDTH-1:0] imm_reg; 
+reg [`WB_CNTRL-1:0] wb_cntrl_reg;
+reg [`ISA_SLCT-1:0] isa_slct_reg;
 reg reg_write_reg;
 reg mem_write_reg;
 reg branch_reg;
 reg jump_reg;
-
-
 
 
 assign opcode = instruction[6:0];
@@ -148,12 +151,13 @@ always @  (*) begin
             endcase    
         end
     end 
+    //buradaki alu control değerleri doğru değildi aluya göre ayarladım.
     else if (opcode == b_logic) begin 
         case (funct3)
-            3'b000: alu_control_reg = 4'b0111; //BEQ
-            3'b001: alu_control_reg = 4'b1010; //BNE
+            3'b000: alu_control_reg = 4'b1010; //BEQ
+            3'b001: alu_control_reg = 4'b1101; //BNE
             3'b100: alu_control_reg = 4'b1100; //BLT
-            3'b101: alu_control_reg = 4'b1101; //BGE
+            3'b101: alu_control_reg = 4'b1011; //BGE
             3'b110: alu_control_reg = 4'b1110; //BLTU 
             3'b111: alu_control_reg = 4'b1111; //BGEU 
         endcase
@@ -175,11 +179,10 @@ always @  (*) begin
             endcase  
         end 
     end
-    else if(opcode == s_logic)begin
+    else if((opcode == s_logic)||(opcode==l_logic))begin
         alu_control_reg = 4'b0000; 
-        // yaptıkları hep aynı olduğu için ayırmadan store dendiğinde hep aynı şeyi yapıyor olacak.
     end 
-    else if (opcode == l_logic) begin
+    else if (instruction == `JAL) begin
         
     end
 end
@@ -189,9 +192,9 @@ direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hata
 
 //Ben açıklamamışım ama tek bitlik işlemleri burada ayptığımız gibi ayrı ayrı hesaplarsak daha az kafa karışır diye düşünüyorum.
 always @ (*) begin
-    imm_reg =   (opcode == i_logic) ? imm_i :
-                (opcode == s_logic) ? imm_s :      
-                (opcode == b_logic) ? imm_b :
+    imm_reg =   (opcode == i_logic)    ? imm_i :
+                (opcode == s_logic)    ? imm_s :      
+                (opcode == b_logic)    ? imm_b :
                 (opcode == 7'b0010111) ? imm_u : //AUIPC
                 (opcode == 7'b0110111) ? imm_u : //LUI
                 (opcode == 7'b1101111) ? imm_j : //JAL
@@ -205,28 +208,51 @@ always @ (*) begin
                     | (opcode == 7'b0110111)
                     | (opcode == 7'b1101111)
                     | (opcode == 7'b1100111);
+
+    reg_write_reg   = (opcode == l_logic);
+
+    mem_write_reg   = (opcode == s_logic);
+
+    branch          = (opcode == b_logic);
+
+    jump_reg        = (opcode == 7'b1101111) 
+                    | (opcode == 7'b1100111);
+    wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00 // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
+                    : 2'b11;  
+    isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
 end
 
 
 always @ (posedge clk) begin
     if (flush) begin
+        rd1_reg <= 32'b0;
+        rd2_reg <= 32'b0;
+        rd_addr_d_reg <= 0;
         imm_reg <= 32'b0;
         alu_control_reg <= 4'b0;
+        alu_imm_en_reg <= 1'b0;
         mdu_control_reg <= 3'b0;
         csr_control_reg <= 3'b0;
         csr_addr_reg <= 12'b0;
+        wb_cntrl_reg <= 0;
+        isa_slct_reg <= 0;
         reg_write_reg <= 1'b0;
         mem_write_reg <= 1'b0;
         branch_reg <= 1'b0;
         jump_reg <= 1'b0;
     end
     else begin
+        rd1 <= rd1_reg;
+        rd2 <= rd2_reg;
+        rd_addr_d <= rd_addr_d_reg;
         imm <= imm_reg;
         alu_control <= alu_control_reg;
         alu_imm_en <= alu_imm_en_reg;
         mdu_control <= mdu_control_reg;
         csr_control <= csr_control_reg;
         csr_addr <= csr_addr_reg;
+        wb_cntrl <= wb_cntrl_reg;
+        isa_slct <= isa_slct_reg;
         reg_write <= reg_write_reg;
         mem_write <= mem_write_reg;
         branch <= branch_reg;
