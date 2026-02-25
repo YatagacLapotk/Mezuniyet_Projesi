@@ -4,8 +4,7 @@
 module DECODE (
     input clk,
     input reset,
-    input stall,
-    input flush,
+    input flushE,
     input we,
     input [`ADDRESS_WIDTH-1:0] w_addr,
     input [`INSTRUCTION_WIDTH-1:0] instruction,
@@ -22,6 +21,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] imm, 
     output reg [`WB_CNTRL-1:0] wb_cntrl,
     output reg [`ISA_SLCT-1:0] isa_slct,
+    output reg exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
     output reg reg_write,
     output reg mem_write,
     output reg exception,
@@ -182,9 +182,6 @@ always @  (*) begin
     else if((opcode == s_logic)||(opcode==l_logic))begin
         alu_control_reg = 4'b0000; 
     end 
-    else if (instruction == `JAL) begin
-        
-    end
 end
 /* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapayzeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
 direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptım o çözdü ama emin değilim.
@@ -220,11 +217,13 @@ always @ (*) begin
     wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00 // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
                     : 2'b11;  
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
+    exception       =  (opcode==7'b1110011);
+    exception_type  =  (instruction[20]);
 end
 
-
+//harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. 
 always @ (posedge clk) begin
-    if (flush) begin
+    if (flushE) begin
         rd1_reg <= 32'b0;
         rd2_reg <= 32'b0;
         rd_addr_d_reg <= 0;
