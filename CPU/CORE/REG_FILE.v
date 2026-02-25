@@ -7,10 +7,9 @@ module REG_FILE (
     input  [`ADDRESS_WIDTH-1:0]    A1,
     input  [`ADDRESS_WIDTH-1:0]    A2,
     input  [`ADDRESS_WIDTH-1:0]    A3,
-    input  [`DATA_WIDTH-1:0]   WD,
-    // Bunları wire yaptım. reg olarak yazma işlemi çalışmıyordu.//tamamdır.
-    output wire [`DATA_WIDTH-1:0]   RD1,
-    output wire [`DATA_WIDTH-1:0]   RD2
+    input  [`DATA_WIDTH-1:0]       WD,
+    output wire [`DATA_WIDTH-1:0]  RD1,
+    output wire [`DATA_WIDTH-1:0]  RD2
 );
 
 reg [`DATA_WIDTH-1:0] REG32[`REG_FILE_DEPTH-1:0] ;

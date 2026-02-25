@@ -187,7 +187,7 @@ end
 direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptım o çözdü ama emin değilim.
 */
 
-//Ben açıklamamışım ama tek bitlik işlemleri burada ayptığımız gibi ayrı ayrı hesaplarsak daha az kafa karışır diye düşünüyorum.
+//Ben açıklamamışım ama tek bitlik işlemleri burada ayptığımız gibi ayrı ayrı hesaplarsak daha az kafa karışır diye düşünüyorum.//
 always @ (*) begin
     imm_reg =   (opcode == i_logic)    ? imm_i :
                 (opcode == s_logic)    ? imm_s :      
@@ -214,14 +214,18 @@ always @ (*) begin
 
     jump_reg        = (opcode == 7'b1101111) 
                     | (opcode == 7'b1100111);
+    
     wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00 // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
                     : 2'b11;  
+    
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
+    
     exception       =  (opcode==7'b1110011);
+    
     exception_type  =  (instruction[20]);
 end
 
-//harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. 
+//harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. //Tamamdır.
 always @ (posedge clk) begin
     if (flushE) begin
         rd1_reg <= 32'b0;
