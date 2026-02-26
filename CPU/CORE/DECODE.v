@@ -10,14 +10,15 @@ module DECODE (
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] wd,
-    output wire [`DATA_WIDTH-1:0] rd1,
-    output wire [`DATA_WIDTH-1:0] rd2,
+    output reg [`DATA_WIDTH-1:0] rd1,
+    output reg [`DATA_WIDTH-1:0] rd2,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
     output reg [`ALU_CNTR-1:0] alu_control,
     output reg alu_imm_en,
     output reg [`MDU_CNTRL-1:0] mdu_control,
     output reg [`CSR_CNTRL-1:0] csr_control,
     output reg [`CSR_ADDR_WIDTH-1:0] csr_addr,
+    output reg [`DATA_WIDTH-1:0] csr_data,
     output reg [`DATA_WIDTH-1:0] imm, 
     output reg [`WB_CNTRL-1:0] wb_cntrl,
     output reg [`ISA_SLCT-1:0] isa_slct,
@@ -59,11 +60,14 @@ wire [`DATA_WIDTH-1:0] immu_s;
 wire [`DATA_WIDTH-1:0] immu_b;
 wire [`DATA_WIDTH-1:0] immu_u;
 wire [`DATA_WIDTH-1:0] immu_j;
+wire [`DATA_WIDTH-1:0] csr_imm;
+wire csr_imm_en;
 wire un_sign;
 
 
-reg [`DATA_WIDTH-1:0] rd1_reg;
-reg [`DATA_WIDTH-1:0] rd2_reg;
+wire [`DATA_WIDTH-1:0] rd1_wire;
+wire [`DATA_WIDTH-1:0] rd2_wire;
+
 reg [`ADDRESS_WIDTH-1:0] rd_addr_d_reg;
 reg [`ALU_CNTR-1:0] alu_control_reg;
 reg alu_imm_en_reg;
@@ -95,8 +99,8 @@ REG_FILE REG_FILE(
     .A2(rs2_addr),
     .A3(w_addr),
     .WD(wd),
-    .RD1(rd1),
-    .RD2(rd2)
+    .RD1(rd1_wire),
+    .RD2(rd2_wire)
 );
 
 //Sign extention for immediate values
@@ -113,20 +117,24 @@ assign immu_u = {instruction[31:12], 12'b0};
 assign immu_j = {{12{1'b0}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
 assign un_sign = (instruction == `SLTIU) 
-               | (instruction == `LHU)
-               | (instruction == `LBU)
-               | (instruction == `BLTU)
-               | (instruction == `BGEU)
-               | (instruction == `AUIPC)
-               | (instruction == `LUI)
-               | (instruction == `JAL);
-               
+| (instruction == `LHU)
+| (instruction == `LBU)
+| (instruction == `BLTU)
+| (instruction == `BGEU)
+| (instruction == `AUIPC)
+| (instruction == `LUI)
+| (instruction == `JAL);
+
 
 assign imm_i = (un_sign==1'b0)?  imms_i : immu_i;
 assign imm_s = (un_sign==1'b0)?  imms_s : immu_s;
 assign imm_b = (un_sign==1'b0)?  imms_b : immu_b;
 assign imm_u = (un_sign==1'b0)?  imms_u : immu_u;
 assign imm_j = (un_sign==1'b0)?  imms_j : immu_j;
+
+//CSR imm control
+assign csr_imm = {27'b0,instruction[19:15]};
+assign csr_imm_en = funct3[2];
 
 //ALU contol signal
 /*Opcode kontrol  eidlerek R-tipi olup olmadığı kontrol edilir, daha sonra ise funct7nin 5.biti kontrol edilerek SUB ve SRA işlemleri ayrılır, diğer işlemler ise funct3e göre ayrılır.
@@ -182,6 +190,9 @@ always @  (*) begin
     else if((opcode == s_logic)||(opcode==l_logic))begin
         alu_control_reg = 4'b0000; 
     end 
+    else if (opcode==sys_logic) begin
+       csr_control = funct3[1:0];
+    end
 end
 /* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapayzeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
 direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptım o çözdü ama emin değilim.
@@ -220,23 +231,25 @@ always @ (*) begin
     
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
     
-    exception       =  (opcode==7'b1110011);
+    exception       =  (opcode==sys_logic) & (funct3==3'b000);
     
-    exception_type  =  (instruction[20]);
+    exception_type  =  (instruction[20]) & (exception);
+
+    csr_data = (csr_imm_en) ? csr_imm : rd1; 
+
+    csr_addr = instruction[31:20];
 end
 
 //harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. //Tamamdır.
 always @ (posedge clk) begin
     if (flushE) begin
-        rd1_reg <= 32'b0;
-        rd2_reg <= 32'b0;
+        rd1 <= 32'b0;
+        rd2 <= 32'b0;
         rd_addr_d_reg <= 0;
         imm_reg <= 32'b0;
         alu_control_reg <= 4'b0;
         alu_imm_en_reg <= 1'b0;
         mdu_control_reg <= 3'b0;
-        csr_control_reg <= 3'b0;
-        csr_addr_reg <= 12'b0;
         wb_cntrl_reg <= 0;
         isa_slct_reg <= 0;
         reg_write_reg <= 1'b0;
@@ -245,15 +258,13 @@ always @ (posedge clk) begin
         jump_reg <= 1'b0;
     end
     else begin
-        rd1 <= rd1_reg;
-        rd2 <= rd2_reg;
+        rd1 <= rd1_wire;
+        rd2 <= rd2_wire;
         rd_addr_d <= rd_addr_d_reg;
         imm <= imm_reg;
         alu_control <= alu_control_reg;
         alu_imm_en <= alu_imm_en_reg;
         mdu_control <= mdu_control_reg;
-        csr_control <= csr_control_reg;
-        csr_addr <= csr_addr_reg;
         wb_cntrl <= wb_cntrl_reg;
         isa_slct <= isa_slct_reg;
         reg_write <= reg_write_reg;

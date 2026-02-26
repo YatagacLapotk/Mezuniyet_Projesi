@@ -46,7 +46,7 @@ always @(posedge clk) begin
     else begin
         exception_prev <= exception;
         if(csr_wr) begin
-            if(csr_cntrl == 2'b00)begin
+            if(csr_cntrl == 2'b01)begin
                 case (csr_addr)
                     `MSTATUS: mstatus <= csr_data_in;
                     `MIE:     mie     <= csr_data_in;
@@ -54,7 +54,7 @@ always @(posedge clk) begin
                     `MTVAL:   mtval   <= csr_data_in;
                 endcase
             end
-            else if (csr_cntrl == 2'b01) begin
+            else if (csr_cntrl == 2'b10) begin
                 case (csr_addr)
                     `MSTATUS: mstatus <= mstatus | csr_data_in;
                     `MIE:     mie     <= mie     | csr_data_in;
@@ -62,7 +62,7 @@ always @(posedge clk) begin
                     `MTVAL:   mtval   <= mtval   | csr_data_in;
                 endcase
             end
-            else if (csr_cntrl == 2'b10) begin
+            else if (csr_cntrl == 2'b11) begin
                 case (csr_addr)
                     `MSTATUS: mstatus <= mstatus & ~csr_data_in;
                     `MIE:     mie     <= mie     & ~csr_data_in;
@@ -76,19 +76,19 @@ always @(posedge clk) begin
             mcause <= mcause_tmp;
             mtval <= mtval_tmp;
             if (csr_wr) begin
-                if (csr_cntrl == 2'b00) begin
+                if (csr_cntrl == 2'b01) begin
                     case (csr_addr)
                         `MCAUSE : mcause <= csr_data_in;
                         `MTVAL : mtval  <= csr_data_in;
                     endcase    
                 end
-                if (csr_cntrl == 2'b01) begin
+                if (csr_cntrl == 2'b10) begin
                     case (csr_addr)
                         `MCAUSE : mcause <= mcause | csr_data_in;
                         `MTVAL : mtval  <= mtval  | csr_data_in;
                     endcase    
                 end
-                if (csr_cntrl == 2'b10) begin
+                if (csr_cntrl == 2'b11) begin
                     case (csr_addr)
                         `MCAUSE : mcause <= mcause & ~csr_data_in;
                         `MTVAL : mtval  <= mtval  & ~csr_data_in;
