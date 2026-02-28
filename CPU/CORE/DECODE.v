@@ -222,7 +222,7 @@ always @ (*) begin
 
     mem_write_reg   = (opcode == s_logic);
 
-    branch          = (opcode == b_logic);
+    branch_reg      = (opcode == b_logic);
 
     jump_reg        = (opcode == 7'b1101111) 
                     | (opcode == 7'b1100111);
