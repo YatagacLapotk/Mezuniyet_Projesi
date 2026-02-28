@@ -1,4 +1,4 @@
-`include "Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "sabit_veriler.vh"
 module MDU (
     input[`DATA_WIDTH-1:0] s1,
     input[`DATA_WIDTH-1:0] s2,
