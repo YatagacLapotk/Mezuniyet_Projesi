@@ -10,6 +10,7 @@ module DECODE (
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] wd,
+    output [`DATA_WIDTH-1:0] pc_out,
     output reg [`DATA_WIDTH-1:0] rd1,
     output reg [`DATA_WIDTH-1:0] rd2,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
@@ -273,6 +274,8 @@ always @ (posedge clk) begin
         jump <= jump_reg; 
     end
 end
+
+assign pc_out = pc;
 
 
 endmodule
