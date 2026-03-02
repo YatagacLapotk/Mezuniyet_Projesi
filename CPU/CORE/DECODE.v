@@ -1,5 +1,5 @@
 
-`include "sabit_veriler.vh"
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 module DECODE (
     input clk,
     input reset,
@@ -9,9 +9,11 @@ module DECODE (
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] wd,
-    output [`DATA_WIDTH-1:0] pc_out,
+    output reg [`DATA_WIDTH-1:0] pc_out,
     output reg [`DATA_WIDTH-1:0] rd1,
     output reg [`DATA_WIDTH-1:0] rd2,
+    output reg [`ADDRESS_WIDTH-1:0] rs1_addr_out,
+    output reg [`ADDRESS_WIDTH-1:0] rs2_addr_out,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
     output reg [`ALU_CNTR-1:0] alu_control,
     output reg alu_imm_en,
@@ -193,6 +195,11 @@ always @  (*) begin
     else if (opcode==sys_logic) begin
        csr_control = funct3[1:0];
     end
+    else begin
+        alu_control_reg = 4'b0000;
+        mdu_control_reg = 3'b000;
+        csr_control = 2'b00;
+    end
 end
 /* Burda "cannot be driven by primitives or continuous assignment." hatası geliyordu register oldukları için yapayzeka imm_next diyeb bi değişken tenımlamayı önerdi ama gereksiz gördüm 
 direk procedural bloğun içine koydum. Bi de 171 ve 172. satırda da aynı hatayı veriyordu REG_FILE içinde çıkışları wire yaptım o çözdü ama emin değilim.
@@ -256,6 +263,9 @@ always @ (posedge clk) begin
         mem_write_reg <= 1'b0;
         branch_reg <= 1'b0;
         jump_reg <= 1'b0;
+        pc_out <= 0;
+        rs1_addr_out <= 0;
+        rs2_addr_out <= 0;
     end
     else begin
         rd1 <= rd1_wire;
@@ -271,10 +281,11 @@ always @ (posedge clk) begin
         mem_write <= mem_write_reg;
         branch <= branch_reg;
         jump <= jump_reg; 
+        pc_out <= pc;
+        rs1_addr_out <= rs1_addr;
+        rs2_addr_out <= rs2_addr;
     end
 end
-
-assign pc_out = pc;
 
 
 endmodule
