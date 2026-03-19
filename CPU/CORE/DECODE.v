@@ -23,7 +23,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] csr_data,
     output reg [`DATA_WIDTH-1:0] imm, 
     output reg [`WB_CNTRL-1:0] wb_cntrl,
-    output reg [`ISA_SLCT-1:0] isa_slct,
+    output reg isa_slct,
     output reg exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
     output reg reg_write,
     output reg mem_write,
@@ -78,7 +78,7 @@ reg [`CSR_CNTRL-1:0] csr_control_reg;
 reg [`CSR_ADDR_WIDTH-1:0] csr_addr_reg;
 reg [`DATA_WIDTH-1:0] imm_reg; 
 reg [`WB_CNTRL-1:0] wb_cntrl_reg;
-reg [`ISA_SLCT-1:0] isa_slct_reg;
+reg isa_slct_reg;
 reg reg_write_reg;
 reg mem_write_reg;
 reg branch_reg;

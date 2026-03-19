@@ -9,21 +9,19 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] exe_result_in,
     input [`DATA_WIDTH-1:0] wb_result_in,
     input [`DATA_WIDTH-1:0] imm,
-    input [`DATA_WIDTH-1:0] alu_result_in,
-    input [`DATA_WIDTH-1:0] wb_in,
     input [`ADDRESS_WIDTH-1:0] rs1_addr_in,
     input [`ADDRESS_WIDTH-1:0] rs2_addr_in,
     input [`ALU_CNTR-1:0] alu_control,
     input alu_imm_en,
     input [`MDU_CNTRL-1:0] mdu_control,
     input [`WB_CNTRL-1:0] wb_control,
-    input [`ISA_SLCT-1:0] isa_slct,
+    input isa_slct,
     input reg_write,
     input mem_write,
     input branch,
     input jump,
-    input [2:0] forwardA,
-    input [2:0] forwardB,
+    input [1:0] forwardA,
+    input [1:0] forwardB,
     output [`DATA_WIDTH-1:0] mem_write_data,
     output [`ADDRESS_WIDTH-1:0] rs1_addr_outE,
     output [`ADDRESS_WIDTH-1:0] rs2_addr_outE,
@@ -38,6 +36,7 @@ module EXECUTE (
 
 wire [`DATA_WIDTH-1:0] alu_src_A;
 wire [`DATA_WIDTH-1:0] alu_src_B;
+wire [`DATA_WIDTH-1:0] alu_src_B_imm;
 wire [`DATA_WIDTH-1:0] mdu_src_A;
 wire [`DATA_WIDTH-1:0] mdu_src_B;
 wire [`DATA_WIDTH-1:0] alu_result_out;
@@ -46,7 +45,7 @@ wire [`DATA_WIDTH-1:0] mdu_result_out;
 
 ALU alu(
     .s1(alu_src_A),
-    .s2(alu_src_B),
+    .s2(alu_src_B_imm),
     .ALU_CNTR(alu_control),
     .ALU_OUT(alu_result_out)
 );
@@ -58,32 +57,36 @@ MDU mdu(
     .d3(mdu_result_out)
 );
 
-//ALU A src selector
-
-
-
-    
 assign pc_target_out = pc + imm; //Branch ve jump işlemleri için hedef adres ataması.
-assign mdu_src_A = rd1;
-assign mdu_src_B = rd2;
+
+//Forward işlemleri için atama harris'ten bakarak yaptım burayı
+assign alu_src_A = (forwardA==2'b00) ? (rd1):
+                   (forwardA==2'b01) ? (exe_result_in):
+                   (forwardA==2'b10) ? (wb_result_in) :
+                    rd1;
+assign alu_src_B = (forwardB==2'b00) ? (rd2):
+                   (forwardB==2'b01) ? (exe_result_in):
+                   (forwardB==2'b10) ? (wb_result_in) :
+                    rd2;
+assign mdu_src_A = (forwardA==2'b00) ? (rd1):
+                   (forwardA==2'b01) ? (exe_result_in):
+                   (forwardA==2'b10) ? (wb_result_in) :
+                    rd1;
+assign mdu_src_B = (forwardB==2'b00) ? (rd2):
+                   (forwardB==2'b01) ? (exe_result_in):
+                   (forwardB==2'b10) ? (wb_result_in) :
+                    rd2;
+
 
 //Immidiate işlemleri için kaynak atama.
-always @(*) begin
-    if (alu_imm_en) begin
-        alu_src_A = rd1;
-        alu_src_B = imm;
-    end else begin
-        alu_src_A = rd1;
-        alu_src_B = rd2;
-    end
-end
+assign alu_src_B_imm = (alu_imm_en==1'b1) ? (imm) : (alu_src_B);
+
+//isa selector aslında tek bit olması gerekiyor ben neden 2 bit koymuşum bilmiyorum.
+//jal ve jalr kendi içerisinde çalışıryor zaten bu buyruklarda belleğe bir şey yazılmadığı için direkt atlanması gerekiyor.
 always @ (*) begin
-    if (isa_slct == 2'b00) 
+    if (isa_slct == 1'b0) 
         result_out = alu_result_out;
-    else if (isa_slct == 2'b01) 
+    else  
         result_out = mdu_result_out;
-    else if (isa_slct == 2'b10) // jal ve jalr için ama jalr için pc'nin rs1 + imm olması gerekiyor sanırım emin değilim. 
-        result_out = pc + 4; 
-    else result_out = 32'b0;
 end
 endmodule

@@ -17,7 +17,6 @@
 `define CSR_CNTRL           2
 `define SHAMT_WIDTH         5
 `define WB_CNTRL            2
-`define ISA_SLCT            2
 
 `define NOP 32'h00000013
 
