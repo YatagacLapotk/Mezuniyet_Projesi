@@ -2,6 +2,7 @@
 
 module EXECUTE (
     input clk,
+    input reset,
     input [`DATA_WIDTH-1:0] rd1,
     input [`DATA_WIDTH-1:0] rd2,
     input [`DATA_WIDTH-1:0] pc,
@@ -11,6 +12,7 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] imm,
     input [`ADDRESS_WIDTH-1:0] rs1_addr_in,
     input [`ADDRESS_WIDTH-1:0] rs2_addr_in,
+    input [`ADDRESS_WIDTH-1:0] rd_addr_d,
     input [`ALU_CNTR-1:0] alu_control,
     input alu_imm_en,
     input [`MDU_CNTRL-1:0] mdu_control,
@@ -22,17 +24,15 @@ module EXECUTE (
     input jump,
     input [1:0] forwardA,
     input [1:0] forwardB,
-    output [`DATA_WIDTH-1:0] mem_write_data,
+    output reg [`DATA_WIDTH-1:0] mem_write_data,
     output [`ADDRESS_WIDTH-1:0] rs1_addr_outE,
     output [`ADDRESS_WIDTH-1:0] rs2_addr_outE,
     output [`ADDRESS_WIDTH-1:0] rdE,
-    output [`ADDRESS_WIDTH-1:0] rdM,
+    output reg [`ADDRESS_WIDTH-1:0] rdM,
     output [`DATA_WIDTH-1:0] pc_target_out,
     output pc_src,
     output reg [`DATA_WIDTH-1:0]result_out
 );
-
-//Biraz daha devam ettirdim. küçük küçk devam ettiriyorum.
 
 wire [`DATA_WIDTH-1:0] alu_src_A;
 wire [`DATA_WIDTH-1:0] alu_src_B;
@@ -41,7 +41,9 @@ wire [`DATA_WIDTH-1:0] mdu_src_A;
 wire [`DATA_WIDTH-1:0] mdu_src_B;
 wire [`DATA_WIDTH-1:0] alu_result_out;
 wire [`DATA_WIDTH-1:0] mdu_result_out;
+wire zero;
 
+reg [`DATA_WIDTH-1:0] result_out_reg;
 
 ALU alu(
     .s1(alu_src_A),
@@ -81,12 +83,31 @@ assign mdu_src_B = (forwardB==2'b00) ? (rd2):
 //Immidiate işlemleri için kaynak atama.
 assign alu_src_B_imm = (alu_imm_en==1'b1) ? (imm) : (alu_src_B);
 
+assign zero = |alu_result_out;//zero bitinin ataması
+assign pc_src = (jump|(zero&branch));//pc giriş değeri ataması
+assign rdE = rd_addr_d;
+
 //isa selector aslında tek bit olması gerekiyor ben neden 2 bit koymuşum bilmiyorum.
 //jal ve jalr kendi içerisinde çalışıryor zaten bu buyruklarda belleğe bir şey yazılmadığı için direkt atlanması gerekiyor.
 always @ (*) begin
     if (isa_slct == 1'b0) 
-        result_out = alu_result_out;
+        result_out_reg = alu_result_out;
     else  
-        result_out = mdu_result_out;
+        result_out_reg = mdu_result_out;
 end
+
+always @(posedge clk) begin
+    if(reset)begin
+        result_out <= 0;
+        mem_write_data <= 0;
+        rdM <= 0;
+    end
+    else begin
+        result_out <= result_out_reg; 
+        mem_write_data <= alu_src_B;
+        rdM <= rd_addr_d;
+    end
+end
+
+
 endmodule
