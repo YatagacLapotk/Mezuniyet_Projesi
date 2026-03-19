@@ -8,6 +8,8 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] imm_ext,
     input [`DATA_WIDTH-1:0] exe_result_in,
     input [`DATA_WIDTH-1:0] wb_result_in,
+    input [`DATA_WIDTH-1:0] imm,
+    input [`DATA_WIDTH-1:0] alu_result_in,
     input [`DATA_WIDTH-1:0] wb_in,
     input [`ADDRESS_WIDTH-1:0] rs1_addr_in,
     input [`ADDRESS_WIDTH-1:0] rs2_addr_in,
@@ -29,7 +31,7 @@ module EXECUTE (
     output [`ADDRESS_WIDTH-1:0] rdM,
     output [`DATA_WIDTH-1:0] pc_target_out,
     output pc_src,
-    output [`DATA_WIDTH-1:0]result_out
+    output reg [`DATA_WIDTH-1:0]result_out
 );
 
 //Biraz daha devam ettirdim. küçük küçk devam ettiriyorum.
@@ -61,4 +63,27 @@ MDU mdu(
 
 
     
+assign pc_target_out = pc + imm; //Branch ve jump işlemleri için hedef adres ataması.
+assign mdu_src_A = rd1;
+assign mdu_src_B = rd2;
+
+//Immidiate işlemleri için kaynak atama.
+always @(*) begin
+    if (alu_imm_en) begin
+        alu_src_A = rd1;
+        alu_src_B = imm;
+    end else begin
+        alu_src_A = rd1;
+        alu_src_B = rd2;
+    end
+end
+always @ (*) begin
+    if (isa_slct == 2'b00) 
+        result_out = alu_result_out;
+    else if (isa_slct == 2'b01) 
+        result_out = mdu_result_out;
+    else if (isa_slct == 2'b10) // jal ve jalr için ama jalr için pc'nin rs1 + imm olması gerekiyor sanırım emin değilim. 
+        result_out = pc + 4; 
+    else result_out = 32'b0;
+end
 endmodule
