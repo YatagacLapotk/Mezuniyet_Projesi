@@ -6,7 +6,8 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] rd2,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] imm_ext,
-    input [`DATA_WIDTH-1:0] alu_result_in,
+    input [`DATA_WIDTH-1:0] exe_result_in,
+    input [`DATA_WIDTH-1:0] wb_result_in,
     input [`DATA_WIDTH-1:0] wb_in,
     input [`ADDRESS_WIDTH-1:0] rs1_addr_in,
     input [`ADDRESS_WIDTH-1:0] rs2_addr_in,
@@ -55,9 +56,8 @@ MDU mdu(
     .d3(mdu_result_out)
 );
 
-always @(*) begin
-    
-end
+//ALU A src selector
+
 
 
     
