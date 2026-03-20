@@ -83,7 +83,7 @@ assign mdu_src_B = (forwardB==2'b00) ? (rd2):
 //Immidiate işlemleri için kaynak atama.
 assign alu_src_B_imm = (alu_imm_en==1'b1) ? (imm) : (alu_src_B);
 
-assign zero = |alu_result_out;//zero bitinin ataması
+assign zero = ~(|alu_result_out);//zero bitinin ataması
 assign pc_src = (jump|(zero&branch));//pc giriş değeri ataması
 assign rdE = rd_addr_d;
 
