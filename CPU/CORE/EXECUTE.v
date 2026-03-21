@@ -16,10 +16,10 @@ module EXECUTE (
     input [`ALU_CNTR-1:0] alu_control,
     input alu_imm_en,
     input [`MDU_CNTRL-1:0] mdu_control,
-    input [`WB_CNTRL-1:0] wb_control,
+    input [`WB_CNTRL-1:0] wb_controlD,
     input isa_slct,
-    input reg_write,
-    input mem_write,
+    input reg_writeD,
+    input mem_writeD,
     input branch,
     input jump,
     input [1:0] forwardA,
@@ -31,6 +31,10 @@ module EXECUTE (
     output reg [`ADDRESS_WIDTH-1:0] rdM,
     output [`DATA_WIDTH-1:0] pc_target_out,
     output pc_src,
+    output reg reg_writeM,
+    output reg mem_writeM,
+    output reg [`WB_CNTRL-1:0] wb_controlM,
+    output wb_contorlZ,
     output reg [`DATA_WIDTH-1:0]result_out
 );
 
@@ -96,16 +100,24 @@ always @ (*) begin
         result_out_reg = mdu_result_out;
 end
 
+assign wb_contorlZ = wb_contorlD[0]; //harris kitabından aldım. Hazard unit için bir sinyal.
+
 always @(posedge clk) begin
     if(reset)begin
         result_out <= 0;
         mem_write_data <= 0;
         rdM <= 0;
+        reg_writeM <= 0;
+        mem_writeM <= 0;
+        wb_controlM <= 0;
     end
     else begin
         result_out <= result_out_reg; 
         mem_write_data <= alu_src_B;
         rdM <= rd_addr_d;
+        reg_writeM <= reg_writeD;
+        mem_writeM <= mem_writeD;
+        wb_controlM <= wb_controlD;
     end
 end
 
