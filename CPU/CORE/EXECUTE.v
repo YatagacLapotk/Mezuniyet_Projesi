@@ -25,8 +25,8 @@ module EXECUTE (
     input [1:0] forwardA,
     input [1:0] forwardB,
     output reg [`DATA_WIDTH-1:0] mem_write_data,
-    output [`ADDRESS_WIDTH-1:0] rs1_addr_outE,
-    output [`ADDRESS_WIDTH-1:0] rs2_addr_outE,
+    output [`ADDRESS_WIDTH-1:0] rs1_addr_outE, // Bu çıkışlara atama yapılmamış teset yaparken hata verdi oradan gördüm. rs1 ve rs2'leri atadım kotrol edersin.
+    output [`ADDRESS_WIDTH-1:0] rs2_addr_outE, // Bu çıkışlara atama yapılmamış
     output [`ADDRESS_WIDTH-1:0] rdE,
     output reg [`ADDRESS_WIDTH-1:0] rdM,
     output [`DATA_WIDTH-1:0] pc_target_out,
@@ -64,6 +64,9 @@ MDU mdu(
 );
 
 assign pc_target_out = pc + imm; //Branch ve jump işlemleri için hedef adres ataması.
+
+assign rs1_addr_outE = rs1_addr_in; //rs1 adresini çıkışa atama
+assign rs2_addr_outE = rs2_addr_in; //rs2 adresini çıkışa atama
 
 //Forward işlemleri için atama harris'ten bakarak yaptım burayı
 assign alu_src_A = (forwardA==2'b00) ? (rd1):
