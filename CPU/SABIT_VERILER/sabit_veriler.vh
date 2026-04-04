@@ -17,8 +17,8 @@
 `define CSR_CNTRL           2
 `define SHAMT_WIDTH         5
 `define WB_CNTRL            2
-`define INST_ADDRESS       32 //Cache boyut ayarlaması için değerler.
-
+`define CACHE_ADDRESS       32 
+`define CACHE_SIZE         2048 // 8KB 
 `define NOP 32'h00000013
 
 // CSR Addresses
