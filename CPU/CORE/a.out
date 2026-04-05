@@ -7,20 +7,59 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x1018e8b90 .scope module, "HU" "HU" 2 4;
+S_0x10323ce40 .scope module, "HU" "HU" 2 3;
  .timescale 0 0;
-    .port_info 0 /OUTPUT 1 "stallF";
-    .port_info 1 /OUTPUT 1 "stallD";
-    .port_info 2 /OUTPUT 1 "flushD";
-    .port_info 3 /OUTPUT 1 "flushE";
-o0xa8a820010 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1018ea360_0 .net "flushD", 0 0, o0xa8a820010;  0 drivers
-o0xa8a820040 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1018eaa50_0 .net "flushE", 0 0, o0xa8a820040;  0 drivers
-o0xa8a820070 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1018eaaf0_0 .net "stallD", 0 0, o0xa8a820070;  0 drivers
-o0xa8a8200a0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1018eabc0_0 .net "stallF", 0 0, o0xa8a8200a0;  0 drivers
+    .port_info 0 /INPUT 5 "rs1D";
+    .port_info 1 /INPUT 5 "rs2D";
+    .port_info 2 /INPUT 5 "rs1E";
+    .port_info 3 /INPUT 5 "rs2E";
+    .port_info 4 /INPUT 5 "rdE";
+    .port_info 5 /INPUT 5 "rdM";
+    .port_info 6 /INPUT 5 "rdW";
+    .port_info 7 /INPUT 1 "reg_writeM";
+    .port_info 8 /INPUT 1 "reg_writeW";
+    .port_info 9 /INPUT 1 "result_srcE_zer";
+    .port_info 10 /OUTPUT 2 "forwardA";
+    .port_info 11 /OUTPUT 2 "forwardB";
+    .port_info 12 /OUTPUT 1 "pc_src";
+    .port_info 13 /OUTPUT 1 "stallF";
+    .port_info 14 /OUTPUT 1 "stallD";
+    .port_info 15 /OUTPUT 1 "flushD";
+    .port_info 16 /OUTPUT 1 "flushE";
+o0xb54820010 .functor BUFZ 1, c4<z>; HiZ drive
+v0x103238ca0_0 .net "flushD", 0 0, o0xb54820010;  0 drivers
+o0xb54820040 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10323d350_0 .net "flushE", 0 0, o0xb54820040;  0 drivers
+o0xb54820070 .functor BUFZ 2, c4<zz>; HiZ drive
+v0x10323d3f0_0 .net "forwardA", 1 0, o0xb54820070;  0 drivers
+o0xb548200a0 .functor BUFZ 2, c4<zz>; HiZ drive
+v0x10323d4d0_0 .net "forwardB", 1 0, o0xb548200a0;  0 drivers
+o0xb548200d0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10323d590_0 .net "pc_src", 0 0, o0xb548200d0;  0 drivers
+o0xb54820100 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x10323d670_0 .net "rdE", 4 0, o0xb54820100;  0 drivers
+o0xb54820130 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x10323d720_0 .net "rdM", 4 0, o0xb54820130;  0 drivers
+o0xb54820160 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x10323d7e0_0 .net "rdW", 4 0, o0xb54820160;  0 drivers
+o0xb54820190 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10323d8a0_0 .net "reg_writeM", 0 0, o0xb54820190;  0 drivers
+o0xb548201c0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10323d940_0 .net "reg_writeW", 0 0, o0xb548201c0;  0 drivers
+o0xb548201f0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10323d9e0_0 .net "result_srcE_zer", 0 0, o0xb548201f0;  0 drivers
+o0xb54820220 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0x10323da80_0 .net "rs1D", 4 0, o0xb54820220;  0 drivers
+o0xb54820250 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb55038000_0 .net "rs1E", 4 0, o0xb54820250;  0 drivers
+o0xb54820280 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb550380a0_0 .net "rs2D", 4 0, o0xb54820280;  0 drivers
+o0xb548202b0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb55038140_0 .net "rs2E", 4 0, o0xb548202b0;  0 drivers
+o0xb548202e0 .functor BUFZ 1, c4<z>; HiZ drive
+v0xb550381e0_0 .net "stallD", 0 0, o0xb548202e0;  0 drivers
+o0xb54820310 .functor BUFZ 1, c4<z>; HiZ drive
+v0xb55038280_0 .net "stallF", 0 0, o0xb54820310;  0 drivers
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
