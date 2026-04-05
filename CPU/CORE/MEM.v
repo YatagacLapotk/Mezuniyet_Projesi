@@ -46,7 +46,7 @@ always @(posedge clk) begin
         wb_control_out <= wb_controlM;
         rdW <= rdM;
         mem_result_out <= mem_result_out_temp;
-        wb_result_out <= exe_result_in;
+        wb_result_out <= execute_result_in;
     end
 end
 
