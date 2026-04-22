@@ -6,7 +6,7 @@ module baudrate (
     output wire tx_enable
 );
     parameter counter_tx = `CLK / `BAUD_RATE; // 868
-    parameter counter_rx = `CLK / (`BAUD_RATE * 16); // 54 reciver için 16x oversampling yapıyoruz. yani her 868 clock atımında değil, her 54 clock atımında bir enable sinyali üretiyor.Yani 16 kat daha sık enable sinyali üretiyor.
+    parameter counter_rx = `CLK / (`BAUD_RATE * 16); // 54 reciver için 16x oversampling yapıyoruz. yani her 868 clock atımında değil, her 54 clock atımında bir enable sinyali üretiyor.Yani 16 kat daha sık enable sinyali üretiyor. UART recieverlerde yapılan bir uygulama imiş.BAUD_GEN_TB
     reg [9:0] tx_acc = 0;
     reg [5:0] rx_acc = 0;
 
