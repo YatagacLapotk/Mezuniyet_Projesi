@@ -17,7 +17,7 @@ reg [`INSTRUCTION_WIDTH-1:0] i_cache [0:`CACHE_SIZE]; // cache boyutunu 8kb olar
 
 always @(posedge clk) begin
     if (reset)begin
-        for(integer i = 0; i<`CACHE_SIZE;i+=1)begin
+        for(integer i = 0; i<`CACHE_SIZE;i=i+1)begin
             i_cache[i]<= 0;
         end
     end 

@@ -1,57 +1,66 @@
-`include "/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 
 module FETCH (
     input clk,
     input reset,
-    input stall,
-    input flush,    
+    input stallF,
+    input stallD,
+    input flushD,    
     input exception,
+    input pc_src,                   
     input [`DATA_WIDTH-1:0] exception_handler_address,                          
-    input [`DATA_WIDTH-1:0] cache_in,
-    input cache_valid,
+    input [`DATA_WIDTH-1:0] cache_input,  
     input [`DATA_WIDTH-1:0] branch_target,
-    input branch,
-    output [`DATA_WIDTH-1:0] instruction_address_out,
-    output reg [`DATA_WIDTH-1:0] instruction_out,
-    output reg instruction_valid_out                       
+    output reg [`DATA_WIDTH-1:0] instruction_out, 
+    output reg [`DATA_WIDTH-1:0] pc_4_out, 
+    output reg [`DATA_WIDTH-1:0] pc_out 
 );
+
+    wire [31:0] pc;
+    wire [31:0] pc_4_out_reg;
+    wire [31:0] instruction_out_reg;
+    reg [31:0] pc_out_reg;
+
     
-    reg [31:0] pc_reg;
+    I_CACHE I_CACHE(
+        .clk(clk),
+        .reset(reset),
+        .we(exception),
+        .inst_in(cache_input),
+        .w_addr(exception_handler_address),
+        .r_addr(pc_out),
+        .inst_out(instruction_out_reg)
+    );
     
+
+    assign pc = (pc_src) ? (branch_target) : (pc_4_out);
+    //PC
     always @(posedge clk) begin
-        if (reset) begin
-            pc_reg <= `FIRST_ADDR;
+        if (reset)begin
+            pc_out_reg <= `FIRST_ADDR;
         end
-        else if (exception) begin
-            pc_reg <= exception_handler_address;
+        if (stallF) begin
+            if(exception)begin
+                pc_out_reg <=  exception_handler_address;
+            end
         end
-        else if(~stall) begin
-            if (branch) 
-                pc_reg <= branch_target;
-            else 
-                pc_reg <= pc_reg + 4;
+        else begin
+            pc_out_reg <= pc;
+        end
+    end 
+    assign pc_4_out_reg = pc_out_reg + 4;
+    always @(posedge clk) begin
+        if (flushD) begin
+            pc_4_out <= 0;
+            pc_out <= 0;
+            instruction_out <= 0;
+        end
+        else begin
+            pc_4_out <= pc_4_out_reg;
+            pc_out <= pc_out_reg;
+            instruction_out <= instruction_out_reg;
         end
     end
-
-    always @(posedge clk) begin
-        if (reset) begin
-            instruction_out <= `NOP;
-            instruction_valid_out <= 1'b0;
-        end
-        else if (flush) begin
-            instruction_out <= `NOP;
-            instruction_valid_out <= 1'b0;             
-        end
-        else if (~stall && cache_valid) begin
-            instruction_out <= cache_in;
-            instruction_valid_out <= 1'b1;              
-        end
-        else if (stall) begin
-            instruction_valid_out <= 1'b0;
-        end
-    end
-
-    assign instruction_address_out = pc_reg;
-
+   
 
 endmodule

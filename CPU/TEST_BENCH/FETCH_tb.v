@@ -4,88 +4,107 @@ module FETCH_tb ();
 
 reg clk;
 reg reset;
-reg stall;
-reg flush;
+reg stallF;
+reg stallD;
+reg flushD;
 reg exception;
+reg pc_src;
 reg [`DATA_WIDTH-1:0] exception_handler_address;
-reg [`DATA_WIDTH-1:0] cache_in;
-reg cache_valid;
+reg [`DATA_WIDTH-1:0] cache_input;
 reg [`DATA_WIDTH-1:0] branch_target;
-reg branch;
-wire [`DATA_WIDTH-1:0] instruction_address_out;
-wire [`DATA_WIDTH-1:0] pc_plus_4_out;
 wire [`DATA_WIDTH-1:0] instruction_out;
-wire instruction_valid_out;
+wire [`DATA_WIDTH-1:0] pc_out;
 
-initial begin
-    forever #5 clk = ~clk;
-end
+parameter CLK_PERIOD = 10;
+
+always #(CLK_PERIOD/2) clk = ~clk;
 
 FETCH fetch_inst (
     .clk(clk),
     .reset(reset),
-    .stall(stall),
-    .flush(flush),
+    .stallF(stallF),
+    .stallD(stallD),
+    .flushD(flushD),
     .exception(exception),
+    .pc_src(pc_src),
     .exception_handler_address(exception_handler_address),
-    .cache_in(cache_in),
-    .cache_valid(cache_valid),
+    .cache_input(cache_input),
     .branch_target(branch_target),
-    .branch(branch),
-    .instruction_address_out(instruction_address_out),
-    .pc_plus_4_out(pc_plus_4_out),
     .instruction_out(instruction_out),
-    .instruction_valid_out(instruction_valid_out)
+    .pc_out(pc_out)
 );
-    
+
 initial begin
-    // Initialize signals
-    clk = 0;
-    reset = 1;
-    stall = 0;
-    flush = 0;
+    clk       = 0;
+    reset     = 1;
+    stallF    = 0;
+    stallD    = 0;
+    flushD    = 0;
     exception = 0;
-    exception_handler_address = `DATA_WIDTH'b0;
-    cache_in = `DATA_WIDTH'b0;
-    cache_valid = 0;
-    branch_target = `DATA_WIDTH'b0;
-    branch = 0;
+    pc_src    = 0;
+    exception_handler_address = 32'h0;
+    cache_input               = 32'h0;
+    branch_target             = 32'h0;
 
-    #20;
-
+    // hold reset
+    @(posedge clk); #1;
+    @(posedge clk); #1;
     reset = 0;
-    cache_in = 32'h00000001; 
-    cache_valid = 1;
 
-    #10; 
-
-    cache_valid = 0;
-    branch_target = 32'h00001000; // Example branch target
-    branch = 1;
-
-    #10; 
-
-    branch = 0; 
-    exception_handler_address = 32'h00002000; // Example exception handler address
+    // --- Test 1: normal PC increment ---
+    // load 3 instructions into I_CACHE via exception path
+    exception_handler_address = 32'd0;
+    cache_input = 32'h00000013; // NOP
     exception = 1;
+    @(posedge clk); #1;
 
-    #10; 
+    exception_handler_address = 32'd1;
+    cache_input = 32'h00100093; // ADDI x1, x0, 1
+    @(posedge clk); #1;
 
-    exception = 0; 
-    flush = 1;
-    
-    #10; 
+    exception_handler_address = 32'd2;
+    cache_input = 32'h00200113; // ADDI x2, x0, 2
+    @(posedge clk); #1;
+    exception = 0;
 
-    flush = 0; 
-    cache_in = 32'h00000002; 
-    cache_valid = 1;
+    @(posedge clk); #1;
+    @(posedge clk); #1;
+    @(posedge clk); #1;
 
-    #10;
+    // --- Test 2: stall ---
+    stallF = 1;
+    @(posedge clk); #1;
+    @(posedge clk); #1;
+    stallF = 0;
 
-    cache_in = 32'h00020002; 
-    cache_valid = 0;
+    @(posedge clk); #1;
 
-    #10;
+    // --- Test 3: branch taken ---
+    branch_target = 32'd0;
+    pc_src = 1;
+    @(posedge clk); #1;
+    pc_src = 0;
+
+    @(posedge clk); #1;
+    @(posedge clk); #1;
+
+    // --- Test 4: exception (load new instruction) ---
+    exception_handler_address = 32'd5;
+    cache_input = 32'hDEADBEEF;
+    exception = 1;
+    @(posedge clk); #1;
+    exception = 0;
+
+    @(posedge clk); #1;
+    @(posedge clk); #1;
+
+    // --- Test 5: flushD ---
+    flushD = 1;
+    @(posedge clk); #1;
+    flushD = 0;
+
+    @(posedge clk); #1;
+
     $finish;
 end
 
@@ -93,4 +112,5 @@ initial begin
     $dumpfile("FETCH_tb.vcd");
     $dumpvars(0, FETCH_tb);
 end
+
 endmodule
