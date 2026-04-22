@@ -20,6 +20,8 @@
 `define CACHE_ADDRESS       32 
 `define CACHE_SIZE         2048 // 8KB 
 `define NOP 32'h00000013
+`define CLK 100000000
+`define BAUD_RATE 115200
 
 // CSR Addresses
 `define MSTATUS        12'h300
