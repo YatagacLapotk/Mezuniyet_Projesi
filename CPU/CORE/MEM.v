@@ -8,6 +8,7 @@ module MEM (
     input [`WB_CNTRL-1:0] wb_controlM,
     input reg_write,
     input mem_write,
+    input [`DATA_WIDTH-1:0] pc_4,
     input [`ADDRESS_WIDTH-1:0] rdM,
     output [`ADDRESS_WIDTH-1:0] rdM_hazard_out,
     output reg_write_hazard,
@@ -16,8 +17,8 @@ module MEM (
     output reg [`ADDRESS_WIDTH-1:0] rdW,
     output [`DATA_WIDTH-1:0] execute_result_out,
     output reg [`DATA_WIDTH-1:0] mem_result_out,
-    output reg [`DATA_WIDTH-1:0] wb_result_out
-
+    output reg [`DATA_WIDTH-1:0] wb_result_out,
+    output reg [`DATA_WIDTH-1:0] pc_4_out
 );
 //Buraya D_cache ekledim ancak tam olarak bizim tasarıma uymuyor sanırım 
 // bunun için ne yapmamız gerekir onu bilmiyorum. 
@@ -41,12 +42,14 @@ always @(posedge clk) begin
         rdW <= 0;
         mem_result_out <= 0;
         wb_result_out <= 0;
+        pc_4_out <= 0;
     end else begin
         reg_write_out <= reg_write;
         wb_control_out <= wb_controlM;
         rdW <= rdM;
         mem_result_out <= mem_result_out_temp;
         wb_result_out <= execute_result_in;
+        pc_4_out <= pc_4;
     end
 end
 

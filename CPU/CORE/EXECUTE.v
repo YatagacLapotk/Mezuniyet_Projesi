@@ -6,6 +6,7 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] rd1,
     input [`DATA_WIDTH-1:0] rd2,
     input [`DATA_WIDTH-1:0] pc,
+    input [`DATA_WIDTH-1:0] pc_4,
     input [`DATA_WIDTH-1:0] imm_ext,
     input [`DATA_WIDTH-1:0] exe_result_in,
     input [`DATA_WIDTH-1:0] wb_result_in,
@@ -24,6 +25,7 @@ module EXECUTE (
     input jump,
     input [1:0] forwardA,
     input [1:0] forwardB,
+    output reg [`DATA_WIDTH-1:0] pc_4_out,
     output reg [`DATA_WIDTH-1:0] mem_write_data,
     output [`ADDRESS_WIDTH-1:0] rs1_addr_outE, // Bu çıkışlara atama yapılmamış teset yaparken hata verdi oradan gördüm. rs1 ve rs2'leri atadım kotrol edersin.
     output [`ADDRESS_WIDTH-1:0] rs2_addr_outE, // Bu çıkışlara atama yapılmamış
@@ -113,6 +115,7 @@ always @(posedge clk) begin
         reg_writeM <= 0;
         mem_writeM <= 0;
         wb_controlM <= 0;
+        pc_4_out<= 0;
     end
     else begin
         result_out <= result_out_reg; 
@@ -121,6 +124,7 @@ always @(posedge clk) begin
         reg_writeM <= reg_writeD;
         mem_writeM <= mem_writeD;
         wb_controlM <= wb_controlD;
+        pc_4_out <= pc_4;
     end
 end
 

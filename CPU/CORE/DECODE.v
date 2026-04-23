@@ -8,8 +8,10 @@ module DECODE (
     input [`ADDRESS_WIDTH-1:0] w_addr,
     input [`INSTRUCTION_WIDTH-1:0] instruction,
     input [`DATA_WIDTH-1:0] pc,
+    input [`DATA_WIDTH-1:0] pc_4,
     input [`DATA_WIDTH-1:0] wd,
     output reg [`DATA_WIDTH-1:0] pc_out,
+    output reg [`DATA_WIDTH-1:0] pc_4_out,
     output reg [`DATA_WIDTH-1:0] rd1,
     output reg [`DATA_WIDTH-1:0] rd2,
     output reg [`ADDRESS_WIDTH-1:0] rs1_addr_out,
@@ -224,7 +226,13 @@ always @ (*) begin
                     | (opcode == 7'b1101111)
                     | (opcode == 7'b1100111);
 
-    reg_write_reg   = (opcode == l_logic);
+    reg_write_reg   = (opcode == l_logic) 
+                    | (opcode == r_logic)
+                    | (opcode == i_logic)
+                    | (opcode == 7'b0010111) 
+                    | (opcode == 7'b0110111) 
+                    | (opcode == 7'b1101111) 
+                    | (opcode == 7'b1100111); 
 
     mem_write_reg   = (opcode == s_logic);
 
@@ -233,8 +241,10 @@ always @ (*) begin
     jump_reg        = (opcode == 7'b1101111) 
                     | (opcode == 7'b1100111);
     
-    wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00 // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
-                    : 2'b11;  
+    wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00: // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
+                      (l_logic) ? 2'b01 :
+                      ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
+                      2'b00;  
     
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
     
@@ -266,6 +276,7 @@ always @ (posedge clk) begin
         pc_out <= 0;
         rs1_addr_out <= 0;
         rs2_addr_out <= 0;
+        pc_4_out <= 0;
     end
     else begin
         rd1 <= rd1_wire;
@@ -284,6 +295,7 @@ always @ (posedge clk) begin
         pc_out <= pc;
         rs1_addr_out <= rs1_addr;
         rs2_addr_out <= rs2_addr;
+        pc_4_out <= pc_4;
     end
 end
 
