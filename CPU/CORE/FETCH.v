@@ -28,23 +28,19 @@ module FETCH (
         .we(exception),
         .inst_in(cache_input),
         .w_addr(exception_handler_address),
-        .r_addr(pc_out),
+        .r_addr(pc_out_reg),
         .inst_out(instruction_out_reg)
     );
     
 
-    assign pc = (pc_src) ? (branch_target) : (pc_4_out);
+    assign pc = (exception) ? exception_handler_address :
+                (pc_src) ? (branch_target) : (pc_4_out_reg);
     //PC
     always @(posedge clk) begin
-        if (reset)begin
+        if (reset) begin
             pc_out_reg <= `FIRST_ADDR;
         end
-        if (stallF) begin
-            if(exception)begin
-                pc_out_reg <=  exception_handler_address;
-            end
-        end
-        else begin
+        else if (~stallF) begin
             pc_out_reg <= pc;
         end
     end 
@@ -55,7 +51,7 @@ module FETCH (
             pc_out <= 0;
             instruction_out <= 0;
         end
-        else begin
+        else if(~stallD)begin
             pc_4_out <= pc_4_out_reg;
             pc_out <= pc_out_reg;
             instruction_out <= instruction_out_reg;

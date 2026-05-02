@@ -7,14 +7,14 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x1054e5bc0 .scope module, "CORE" "CORE" 2 3;
+S_0x101059b80 .scope module, "CORE" "CORE" 2 3;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
-o0x8d9420010 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1054e4c90_0 .net "clk", 0 0, o0x8d9420010;  0 drivers
-o0x8d9420040 .functor BUFZ 1, c4<z>; HiZ drive
-v0x1054e62f0_0 .net "reset", 0 0, o0x8d9420040;  0 drivers
+o0xa0d420010 .functor BUFZ 1, c4<z>; HiZ drive
+v0x101058bf0_0 .net "clk", 0 0, o0xa0d420010;  0 drivers
+o0xa0d420040 .functor BUFZ 1, c4<z>; HiZ drive
+v0x10105a290_0 .net "reset", 0 0, o0xa0d420040;  0 drivers
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";

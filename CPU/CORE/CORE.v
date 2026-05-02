@@ -3,6 +3,8 @@
 module CORE (
     input clk,
     input reset
+    
 );
+
     
 endmodule

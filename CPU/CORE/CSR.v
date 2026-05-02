@@ -6,6 +6,7 @@ module CSR (
     input [`DATA_WIDTH-1:0] instr,
     input [`CSR_ADDR_WIDTH-1:0] csr_addr,
     input exception,
+    input interrupt,
     input [7:0] exception_code,
     input [`DATA_WIDTH-1:0] csr_data_in,
     input [1:0] csr_cntrl,
@@ -28,9 +29,16 @@ reg [`DATA_WIDTH-1:0] mepc;
 reg [`DATA_WIDTH-1:0] mcause;
 reg [`DATA_WIDTH-1:0] mtval;
 
-assign exception_edge = exception & ~exception_prev;
+// Interrupt masking: exceptions always allowed, interrupts require MIE + specific bit in mie
+wire interrupt_allowed = interrupt ? (mstatus[3] & mie[exception_code]) : 1'b1;
+wire effective_exception = exception & interrupt_allowed;
+
+// mstatus bits: [3]=MIE (global enable), [7]=MPIE (saved MIE), [11:12]=MPP (privilege)
+// mie bits: [4]=MSIE (software/UART interrupt enable)
+
+assign exception_edge = effective_exception & ~exception_prev;
 assign mtval_tmp = (exception_code == 8'h02) ? instr : 32'b0; 
-assign mcause_tmp = {24'b0, exception_code}; 
+assign mcause_tmp = {interrupt, 23'b0, exception_code}; 
 
 
 always @(posedge clk) begin
@@ -75,6 +83,10 @@ always @(posedge clk) begin
             mepc <= pc;
             mcause <= mcause_tmp;
             mtval <= mtval_tmp;
+            // Save MIE to MPIE, disable MIE, save privilege to MPP
+            mstatus[7] <= mstatus[3];  // MPIE = MIE
+            mstatus[3] <= 1'b0;        // MIE = 0 (disable interrupts in handler)
+            mstatus[12:11] <= 2'b11;   // MPP = 3 (machine mode)
             if (csr_wr) begin
                 if (csr_cntrl == 2'b01) begin
                     case (csr_addr)
