@@ -1,6 +1,6 @@
 `include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
 
-module HU (  
+module HAZARD_UNIT (  
     input [`ADDRESS_WIDTH-1:0] rs1D,
     input [`ADDRESS_WIDTH-1:0] rs2D,
     input [`ADDRESS_WIDTH-1:0] rs1E,

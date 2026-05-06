@@ -7,16 +7,159 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x101059b80 .scope module, "CORE" "CORE" 2 3;
+S_0x104f6cb40 .scope module, "HAZARD_UNIT" "HAZARD_UNIT" 2 3;
  .timescale 0 0;
-    .port_info 0 /INPUT 1 "clk";
-    .port_info 1 /INPUT 1 "reset";
-o0xa0d420010 .functor BUFZ 1, c4<z>; HiZ drive
-v0x101058bf0_0 .net "clk", 0 0, o0xa0d420010;  0 drivers
-o0xa0d420040 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10105a290_0 .net "reset", 0 0, o0xa0d420040;  0 drivers
+    .port_info 0 /INPUT 5 "rs1D";
+    .port_info 1 /INPUT 5 "rs2D";
+    .port_info 2 /INPUT 5 "rs1E";
+    .port_info 3 /INPUT 5 "rs2E";
+    .port_info 4 /INPUT 5 "rdE";
+    .port_info 5 /INPUT 5 "rdM";
+    .port_info 6 /INPUT 5 "rdW";
+    .port_info 7 /INPUT 1 "reg_writeM";
+    .port_info 8 /INPUT 1 "reg_writeW";
+    .port_info 9 /INPUT 1 "result_srcE_zer";
+    .port_info 10 /OUTPUT 2 "forwardA";
+    .port_info 11 /OUTPUT 2 "forwardB";
+    .port_info 12 /OUTPUT 1 "pc_src";
+    .port_info 13 /OUTPUT 1 "stallF";
+    .port_info 14 /OUTPUT 1 "stallD";
+    .port_info 15 /OUTPUT 1 "flushD";
+    .port_info 16 /OUTPUT 1 "flushE";
+L_0x104f73ee0 .functor OR 1, L_0x104f73e40, L_0x104f758e0, C4<0>, C4<0>;
+o0xb53c102b0 .functor BUFZ 1, c4<z>; HiZ drive
+L_0x104f74120 .functor AND 1, o0xb53c102b0, L_0x104f73ee0, C4<1>, C4<1>;
+L_0x104f742e0 .functor BUFZ 1, L_0x104f74120, C4<0>, C4<0>, C4<0>;
+L_0x104f74590 .functor BUFZ 1, L_0x104f74120, C4<0>, C4<0>, C4<0>;
+o0xb53c10190 .functor BUFZ 1, c4<z>; HiZ drive
+L_0x104f73c30 .functor OR 1, L_0x104f74120, o0xb53c10190, C4<0>, C4<0>;
+L_0x104f6ccc0 .functor BUFZ 1, o0xb53c10190, C4<0>, C4<0>, C4<0>;
+v0x104f73b90_0 .net *"_ivl_0", 0 0, L_0x104f73e40;  1 drivers
+v0x104f744f0_0 .net *"_ivl_2", 0 0, L_0x104f758e0;  1 drivers
+v0x104f74240_0 .net *"_ivl_4", 0 0, L_0x104f73ee0;  1 drivers
+v0x104f74080_0 .net "flushD", 0 0, L_0x104f6ccc0;  1 drivers
+v0x104f75560_0 .net "flushE", 0 0, L_0x104f73c30;  1 drivers
+v0x104f75600_0 .var "forwardA", 1 0;
+v0x104f756a0_0 .var "forwardB", 1 0;
+v0x104f75740_0 .net "lwstall", 0 0, L_0x104f74120;  1 drivers
+v0xb53828000_0 .net "pc_src", 0 0, o0xb53c10190;  0 drivers
+o0xb53c101c0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb538280a0_0 .net "rdE", 4 0, o0xb53c101c0;  0 drivers
+o0xb53c101f0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb53828140_0 .net "rdM", 4 0, o0xb53c101f0;  0 drivers
+o0xb53c10220 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb538281e0_0 .net "rdW", 4 0, o0xb53c10220;  0 drivers
+o0xb53c10250 .functor BUFZ 1, c4<z>; HiZ drive
+v0xb53828280_0 .net "reg_writeM", 0 0, o0xb53c10250;  0 drivers
+o0xb53c10280 .functor BUFZ 1, c4<z>; HiZ drive
+v0xb53828320_0 .net "reg_writeW", 0 0, o0xb53c10280;  0 drivers
+v0xb538283c0_0 .net "result_srcE_zer", 0 0, o0xb53c102b0;  0 drivers
+o0xb53c102e0 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb53828460_0 .net "rs1D", 4 0, o0xb53c102e0;  0 drivers
+o0xb53c10310 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb53828500_0 .net "rs1E", 4 0, o0xb53c10310;  0 drivers
+o0xb53c10340 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb538285a0_0 .net "rs2D", 4 0, o0xb53c10340;  0 drivers
+o0xb53c10370 .functor BUFZ 5, c4<zzzzz>; HiZ drive
+v0xb53828640_0 .net "rs2E", 4 0, o0xb53c10370;  0 drivers
+v0xb538286e0_0 .net "stallD", 0 0, L_0x104f742e0;  1 drivers
+v0xb53828780_0 .net "stallF", 0 0, L_0x104f74590;  1 drivers
+E_0xb52c58000/0 .event anyedge, v0xb53828640_0, v0xb53828140_0, v0xb53828280_0, v0xb538281e0_0;
+E_0xb52c58000/1 .event anyedge, v0xb53828320_0, v0xb538285a0_0;
+E_0xb52c58000 .event/or E_0xb52c58000/0, E_0xb52c58000/1;
+E_0xb52c58040/0 .event anyedge, v0xb53828500_0, v0xb53828140_0, v0xb53828280_0, v0xb538281e0_0;
+E_0xb52c58040/1 .event anyedge, v0xb53828320_0, v0xb53828460_0;
+E_0xb52c58040 .event/or E_0xb52c58040/0, E_0xb52c58040/1;
+L_0x104f73e40 .cmp/eq 5, o0xb53c102e0, o0xb53c101c0;
+L_0x104f758e0 .cmp/eq 5, o0xb53c10370, o0xb53c101c0;
+    .scope S_0x104f6cb40;
+T_0 ;
+    %wait E_0xb52c58040;
+    %load/vec4 v0xb53828500_0;
+    %load/vec4 v0xb53828140_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %load/vec4 v0xb53828280_0;
+    %and;
+    %load/vec4 v0xb53828500_0;
+    %pad/u 32;
+    %pushi/vec4 0, 0, 32;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.0, 8;
+    %pushi/vec4 1, 0, 2;
+    %store/vec4 v0x104f75600_0, 0, 2;
+T_0.0 ;
+    %load/vec4 v0xb53828500_0;
+    %load/vec4 v0xb538281e0_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %load/vec4 v0xb53828320_0;
+    %and;
+    %load/vec4 v0xb53828460_0;
+    %pad/u 32;
+    %pushi/vec4 0, 0, 32;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.2, 8;
+    %pushi/vec4 2, 0, 2;
+    %store/vec4 v0x104f75600_0, 0, 2;
+    %jmp T_0.3;
+T_0.2 ;
+    %pushi/vec4 0, 0, 2;
+    %store/vec4 v0x104f75600_0, 0, 2;
+T_0.3 ;
+    %jmp T_0;
+    .thread T_0, $push;
+    .scope S_0x104f6cb40;
+T_1 ;
+    %wait E_0xb52c58000;
+    %load/vec4 v0xb53828640_0;
+    %load/vec4 v0xb53828140_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %load/vec4 v0xb53828280_0;
+    %and;
+    %load/vec4 v0xb53828640_0;
+    %pad/u 32;
+    %pushi/vec4 0, 0, 32;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.0, 8;
+    %pushi/vec4 1, 0, 2;
+    %store/vec4 v0x104f756a0_0, 0, 2;
+T_1.0 ;
+    %load/vec4 v0xb53828640_0;
+    %load/vec4 v0xb538281e0_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %load/vec4 v0xb53828320_0;
+    %and;
+    %load/vec4 v0xb538285a0_0;
+    %pad/u 32;
+    %pushi/vec4 0, 0, 32;
+    %cmp/ne;
+    %flag_get/vec4 4;
+    %and;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.2, 8;
+    %pushi/vec4 2, 0, 2;
+    %store/vec4 v0x104f756a0_0, 0, 2;
+    %jmp T_1.3;
+T_1.2 ;
+    %pushi/vec4 0, 0, 2;
+    %store/vec4 v0x104f756a0_0, 0, 2;
+T_1.3 ;
+    %jmp T_1;
+    .thread T_1, $push;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
     "<interactive>";
-    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/CORE/CORE.v";
+    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/CORE/HAZARD_UNIT.v";
