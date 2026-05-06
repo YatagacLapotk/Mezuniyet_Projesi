@@ -1,5 +1,6 @@
+
 module UART_tx(
-   input wire [7:0] data_in,
+   input wire [7:0] data_out,
    input wire clk,
    input wire reset,
    input wire tx_enable, // transmit işlemini başlatmak için kullanılacak harici bir sinyal
@@ -33,7 +34,7 @@ always @(posedge clk or posedge reset) begin
             tx_out <= 1;
             if (~tx_enable) begin // harici olarak gelen enable sinyali LOW duruma geçince veri gönderimi başlar
                state <= START;
-               data_buffer <= data_in;
+               data_buffer <= data_out;
                bit_index <= 0;
             end
          end
@@ -63,6 +64,5 @@ always @(posedge clk or posedge reset) begin
          end   
       endcase
    end
-
 end
 endmodule

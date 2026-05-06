@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "sabit_veriler.vh"
+
 
 module BAUD_GEN_TB;
 
