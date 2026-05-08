@@ -7,7 +7,6 @@ module EXECUTE (
     input [`DATA_WIDTH-1:0] rd2,
     input [`DATA_WIDTH-1:0] pc,
     input [`DATA_WIDTH-1:0] pc_4,
-    input [`DATA_WIDTH-1:0] imm_ext,
     input [`DATA_WIDTH-1:0] exe_result_in,
     input [`DATA_WIDTH-1:0] wb_result_in,
     input [`DATA_WIDTH-1:0] imm,
@@ -18,6 +17,7 @@ module EXECUTE (
     input alu_imm_en,
     input [`MDU_CNTRL-1:0] mdu_control,
     input [`WB_CNTRL-1:0] wb_controlD,
+    input [`DATA_WIDTH-1:0] csr_data_in,
     input isa_slct,
     input reg_writeD,
     input mem_writeD,
@@ -99,9 +99,11 @@ assign rdE = rd_addr_d;
 //isa selector aslında tek bit olması gerekiyor ben neden 2 bit koymuşum bilmiyorum.
 //jal ve jalr kendi içerisinde çalışıryor zaten bu buyruklarda belleğe bir şey yazılmadığı için direkt atlanması gerekiyor.
 always @ (*) begin
-    if (isa_slct == 1'b0) 
+    if (wb_controlD == 2'b11) // CSR instruction
+        result_out_reg = csr_data_in;
+    else if (isa_slct == 1'b0)
         result_out_reg = alu_result_out;
-    else  
+    else
         result_out_reg = mdu_result_out;
 end
 

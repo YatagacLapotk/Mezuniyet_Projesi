@@ -23,7 +23,9 @@ module DECODE (
     output reg [`CSR_CNTRL-1:0] csr_control,
     output reg [`CSR_ADDR_WIDTH-1:0] csr_addr,
     output reg [`DATA_WIDTH-1:0] csr_data,
-    output reg [`DATA_WIDTH-1:0] imm, 
+    output reg csr_rd,
+    output reg csr_wr,
+    output reg [`DATA_WIDTH-1:0] imm,
     output reg [`WB_CNTRL-1:0] wb_cntrl,
     output reg isa_slct,
     output reg exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
@@ -246,15 +248,13 @@ always @ (*) begin
                       ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
                       2'b00;  
     
-    isa_slct_reg    = (opcode==r_logic) & (funct7[0]); //Sadece bir olup olmama durumuna bakılır. 1 ise mdu çıktısı alınır. 0 ise alu çıktısı alınır.
-    
-    exception       =  (opcode==sys_logic) & (funct3==3'b000);
-    
-    exception_type  =  (instruction[20]) & (exception);
-
-    csr_data = (csr_imm_en) ? csr_imm : rd1; 
-
-    csr_addr = instruction[31:20];
+    isa_slct_reg    = (opcode==r_logic) & (funct7[0]);
+    exception       = (opcode==sys_logic) & (funct3==3'b000);
+    exception_type  = instruction[20] & exception;
+    csr_data        = csr_imm_en ? csr_imm : rd1;
+    csr_addr        = instruction[31:20];
+    csr_rd          = (opcode==sys_logic) & funct3[1];
+    csr_wr          = (opcode==sys_logic) & funct3[0];
 end
 
 //harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. //Tamamdır.

@@ -3,6 +3,7 @@
 module CORE (
     input clk,
     input reset,
+    input interrupt,
     input [`DATA_WIDTH-1:0] comm_data_in,
     output [`DATA_WIDTH-1:0] comm_data_out
 );
@@ -12,7 +13,6 @@ wire stallF;
 wire stallD;
 wire flushD;
 wire pc_src;
-wire [`DATA_WIDTH-1:0] exception_handler_Address;
 //comm_data_in kullanılabilir.
 wire [`DATA_WIDTH-1:0] branch_target;
 //-----output------
@@ -22,7 +22,6 @@ wire [`DATA_WIDTH-1:0] pc_out_fetch;
 
 //DECODE wiring
 wire flushE;
-wire we;
 wire [`ADDRESS_WIDTH-1:0] w_addr;
 wire [`DATA_WIDTH-1:0] wd;
 //-----output------
@@ -39,30 +38,63 @@ wire [`MDU_CNTRL-1:0] mdu_control;
 wire [`CSR_CNTRL-1:0] csr_control;
 wire [`CSR_ADDR_WIDTH-1:0] csr_addr;
 wire [`DATA_WIDTH-1:0] csr_data;
+wire csr_rd;
+wire csr_wr;
+wire [`DATA_WIDTH-1:0] csr_data_out;
+wire [`DATA_WIDTH-1:0] csr_mtvec;
+wire [`DATA_WIDTH-1:0] csr_mepc;
 wire [`DATA_WIDTH-1:0] imm;
 wire [`WB_CNTRL-1:0] wb_cntrl;
 wire isa_slct;
 wire exception_type;
-wire reg_write;
-wire mem_write;
+wire reg_writeD;
+wire mem_writeD;
 wire exception;
 wire branch;
 wire jump;
 
+//EXECUTE wiring
+wire [`DATA_WIDTH-1:0] pc_4_outE;
+wire [`DATA_WIDTH-1:0] mem_write_data;
+wire [`ADDRESS_WIDTH-1:0] rs1_addr_outE;
+wire [`ADDRESS_WIDTH-1:0] rs2_addr_outE;
+wire [`ADDRESS_WIDTH-1:0] rdE;
+wire [`ADDRESS_WIDTH-1:0] rdM;
+wire  reg_writeM;
+wire mem_writeM;
+wire [`WB_CNTRL-1:0] wb_cntrlM;
+wire wb_controlZ;
+wire [`DATA_WIDTH-1:0] result_out;
+
+//MEM wiring
+wire reg_writeW;
+wire [`ADDRESS_WIDTH-1:0] rdM_hazard_out;
+wire reg_write_hazard;
+wire reg_write_out;
+wire [`WB_CNTRL-1:0] wb_control_out;
+wire [`ADDRESS_WIDTH-1:0] rdW;
+wire [`DATA_WIDTH-1:0] execute_result_out;
+wire [`DATA_WIDTH-1:0] mem_result_out;
+wire [`DATA_WIDTH-1:0] wb_result_out;
+wire [`DATA_WIDTH-1:0] pc_4_outM;
+
+//HAZARD UNIT
+wire [1:0] forwardA;
+wire [1:0] forwardB;
 
 HAZARD_UNIT HAZARD_UNIT(
     .rs1D(rs1_addr_out),
     .rs2D(rs2_addr_out),
-    .rs1E(),
-    .rs2E(),
-    .rdE(),
-    .rdM(),
-    .rdW(),
-    .reg_writeM(),
-    .reg_writeW(),
-    .result_srcE_zer(),
-    .forwardA(),
-    .forwardB(),
+    .rs1E(rs1_addr_outE),
+    .rs2E(rs2_addr_outE),
+    .rdE(rdE),
+    .rdM(rdM),
+    .rdW(rdW),
+    .reg_writeM(reg_writeM),
+    .reg_writeW(reg_writeW),
+    .result_srcE_zer(wb_controlZ),
+    .forwardA(forwardA),
+    .forwardB(forwardB),
     .pc_src(pc_src),
     .stallF(stallF),
     .stallD(stallD),
@@ -78,7 +110,7 @@ FETCH FETCH(
     .flushD(flushD),
     .exception(exception),
     .pc_src(pc_src),
-    .exception_handler_address(exception_handler_Address),
+    .exception_handler_address(csr_mtvec),
     .cache_input(comm_data_in),
     .branch_target(branch_target),
     .instruction_out(instruction_out),
@@ -90,7 +122,7 @@ DECODE DECODE(
    .clk(clk),
    .reset(reset),
    .flushE(flushE),
-   .we(we),
+   .we(reg_writeW),
    .w_addr(w_addr),
    .instruction(instruction_out),
    .pc(pc_out_fetch),
@@ -112,8 +144,8 @@ DECODE DECODE(
    .wb_cntrl(wb_cntrl),
    .isa_slct(isa_slct),
    .exception_type(exception_type),
-   .reg_write(reg_write),
-   .mem_write(mem_write),
+   .reg_write(reg_writeD),
+   .mem_write(mem_writeD),
    .exception(exception),
    .branch(branch),
    .jump(jump)
@@ -126,76 +158,76 @@ EXECUTE EXECUTE(
     .rd2(rd2),
     .pc(pc_out_decode),
     .pc_4(pc_4_out_decode),
-    .imm_ext(imm),
     .exe_result_in(),
     .wb_result_in(),
-    .imm(),
-    .rs1_addr_in(),
-    .rs2_addr_in(),
-    .rd_addr_d(),
-    .alu_control(),
-    .alu_imm_en(),
-    .mdu_control(),
-    .wb_controlD(),
-    .isa_slct(),
-    .reg_writeD(),
-    .mem_writeD(),
-    .branch(),
-    .jump(),
-    .forwardA(),
-    .forwardB(),
-    .pc_4_out(),
-    .mem_write_data(),
-    .rs1_addr_outE(),
-    .rs2_addr_outE(), 
-    .rdE(),
-    .rdM(),
-    .pc_target_out(),
-    .pc_src(),
-    .reg_writeM(),
-    .mem_writeM(),
-    .wb_controlM(),
-    .wb_contorlZ(), 
-    .result_out()
+    .imm(imm),
+    .rs1_addr_in(rs1_addr_out),
+    .rs2_addr_in(rs2_addr_out),
+    .rd_addr_d(rd_addr_d),
+    .alu_control(alu_control),
+    .alu_imm_en(alu_imm_en),
+    .mdu_control(mdu_control),
+    .wb_controlD(wb_cntrl),
+    .csr_data_in(csr_data_out),
+    .isa_slct(isa_slct),
+    .reg_writeD(reg_writeD),
+    .mem_writeD(mem_writeD),
+    .branch(branch),
+    .jump(jump),
+    .forwardA(forwardA),
+    .forwardB(forwardB),
+    .pc_4_out(pc_4_outE),
+    .mem_write_data(mem_write_data),
+    .rs1_addr_outE(rs1_addr_outE),
+    .rs2_addr_outE(rs2_addr_outE), 
+    .rdE(rdE),
+    .rdM(rdM),
+    .pc_target_out(branch_target),
+    .pc_src(pc_src),
+    .reg_writeM(reg_writeM),
+    .mem_writeM(mem_writeM),
+    .wb_controlM(wb_cntrlM),
+    .wb_contorlZ(wb_controlZ), 
+    .result_out(result_out)
 );
 
 MEM MEM(
     .clk(clk),
     .reset(reset),
-    .execute_result_in(),
-    .mem_write_data(),
-    .wb_controlM(),
-    .reg_write(),
-    .mem_write(),
-    .pc_4(),
-    .rdM(),
-    .rdM_hazard_out(),
-    .reg_write_hazard(),
-    .reg_write_out(),
-    .wb_control_out(),
-    .rdW(),
-    .execute_result_out(),
-    .mem_result_out(),
-    .wb_result_out(),
-    .pc_4_out()
+    .execute_result_in(result_out),
+    .mem_write_data(mem_write_data),
+    .wb_controlM(wb_cntrlM),
+    .reg_write(reg_writeM),
+    .mem_write(mem_writeM),
+    .pc_4(pc_4_outE),
+    .rdM(rdM),
+    .rdM_hazard_out(rdM_hazard_out),
+    .reg_write_hazard(reg_write_hazard),
+    .reg_write_out(reg_write_out),
+    .wb_control_out(wb_control_out),
+    .rdW(rdW),
+    .execute_result_out(execute_result_out),
+    .mem_result_out(mem_result_out),
+    .wb_result_out(wb_result_out),
+    .pc_4_out(pc_4_outM)
 );
 
 CSR CSR(
     .clk(clk),
     .reset(reset),
-    .pc(),
-    .instr(),
-    .csr_addr(),
-    .exception(),
-    .interrupt(),
-    .exception_code(),
-    .csr_data_in(),
-    .csr_cntrl(),
-    .csr_rd(),
-    .csr_wr(),
-    .csr_data_out(),
-    .csr_mtvec(),
-    .csr_mepc()
+    .pc(pc_out_decode),
+    .instr(instruction_out),
+    .csr_addr(csr_addr),
+    .exception(exception),
+    .interrupt(interrupt),
+    .exception_code(exception_type),
+    .csr_data_in(csr_data),
+    .csr_cntrl(csr_control),
+    .csr_rd(csr_rd),
+    .csr_wr(csr_wr),
+    .csr_data_out(csr_data_out),
+    .csr_mtvec(csr_mtvec),
+    .csr_mepc(csr_mepc)
 );
     
 endmodule
