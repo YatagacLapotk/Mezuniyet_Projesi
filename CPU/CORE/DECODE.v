@@ -241,7 +241,7 @@ always @ (*) begin
     jump_reg        = (opcode == 7'b1101111) 
                     | (opcode == 7'b1100111);
     
-    wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00: // Aklıma sadece default ve alu değeri ne zaman direkt alınır onu yazmak geldi sıralamaların hepsi harris ve harristeki pipeline tasarımından alınma. Devamı yapılabilir.
+    wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00:
                       (l_logic) ? 2'b01 :
                       ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
                       2'b00;  
