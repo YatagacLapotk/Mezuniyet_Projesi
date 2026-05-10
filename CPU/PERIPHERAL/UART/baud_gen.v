@@ -1,4 +1,7 @@
 
+`define CLK 100000000
+`define BAUD_RATE 115200
+
 module baudrate (
     input wire clk,
     input wire reset,
@@ -13,7 +16,7 @@ module baudrate (
     assign tx_enable = (tx_acc == 0) ? 1'b1 : 1'b0;
     assign rx_enable = (rx_acc == 0) ? 1'b1 : 1'b0; 
     
-    always @ (posedge clk) begin
+    always @ (posedge clk or posedge reset) begin
         if (reset) begin
             tx_acc <= 0;
             rx_acc <= 0;
@@ -28,5 +31,4 @@ module baudrate (
                 tx_acc <= tx_acc + 1;
         end
     end
-
 endmodule
