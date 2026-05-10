@@ -99,9 +99,7 @@ assign rdE = rd_addr_d;
 //isa selector aslında tek bit olması gerekiyor ben neden 2 bit koymuşum bilmiyorum.
 //jal ve jalr kendi içerisinde çalışıryor zaten bu buyruklarda belleğe bir şey yazılmadığı için direkt atlanması gerekiyor.
 always @ (*) begin
-    if (wb_controlD == 2'b11) // CSR instruction
-        result_out_reg = csr_data_in;
-    else if (isa_slct == 1'b0)
+    if (isa_slct == 1'b0)
         result_out_reg = alu_result_out;
     else
         result_out_reg = mdu_result_out;

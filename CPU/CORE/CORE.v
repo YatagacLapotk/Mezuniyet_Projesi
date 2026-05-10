@@ -22,8 +22,6 @@ wire [`DATA_WIDTH-1:0] pc_out_fetch;
 
 //DECODE wiring
 wire flushE;
-wire [`ADDRESS_WIDTH-1:0] w_addr;
-wire [`DATA_WIDTH-1:0] wd;
 //-----output------
 wire [`DATA_WIDTH-1:0] pc_out_decode;
 wire [`DATA_WIDTH-1:0] pc_4_out_decode;
@@ -78,6 +76,9 @@ wire [`DATA_WIDTH-1:0] mem_result_out;
 wire [`DATA_WIDTH-1:0] wb_result_out;
 wire [`DATA_WIDTH-1:0] pc_4_outM;
 
+//WB wiring
+wire [`DATA_WIDTH-1:0] wb_out;
+
 //HAZARD UNIT
 wire [1:0] forwardA;
 wire [1:0] forwardB;
@@ -123,11 +124,11 @@ DECODE DECODE(
    .reset(reset),
    .flushE(flushE),
    .we(reg_writeW),
-   .w_addr(w_addr),
+   .w_addr(rdW),
    .instruction(instruction_out),
    .pc(pc_out_fetch),
    .pc4(pc_4_out_fetch),
-   .wd(wd),
+   .wd(wb_out),
    .pc_out(pc_out_decode),
    .pc_4_out(pc_4_out_decode),
    .rd1(rd1),
@@ -158,8 +159,8 @@ EXECUTE EXECUTE(
     .rd2(rd2),
     .pc(pc_out_decode),
     .pc_4(pc_4_out_decode),
-    .exe_result_in(),
-    .wb_result_in(),
+    .exe_result_in(execute_result_out),
+    .wb_result_in(wb_out),
     .imm(imm),
     .rs1_addr_in(rs1_addr_out),
     .rs2_addr_in(rs2_addr_out),
@@ -211,6 +212,12 @@ MEM MEM(
     .wb_result_out(wb_result_out),
     .pc_4_out(pc_4_outM)
 );
+
+assign wb_out = (wb_cntrlM==2'b00) ? wb_result_out: 
+                (wb_cntrlM==2'b01) ? mem_result_out:
+                (wb_cntrlM==2'b10) ? pc_4_outM 
+                : 32'b0;
+
 
 CSR CSR(
     .clk(clk),
