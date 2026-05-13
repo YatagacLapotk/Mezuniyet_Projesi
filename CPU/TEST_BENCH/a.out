@@ -1,34 +1,445 @@
-#! /Users/yatagaclapotk/Programs/oss-cad-suite/bin/vvp
-:ivl_version "13.0 (devel)" "(s20250103-17-g30123f894)";
+#! /c/Source/iverilog-install/bin/vvp
+:ivl_version "12.0 (devel)" "(s20150603-1110-g18392a46)";
 :ivl_delay_selection "TYPICAL";
-:vpi_time_precision + 0;
-:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/system.vpi";
-:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_sys.vpi";
-:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
-:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
-:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x105223990 .scope module, "CORE_TB" "CORE_TB" 2 2;
- .timescale 0 0;
-v0x105223b10_0 .var "clk", 0 0;
-    .scope S_0x105223990;
-T_0 ;
+:vpi_time_precision - 12;
+:vpi_module "E:\Programlar\iverilog\lib\ivl\system.vpi";
+:vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_sys.vpi";
+:vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_textio.vpi";
+:vpi_module "E:\Programlar\iverilog\lib\ivl\v2005_math.vpi";
+:vpi_module "E:\Programlar\iverilog\lib\ivl\va_math.vpi";
+S_000001cbae02b050 .scope module, "sclk_gen_tb" "sclk_gen_tb" 2 32;
+ .timescale -9 -12;
+P_000001cbae02bdf0 .param/l "CLK_PERIOD" 1 2 40, +C4<00000000000000000000000000001010>;
+v000001cbae024a30_0 .var "clk", 0 0;
+v000001cbae024ad0_0 .var/i "cycle_count", 31 0;
+v000001cbae002d70_0 .var/i "fail_count", 31 0;
+v000001cbae098250_0 .var/i "pass_count", 31 0;
+v000001cbae0984d0_0 .var "reset", 0 0;
+v000001cbae098430_0 .net "sclk", 0 0, v000001cbae034740_0;  1 drivers
+v000001cbae098570_0 .var "sclk_enable", 0 0;
+E_000001cbae02c4f0 .event anyedge, v000001cbae034740_0;
+E_000001cbae02bf70 .event posedge, v000001cbadf7e4b0_0;
+S_000001cbae0334d0 .scope task, "check" "check" 2 68, 2 68 0, S_000001cbae02b050;
+ .timescale -9 -12;
+v000001cbadf7c530_0 .var "actual", 0 0;
+v000001cbae02fad0_0 .var "expected", 0 0;
+v000001cbae02de60_0 .var "msg", 255 0;
+TD_sclk_gen_tb.check ;
+    %load/vec4 v000001cbae02fad0_0;
+    %load/vec4 v000001cbadf7c530_0;
+    %cmp/e;
+    %jmp/0xz  T_0.0, 6;
+    %load/vec4 v000001cbae098250_0;
+    %addi 1, 0, 32;
+    %store/vec4 v000001cbae098250_0, 0, 32;
+    %vpi_call 2 75 "$display", "PASS: %s", v000001cbae02de60_0 {0 0 0};
+    %jmp T_0.1;
 T_0.0 ;
-    %delay 5, 0;
-    %load/vec4 v0x105223b10_0;
-    %inv;
-    %store/vec4 v0x105223b10_0, 0, 1;
-    %jmp T_0.0;
+    %load/vec4 v000001cbae002d70_0;
+    %addi 1, 0, 32;
+    %store/vec4 v000001cbae002d70_0, 0, 32;
+    %vpi_call 2 78 "$display", "FAIL: %s (expected %b, got %b)", v000001cbae02de60_0, v000001cbae02fad0_0, v000001cbadf7c530_0 {0 0 0};
 T_0.1 ;
     %end;
-    .thread T_0;
-    .scope S_0x105223990;
+S_000001cbae024800 .scope module, "uut" "sclk_gen" 2 54, 2 5 0, S_000001cbae02b050;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INPUT 1 "reset";
+    .port_info 2 /INPUT 1 "sclk_enable";
+    .port_info 3 /OUTPUT 1 "sclk";
+P_000001cbae02bff0 .param/l "COUNTER_SCLK" 1 2 11, +C4<00000000000000000000000110110010>;
+v000001cbadf7e4b0_0 .net "clk", 0 0, v000001cbae024a30_0;  1 drivers
+v000001cbae033660_0 .var "counter", 15 0;
+v000001cbae0346a0_0 .net "reset", 0 0, v000001cbae0984d0_0;  1 drivers
+v000001cbae034740_0 .var "sclk", 0 0;
+v000001cbae024990_0 .net "sclk_enable", 0 0, v000001cbae098570_0;  1 drivers
+E_000001cbae02b6b0 .event posedge, v000001cbae0346a0_0, v000001cbadf7e4b0_0;
+    .scope S_000001cbae024800;
 T_1 ;
-    %vpi_call 2 27 "$dumpfile", "CORE_TB.vcd" {0 0 0};
-    %vpi_call 2 28 "$dumpvars", 32'sb00000000000000000000000000000000, S_0x105223990 {0 0 0};
-    %end;
+    %wait E_000001cbae02b6b0;
+    %load/vec4 v000001cbae0346a0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.0, 8;
+    %pushi/vec4 0, 0, 16;
+    %assign/vec4 v000001cbae033660_0, 0;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v000001cbae034740_0, 0;
+    %jmp T_1.1;
+T_1.0 ;
+    %load/vec4 v000001cbae024990_0;
+    %nor/r;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.2, 8;
+    %pushi/vec4 0, 0, 16;
+    %assign/vec4 v000001cbae033660_0, 0;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v000001cbae034740_0, 0;
+    %jmp T_1.3;
+T_1.2 ;
+    %load/vec4 v000001cbae033660_0;
+    %pad/u 32;
+    %cmpi/e 433, 0, 32;
+    %jmp/0xz  T_1.4, 4;
+    %pushi/vec4 0, 0, 16;
+    %assign/vec4 v000001cbae033660_0, 0;
+    %load/vec4 v000001cbae034740_0;
+    %inv;
+    %assign/vec4 v000001cbae034740_0, 0;
+    %jmp T_1.5;
+T_1.4 ;
+    %load/vec4 v000001cbae033660_0;
+    %addi 1, 0, 16;
+    %assign/vec4 v000001cbae033660_0, 0;
+T_1.5 ;
+T_1.3 ;
+T_1.1 ;
+    %jmp T_1;
     .thread T_1;
+    .scope S_000001cbae02b050;
+T_2 ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae024a30_0, 0, 1;
+    %end;
+    .thread T_2;
+    .scope S_000001cbae02b050;
+T_3 ;
+    %delay 5000, 0;
+    %load/vec4 v000001cbae024a30_0;
+    %inv;
+    %store/vec4 v000001cbae024a30_0, 0, 1;
+    %jmp T_3;
+    .thread T_3;
+    .scope S_000001cbae02b050;
+T_4 ;
+    %vpi_call 2 87 "$dumpfile", "sclk_gen_tb.vcd" {0 0 0};
+    %vpi_call 2 88 "$dumpvars", 32'sb00000000000000000000000000000000, S_000001cbae02b050 {0 0 0};
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v000001cbae098250_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v000001cbae002d70_0, 0, 32;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae0984d0_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae098570_0, 0, 1;
+    %delay 20000, 0;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae0984d0_0, 0, 1;
+    %wait E_000001cbae02bf70;
+    %vpi_call 2 101 "$display", "=== Test 1: Reset state ===" {0 0 0};
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1935895659, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 543977335, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 543254132, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1701978226, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1702061428, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae033660_0;
+    %pad/u 1;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1668248942, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1952805408, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 2053468783, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 543254132, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1701978226, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1702061428, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %vpi_call 2 106 "$display", "=== Test 2: Enable toggle ===" {0 0 0};
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae098570_0, 0, 1;
+T_4.0 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %pushi/vec4 1, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %cmpi/ne 1, 0, 1;
+    %jmp/0xz T_4.1, 6;
+    %wait E_000001cbae02c4f0;
+    %jmp T_4.0;
+T_4.1 ;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 29539, 0, 32; draw_string_vec4
+    %pushi/vec4 1818959988, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1869047660, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1701060712, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1768384544, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1634104421, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1914725742, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1633840229, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+T_4.2 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %pushi/vec4 0, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %cmpi/ne 1, 0, 1;
+    %jmp/0xz T_4.3, 6;
+    %wait E_000001cbae02c4f0;
+    %jmp T_4.2;
+T_4.3 ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1935895659, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 544501607, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1735157092, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 543977335, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+T_4.4 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %pushi/vec4 1, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %cmpi/ne 1, 0, 1;
+    %jmp/0xz T_4.5, 6;
+    %wait E_000001cbae02c4f0;
+    %jmp T_4.4;
+T_4.5 ;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 7562092, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1797289071, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1734831205, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1679845481, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1734877281, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1734437230, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %vpi_call 2 120 "$display", "=== Test 3: Period measurement ===" {0 0 0};
+    %wait E_000001cbae02bf70;
+T_4.6 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %cmpi/ne 0, 0, 32;
+    %jmp/0xz T_4.7, 4;
+    %wait E_000001cbae02bf70;
+    %jmp T_4.6;
+T_4.7 ;
+    %wait E_000001cbae02bf70;
+    %vpi_call 2 124 "$display", "sclk low at time %0t", $time {0 0 0};
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v000001cbae024ad0_0, 0, 32;
+    %wait E_000001cbae02bf70;
+T_4.8 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %cmpi/ne 1, 0, 32;
+    %jmp/0xz T_4.9, 4;
+    %load/vec4 v000001cbae024ad0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v000001cbae024ad0_0, 0, 32;
+    %wait E_000001cbae02bf70;
+    %jmp T_4.8;
+T_4.9 ;
+    %vpi_call 2 132 "$display", "sclk high at time %0t", $time {0 0 0};
+    %vpi_call 2 133 "$display", "Half-period measured: %0d cycles (expected 434)", v000001cbae024ad0_0 {0 0 0};
+    %pushi/vec4 432, 0, 32;
+    %load/vec4 v000001cbae024ad0_0;
+    %cmp/s;
+    %flag_get/vec4 4;
+    %flag_get/vec4 5;
+    %or;
+    %load/vec4 v000001cbae024ad0_0;
+    %cmpi/s 436, 0, 32;
+    %flag_get/vec4 4;
+    %flag_get/vec4 5;
+    %or;
+    %and;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_4.10, 8;
+    %load/vec4 v000001cbae098250_0;
+    %addi 1, 0, 32;
+    %store/vec4 v000001cbae098250_0, 0, 32;
+    %vpi_call 2 136 "$display", "PASS: Half-period is %0d cycles (within tolerance)", v000001cbae024ad0_0 {0 0 0};
+    %jmp T_4.11;
+T_4.10 ;
+    %load/vec4 v000001cbae002d70_0;
+    %addi 1, 0, 32;
+    %store/vec4 v000001cbae002d70_0, 0, 32;
+    %vpi_call 2 139 "$display", "FAIL: Half-period is %0d cycles, expected 434", v000001cbae024ad0_0 {0 0 0};
+T_4.11 ;
+    %vpi_call 2 143 "$display", "=== Test 4: Mid-run disable ===" {0 0 0};
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae098570_0, 0, 1;
+    %wait E_000001cbae02bf70;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 3637919960, 0, 33;
+    %concati/vec4 3740156114, 0, 32;
+    %concati/vec4 3671771848, 0, 32;
+    %concati/vec4 3535988938, 0, 32;
+    %concati/vec4 3639754946, 0, 32;
+    %concati/vec4 3437808356, 0, 32;
+    %concati/vec4 2173806029, 0, 33;
+    %concati/vec4 560098405, 0, 30;
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae033660_0;
+    %pad/u 1;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 6516597, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1853121906, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 544367987, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1702109281, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1718904178, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 543451507, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1633840229, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %pushi/vec4 100, 0, 32;
+T_4.12 %dup/vec4;
+    %pushi/vec4 0, 0, 32;
+    %cmp/s;
+    %jmp/1xz T_4.13, 5;
+    %jmp/1 T_4.13, 4;
+    %pushi/vec4 1, 0, 32;
+    %sub;
+    %wait E_000001cbae02bf70;
+    %jmp T_4.12;
+T_4.13 ;
+    %pop/vec4 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 115, 0, 32; draw_string_vec4
+    %pushi/vec4 1668049696, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1937006969, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1931504751, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1998616424, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1768711456, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1684632417, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1651271012, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae098570_0, 0, 1;
+T_4.14 ;
+    %load/vec4 v000001cbae098430_0;
+    %pad/u 32;
+    %pushi/vec4 1, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %cmpi/ne 1, 0, 1;
+    %jmp/0xz T_4.15, 6;
+    %wait E_000001cbae02c4f0;
+    %jmp T_4.14;
+T_4.15 ;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v000001cbae02fad0_0, 0, 1;
+    %load/vec4 v000001cbae098430_0;
+    %store/vec4 v000001cbadf7c530_0, 0, 1;
+    %pushi/vec4 3838502634, 0, 33;
+    %concati/vec4 3670730304, 0, 32;
+    %concati/vec4 3906916046, 0, 32;
+    %concati/vec4 3637697742, 0, 32;
+    %concati/vec4 2173016529, 0, 33;
+    %concati/vec4 2512945609, 0, 32;
+    %concati/vec4 2494928313, 0, 32;
+    %concati/vec4 560098405, 0, 30;
+    %store/vec4 v000001cbae02de60_0, 0, 256;
+    %fork TD_sclk_gen_tb.check, S_000001cbae0334d0;
+    %join;
+    %vpi_call 2 159 "$display", "\012========================================" {0 0 0};
+    %vpi_call 2 160 "$display", "  sclk_gen_tb Results" {0 0 0};
+    %vpi_call 2 161 "$display", "  PASS: %0d", v000001cbae098250_0 {0 0 0};
+    %vpi_call 2 162 "$display", "  FAIL: %0d", v000001cbae002d70_0 {0 0 0};
+    %vpi_call 2 163 "$display", "========================================" {0 0 0};
+    %vpi_call 2 165 "$finish" {0 0 0};
+    %end;
+    .thread T_4;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
     "<interactive>";
-    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/TEST_BENCH/CORE_TB.v";
+    "e:\RV32IM\Mezuniyet_Projesi\CPU\TEST_BENCH\sclk_gen_tb.v";

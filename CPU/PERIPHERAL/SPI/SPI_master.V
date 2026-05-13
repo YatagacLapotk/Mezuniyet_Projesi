@@ -1,4 +1,6 @@
-module SPI (
+`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+
+module SPI_master (
     input wire clk,
     input wire reset,
     output reg mosi, // Master out slave in
@@ -9,7 +11,8 @@ module SPI (
     output reg busy,
     input wire sclk,  // Haberleşme için kullanılacak sclk. sclk_gen modülünden gelecek.
     output reg ss, // Slave select 
-    input wire enable // Harici enable sinyali
+    input wire enable, // Harici enable sinyali
+    input wire sclk_enable
 );
 
 
@@ -36,36 +39,43 @@ always @ (posedge clk or posedge reset) begin
         mosi_buffer <= 8'b0;
         bit_index <= 3'd0;
     end else begin
+        sclk_prev <= sclk;
         case (state) 
         IDLE: begin
             data_ready <= 1'b0;
             busy <= 1'b0;
             mosi <= 1'b0;
             ss <= 1'b1; 
-            if (enable) begin
+            if (enable && sclk_enable) begin
                 state <= START;
                 mosi_buffer <= data_out;
             end
         end
         START: begin
-            busy <= 1'b1; //İletişime başlandı
-            ss <= 1'b0; // LOW olduğnda haberleşme olr
-            mosi <= mosi_buffer[7]; // mode 0 SPI da sclk'nın ilk pozitif kenarında önce MSB çıkış hattına yerleştirilir.
-            state <= DATA; 
+            if (~sclk_enable) begin
+                state <= IDLE;
+            end else begin
+                busy <= 1'b1; //İletişime başlandı
+                ss <= 1'b0; // LOW olduğnda haberleşme olr
+                mosi <= mosi_buffer[7]; // mode 0 SPI da sclk'nın ilk pozitif kenarında önce MSB çıkış hattına yerleştirilir.
+                state <= DATA;
+            end 
         end
         DATA: begin
-            sclk_prev <= sclk;
-            if (sclk_prev == 0 && sclk == 1) begin //posedge algılama
+            if (~sclk_enable) begin
+                state <= IDLE;
+            end
+            else if (sclk_prev == 0 && sclk == 1) begin //posedge algılama
                 miso_buffer <= miso_buffer << 1; // bir sola kaydırdık
                 miso_buffer[0] <= miso; // LSB'ye slaveden gelen (miso inputu) biti yerleştirdik
             end else if (sclk_prev == 1 && sclk == 0) begin //negedge algılama
-                mosi_buffer <= mosi_buffer << 1; // bir sola kaydırdık
-                mosi <= mosi_buffer[6]; // MSB'yi mosi hattına koyduk
                 if (bit_index == 3'd7) begin
                     state <= STOP;
                     bit_index <= 0;
                 end else begin
                     bit_index <= bit_index + 1;
+                    mosi_buffer <= mosi_buffer << 1; // bir sola kaydırdık
+                    mosi <= mosi_buffer[6]; // MSB'yi mosi hattına koyduk
                 end 
             end
         end
