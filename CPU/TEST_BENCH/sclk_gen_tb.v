@@ -42,7 +42,7 @@ module sclk_gen_tb;
         begin
             cycle_count = 0;
             while (sclk_fast === expected_value) begin
-                @(posedge clk);
+                @(negedge clk);
                 cycle_count = cycle_count + 1;
             end
             if (cycle_count == expected_cycles) begin
@@ -116,6 +116,7 @@ module sclk_gen_tb;
         section("3. DISABLE DURING OPERATION");
         sclk_enable = 0;
         @(posedge clk);
+        #1;
         check_fast(0, "sclk returns to 0 immediately after disable");
 
         repeat(10) @(posedge clk);
@@ -182,7 +183,7 @@ module sclk_gen_tb;
         $display("  Testing uut_real with counter_sclk=434");
         reset = 1;
         sclk_enable = 0;
-        repeat(3) @(posedge clk);
+        repeat(3) @(negedge clk);
 
         if (sclk_real === 0) begin
             $display("  PASS: sclk_real low during reset");
@@ -205,7 +206,7 @@ module sclk_gen_tb;
 
         cycle_count = 0;
         while (sclk_real === 0) begin
-            @(posedge clk);
+            @(negedge clk);
             cycle_count = cycle_count + 1;
         end
         if (cycle_count == 434) begin
@@ -218,7 +219,7 @@ module sclk_gen_tb;
 
         cycle_count = 0;
         while (sclk_real === 1) begin
-            @(posedge clk);
+            @(negedge clk);
             cycle_count = cycle_count + 1;
         end
         if (cycle_count == 434) begin
@@ -231,7 +232,7 @@ module sclk_gen_tb;
 
         cycle_count = 0;
         while (sclk_real === 0) begin
-            @(posedge clk);
+            @(negedge clk);
             cycle_count = cycle_count + 1;
         end
         if (cycle_count == 434) begin
@@ -244,7 +245,7 @@ module sclk_gen_tb;
 
         cycle_count = 0;
         while (sclk_real === 1) begin
-            @(posedge clk);
+            @(negedge clk);
             cycle_count = cycle_count + 1;
         end
         if (cycle_count == 434) begin
