@@ -114,29 +114,31 @@ assign imms_i = {{20{instruction[31]}}, instruction[31:20]};
 assign imms_s = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
 assign imms_b = {{19{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 assign imms_u = {instruction[31:12], 12'b0};
-assign imms_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
 assign immu_i = {{20{1'b0}}, instruction[31:20]};
 assign immu_s = {{20{1'b0}}, instruction[31:25], instruction[11:7]};
 assign immu_b = {{19{1'b0}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 assign immu_u = {instruction[31:12], 12'b0};
-assign immu_j = {{12{1'b0}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
-assign un_sign = (instruction == `SLTIU) 
-| (instruction == `LHU)
-| (instruction == `LBU)
-| (instruction == `BLTU)
-| (instruction == `BGEU)
-| (instruction == `AUIPC)
-| (instruction == `LUI)
-| (instruction == `JAL);
-
+//Antigravity'e sordum düzelt dedi onları ayarladım o yüzden
+always@(*) begin
+    casez (insturction)
+        `SLTIU : un_sign =1; 
+        `LHU : un_sign =1; 
+        `LBU : un_sign =1; 
+        `BLTU : un_sign =1; 
+        `BGEU : un_sign =1; 
+        `AUIPC : un_sign =1; 
+        `LUI : un_sign =1;  
+        default : un_sign = 0;
+    endcase
+end
 
 assign imm_i = (un_sign==1'b0)?  imms_i : immu_i;
 assign imm_s = (un_sign==1'b0)?  imms_s : immu_s;
 assign imm_b = (un_sign==1'b0)?  imms_b : immu_b;
 assign imm_u = (un_sign==1'b0)?  imms_u : immu_u;
-assign imm_j = (un_sign==1'b0)?  imms_j : immu_j;
+assign imm_j = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
 
 //CSR imm control
 assign csr_imm = {27'b0,instruction[19:15]};
@@ -222,7 +224,7 @@ always @ (*) begin
 
     alu_imm_en_reg  = (opcode == i_logic)
                     | (opcode == s_logic)
-                    | (opcode == b_logic)
+                    | (opcode == l_logic)
                     | (opcode == 7'b0010111) 
                     | (opcode == 7'b0110111)
                     | (opcode == 7'b1101111)
@@ -244,7 +246,7 @@ always @ (*) begin
                     | (opcode == 7'b1100111);
     
     wb_cntrl_reg    = ((opcode==i_logic)| (opcode==r_logic)) ? 2'b00:
-                      (l_logic) ? 2'b01 :
+                      (opcode==l_logic) ? 2'b01 :
                       ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
                       2'b00;  
     
@@ -262,17 +264,17 @@ always @ (posedge clk) begin
     if (flushE) begin
         rd1 <= 32'b0;
         rd2 <= 32'b0;
-        rd_addr_d_reg <= 0;
-        imm_reg <= 32'b0;
-        alu_control_reg <= 4'b0;
-        alu_imm_en_reg <= 1'b0;
-        mdu_control_reg <= 3'b0;
-        wb_cntrl_reg <= 0;
-        isa_slct_reg <= 0;
-        reg_write_reg <= 1'b0;
-        mem_write_reg <= 1'b0;
-        branch_reg <= 1'b0;
-        jump_reg <= 1'b0;
+        rd_addr_d <= 0;
+        imm <= 32'b0;
+        alu_control <= 4'b0;
+        alu_imm_en <= 1'b0;
+        mdu_control <= 3'b0;
+        wb_cntrl <= 0;
+        isa_slct <= 0;
+        reg_write <= 1'b0;
+        mem_write <= 1'b0;
+        branch <= 1'b0;
+        jump <= 1'b0;
         pc_out <= 0;
         rs1_addr_out <= 0;
         rs2_addr_out <= 0;

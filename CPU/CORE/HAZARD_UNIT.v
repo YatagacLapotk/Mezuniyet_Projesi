@@ -23,19 +23,19 @@ wire lwstall;
 //Forwarding 
 //A
 always @(*) begin
-    if(((rs1E==rdM) & (reg_writeM))&(rs1E!=0))  forwardA = 2'b01;
-    if(((rs1E==rdW) & (reg_writeW))&(rs1D!=0))  forwardA = 2'b10;
+    if((rs1E==rdM) && reg_writeM && (rs1E!=0))  forwardA = 2'b01;
+    if((rs1E==rdW) && reg_writeW && (rs1E!=0))  forwardA = 2'b10;
     else                                        forwardA = 2'b00;
 end
 //B
 always @(*) begin
-    if(((rs2E==rdM) & (reg_writeM))&(rs2E!=0))  forwardB = 2'b01;
-    if(((rs2E==rdW) & (reg_writeW))&(rs2D!=0))  forwardB = 2'b10;
+    if((rs2E==rdM) && reg_writeM && (rs2E!=0))  forwardB = 2'b01;
+    if((rs2E==rdW) && reg_writeW && (rs2E!=0))  forwardB = 2'b10;
     else                                        forwardB = 2'b00;
 end
 
 //Stalling
-assign lwstall = result_srcE_zer & ((rs1D==rdE)|(rs2E==rdE));
+assign lwstall = result_srcE_zer & ((rs1D==rdE)|(rs2D==rdE));
 assign stallD = lwstall; 
 assign stallF = lwstall; 
 

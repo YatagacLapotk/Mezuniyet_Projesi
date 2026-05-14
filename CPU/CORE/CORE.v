@@ -65,10 +65,9 @@ wire wb_controlZ;
 wire [`DATA_WIDTH-1:0] result_out;
 
 //MEM wiring
-wire reg_writeW;
 wire [`ADDRESS_WIDTH-1:0] rdM_hazard_out;
 wire reg_write_hazard;
-wire reg_write_out;
+wire reg_write_en;
 wire [`WB_CNTRL-1:0] wb_control_out;
 wire [`ADDRESS_WIDTH-1:0] rdW;
 wire [`DATA_WIDTH-1:0] execute_result_out;
@@ -92,7 +91,7 @@ HAZARD_UNIT HAZARD_UNIT(
     .rdM(rdM),
     .rdW(rdW),
     .reg_writeM(reg_writeM),
-    .reg_writeW(reg_writeW),
+    .reg_writeW(reg_write_hazard),
     .result_srcE_zer(wb_controlZ),
     .forwardA(forwardA),
     .forwardB(forwardB),
@@ -123,7 +122,7 @@ DECODE DECODE(
    .clk(clk),
    .reset(reset),
    .flushE(flushE),
-   .we(reg_writeW),
+   .we(reg_write_en),
    .w_addr(rdW),
    .instruction(instruction_out),
    .pc(pc_out_fetch),
@@ -204,7 +203,7 @@ MEM MEM(
     .rdM(rdM),
     .rdM_hazard_out(rdM_hazard_out),
     .reg_write_hazard(reg_write_hazard),
-    .reg_write_out(reg_write_out),
+    .reg_write_en(reg_write_en),
     .wb_control_out(wb_control_out),
     .rdW(rdW),
     .execute_result_out(execute_result_out),

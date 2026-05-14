@@ -92,8 +92,7 @@ assign mdu_src_B = (forwardB==2'b00) ? (rd2):
 //Immidiate işlemleri için kaynak atama.
 assign alu_src_B_imm = (alu_imm_en==1'b1) ? (imm) : (alu_src_B);
 
-assign zero = ~(|alu_result_out);//zero bitinin ataması
-assign pc_src = (jump|(zero&branch));//pc giriş değeri ataması
+assign pc_src = (jump|(alu_result_out[0]&branch));//pc giriş değeri ataması
 assign rdE = rd_addr_d;
 
 //isa selector aslında tek bit olması gerekiyor ben neden 2 bit koymuşum bilmiyorum.
@@ -105,7 +104,7 @@ always @ (*) begin
         result_out_reg = mdu_result_out;
 end
 
-assign wb_contorlZ = wb_contorlD[0]; //harris kitabından aldım. Hazard unit için bir sinyal.
+assign wb_contorlZ = wb_controlD[0]; //harris kitabından aldım. Hazard unit için bir sinyal.
 
 always @(posedge clk) begin
     if(reset)begin

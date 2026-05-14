@@ -22,7 +22,7 @@ always @(posedge clk) begin
         end
     end 
     else if (we)begin
-        d_cache[w_addr] = data_in;
+        d_cache[w_addr[31:2]] = data_in;
     end
 end
 

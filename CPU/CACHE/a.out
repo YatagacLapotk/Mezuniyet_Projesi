@@ -7,87 +7,83 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x105a78b20 .scope module, "I_CACHE" "I_CACHE" 2 2;
+S_0x1010e0bc0 .scope module, "D_CACHE" "D_CACHE" 2 2;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
     .port_info 2 /INPUT 1 "we";
-    .port_info 3 /INPUT 32 "inst_in";
+    .port_info 3 /INPUT 32 "data_in";
     .port_info 4 /INPUT 32 "w_addr";
     .port_info 5 /INPUT 32 "r_addr";
-    .port_info 6 /OUTPUT 32 "inst_out";
-L_0x105a7fb90 .functor BUFZ 32, L_0x105a7faf0, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-v0x105a7f4d0_0 .net *"_ivl_0", 31 0, L_0x105a7faf0;  1 drivers
-o0x741420070 .functor BUFZ 1, c4<z>; HiZ drive
-v0x105a7f580_0 .net "clk", 0 0, o0x741420070;  0 drivers
-v0x105a7f630 .array "i_cache", 2048 0, 31 0;
-o0x7414200a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x105a7f6f0_0 .net "inst_in", 31 0, o0x7414200a0;  0 drivers
-v0x105a7f790_0 .net "inst_out", 31 0, L_0x105a7fb90;  1 drivers
-o0x741420100 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x105a7f870_0 .net "r_addr", 31 0, o0x741420100;  0 drivers
-o0x741420130 .functor BUFZ 1, c4<z>; HiZ drive
-v0x105a7f910_0 .net "reset", 0 0, o0x741420130;  0 drivers
-o0x741420160 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x105a7f9b0_0 .net "w_addr", 31 0, o0x741420160;  0 drivers
-o0x741420190 .functor BUFZ 1, c4<z>; HiZ drive
-v0x105a7fa50_0 .net "we", 0 0, o0x741420190;  0 drivers
-E_0x74101c180 .event posedge, v0x105a7f580_0;
-L_0x105a7faf0 .array/port v0x105a7f630, o0x741420100;
-S_0x105a7f210 .scope begin, "$ivl_for_loop0" "$ivl_for_loop0" 2 25, 2 25 0, S_0x105a78b20;
+    .port_info 6 /OUTPUT 32 "data_out";
+L_0x1010e81e0 .functor BUFZ 32, L_0x1010e8140, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
+v0x1010e7b20_0 .net *"_ivl_0", 31 0, L_0x1010e8140;  1 drivers
+o0xacd420070 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1010e7bd0_0 .net "clk", 0 0, o0xacd420070;  0 drivers
+v0x1010e7c80 .array "d_cache", 2048 0, 31 0;
+o0xacd4200a0 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x1010e7d40_0 .net "data_in", 31 0, o0xacd4200a0;  0 drivers
+v0x1010e7de0_0 .net "data_out", 31 0, L_0x1010e81e0;  1 drivers
+o0xacd420100 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x1010e7e80_0 .net "r_addr", 31 0, o0xacd420100;  0 drivers
+o0xacd420130 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1010e7f20_0 .net "reset", 0 0, o0xacd420130;  0 drivers
+o0xacd420160 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x1010e7fc0_0 .net "w_addr", 31 0, o0xacd420160;  0 drivers
+o0xacd420190 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1010e8060_0 .net "we", 0 0, o0xacd420190;  0 drivers
+E_0x1010e21d0 .event posedge, v0x1010e7bd0_0;
+L_0x1010e8140 .array/port v0x1010e7c80, o0xacd420100;
+S_0x1010e78e0 .scope begin, "$ivl_for_loop0" "$ivl_for_loop0" 2 20, 2 20 0, S_0x1010e0bc0;
  .timescale 0 0;
-v0x105a7f390_0 .var/i "i", 31 0;
-    .scope S_0x105a78b20;
+v0x1010e7a60_0 .var/i "i", 31 0;
+    .scope S_0x1010e0bc0;
 T_0 ;
-    %pushi/vec4 0, 0, 32;
-    %ix/load 4, 0, 0;
-    %flag_set/imm 4, 0;
-    %store/vec4a v0x105a7f630, 4, 0;
-    %end;
-    .thread T_0;
-    .scope S_0x105a78b20;
-T_1 ;
-    %wait E_0x74101c180;
-    %load/vec4 v0x105a7f910_0;
+    %wait E_0x1010e21d0;
+    %load/vec4 v0x1010e7f20_0;
     %flag_set/vec4 8;
-    %jmp/0xz  T_1.0, 8;
-    %fork t_1, S_0x105a7f210;
+    %jmp/0xz  T_0.0, 8;
+    %fork t_1, S_0x1010e78e0;
     %jmp t_0;
-    .scope S_0x105a7f210;
+    .scope S_0x1010e78e0;
 t_1 ;
     %pushi/vec4 0, 0, 32;
-    %store/vec4 v0x105a7f390_0, 0, 32;
-T_1.2 ; Top of for-loop
-    %load/vec4 v0x105a7f390_0;
+    %store/vec4 v0x1010e7a60_0, 0, 32;
+T_0.2 ; Top of for-loop
+    %load/vec4 v0x1010e7a60_0;
     %cmpi/s 2048, 0, 32;
-	  %jmp/0xz T_1.3, 5;
+	  %jmp/0xz T_0.3, 5;
     %pushi/vec4 0, 0, 32;
-    %ix/getv/s 3, v0x105a7f390_0;
+    %ix/getv/s 3, v0x1010e7a60_0;
     %ix/load 4, 0, 0; Constant delay
-    %assign/vec4/a/d v0x105a7f630, 0, 4;
-T_1.4 ; for-loop step statement
-    %load/vec4 v0x105a7f390_0;
-    %addi 1, 0, 32;
-    %store/vec4 v0x105a7f390_0, 0, 32;
-    %jmp T_1.2;
-T_1.3 ; for-loop exit label
+    %assign/vec4/a/d v0x1010e7c80, 0, 4;
+T_0.4 ; for-loop step statement
+    ; show_stmt_assign_vector: Get l-value for compressed += operand
+    %load/vec4 v0x1010e7a60_0;
+    %pushi/vec4 1, 0, 32;
+    %add;
+    %store/vec4 v0x1010e7a60_0, 0, 32;
+    %jmp T_0.2;
+T_0.3 ; for-loop exit label
     %end;
-    .scope S_0x105a78b20;
+    .scope S_0x1010e0bc0;
 t_0 %join;
-    %jmp T_1.1;
-T_1.0 ;
-    %load/vec4 v0x105a7fa50_0;
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x1010e8060_0;
     %flag_set/vec4 8;
-    %jmp/0xz  T_1.5, 8;
-    %load/vec4 v0x105a7f6f0_0;
-    %ix/getv 4, v0x105a7f9b0_0;
-    %store/vec4a v0x105a7f630, 4, 0;
-T_1.5 ;
-T_1.1 ;
-    %jmp T_1;
-    .thread T_1;
+    %jmp/0xz  T_0.5, 8;
+    %load/vec4 v0x1010e7d40_0;
+    %load/vec4 v0x1010e7fc0_0;
+    %parti/s 30, 2, 3;
+    %ix/vec4 4;
+    %store/vec4a v0x1010e7c80, 4, 0;
+T_0.5 ;
+T_0.1 ;
+    %jmp T_0;
+    .thread T_0;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
     "<interactive>";
-    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/CACHE/I_CACHE.v";
+    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/CACHE/D_CACHE.v";
