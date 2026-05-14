@@ -1,0 +1,12 @@
+ilk olarak normal konumda olmalı
+yani data beklemesi gerekiyor
+data spi ya da uarttan gelebilir
+ikisinden de 8 bit alacağız
+bu sebeple sadece datanın gelmesi bize yeterli olur 
+1. stall state : burade datayı bekliyoruz.
+2. data state : burada gelen datayı 8 bitlik parçalaarı birleştirerek 32 bite çeviriyoruz. 
+3. mem_load : burada topladığımız 32 bitlik buyruğu i_cache'e yazıyoruz. 
+4. pc_transfer: eğer yeni bir data gelirse süreci data_state'e getiriyoruz.
+                gelmemişse pc değerini uart adresiyle değiştiriyoruz pc adresini de saklıyoruz.
+                uarta gelen buyruk sayısı kadar bu state'te bekliyoruz. 
+                işlemler bitince cpu'yu kendi haline bırakıyoruz. Yani stall_state'e dönüş.

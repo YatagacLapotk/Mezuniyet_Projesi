@@ -12,7 +12,7 @@ module MEM (
     input [`ADDRESS_WIDTH-1:0] rdM,
     output [`ADDRESS_WIDTH-1:0] rdM_hazard_out,
     output reg_write_hazard,
-    output reg reg_write_out,
+    output reg reg_write_en,
     output reg [`WB_CNTRL-1:0] wb_control_out,
     output reg [`ADDRESS_WIDTH-1:0] rdW,
     output [`DATA_WIDTH-1:0] execute_result_out,
@@ -37,14 +37,14 @@ D_CACHE D_CACHE (
 
 always @(posedge clk) begin
     if(reset) begin
-        reg_write_out <= 0;
+        reg_write_en <= 0;
         wb_control_out <= 0;
         rdW <= 0;
         mem_result_out <= 0;
         wb_result_out <= 0;
         pc_4_out <= 0;
     end else begin
-        reg_write_out <= reg_write;
+        reg_write_en <= reg_write;
         wb_control_out <= wb_controlM;
         rdW <= rdM;
         mem_result_out <= mem_result_out_temp;

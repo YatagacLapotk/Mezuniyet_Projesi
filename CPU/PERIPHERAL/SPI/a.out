@@ -1,7 +1,8 @@
-#! /c/Source/iverilog-install/bin/vvp
-:ivl_version "12.0 (devel)" "(s20150603-1110-g18392a46)";
+#! /Users/yatagaclapotk/Programs/oss-cad-suite/bin/vvp
+:ivl_version "13.0 (devel)" "(s20250103-17-g30123f894)";
 :ivl_delay_selection "TYPICAL";
 :vpi_time_precision + 0;
+<<<<<<< HEAD
 :vpi_module "E:\Programlar\iverilog\lib\ivl\system.vpi";
 :vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_sys.vpi";
 :vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_textio.vpi";
@@ -126,6 +127,71 @@ T_1.2 ;
     %assign/vec4 v000002475a2d3960_0, 0;
 T_1.7 ;
     %jmp T_1.6;
+=======
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/system.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
+S_0x1005adac0 .scope module, "sclk_gen" "sclk_gen" 2 4;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INPUT 1 "reset";
+    .port_info 2 /INPUT 1 "sclk_enable";
+    .port_info 3 /OUTPUT 1 "sclk";
+P_0x1005a9130 .param/l "counter_sclk" 0 2 12, +C4<00000000000000000000000110110010>;
+o0xbdf420010 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1005a8be0_0 .net "clk", 0 0, o0xbdf420010;  0 drivers
+v0x1005adcd0_0 .var "counter", 9 0;
+o0xbdf420070 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1005add80_0 .net "reset", 0 0, o0xbdf420070;  0 drivers
+v0x1005ade20_0 .var "sclk", 0 0;
+o0xbdf4200d0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1005adec0_0 .net "sclk_enable", 0 0, o0xbdf4200d0;  0 drivers
+E_0x1005a9550 .event posedge, v0x1005add80_0, v0x1005a8be0_0;
+    .scope S_0x1005adac0;
+T_0 ;
+    %pushi/vec4 0, 0, 10;
+    %store/vec4 v0x1005adcd0_0, 0, 10;
+    %end;
+    .thread T_0;
+    .scope S_0x1005adac0;
+T_1 ;
+    %wait E_0x1005a9550;
+    %load/vec4 v0x1005add80_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.0, 8;
+    %pushi/vec4 0, 0, 10;
+    %assign/vec4 v0x1005adcd0_0, 0;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x1005ade20_0, 0;
+    %jmp T_1.1;
+T_1.0 ;
+    %load/vec4 v0x1005adec0_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.2, 8;
+    %load/vec4 v0x1005adcd0_0;
+    %pad/u 32;
+    %cmpi/e 433, 0, 32;
+    %jmp/0xz  T_1.4, 4;
+    %pushi/vec4 0, 0, 10;
+    %assign/vec4 v0x1005adcd0_0, 0;
+    %load/vec4 v0x1005ade20_0;
+    %inv;
+    %assign/vec4 v0x1005ade20_0, 0;
+    %jmp T_1.5;
+T_1.4 ;
+    %load/vec4 v0x1005adcd0_0;
+    %addi 1, 0, 10;
+    %assign/vec4 v0x1005adcd0_0, 0;
+T_1.5 ;
+    %jmp T_1.3;
+T_1.2 ;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x1005ade20_0, 0;
+    %pushi/vec4 0, 0, 10;
+    %assign/vec4 v0x1005adcd0_0, 0;
+>>>>>>> 444ab9a5027b768973833f17068640771120a905
 T_1.3 ;
     %load/vec4 v000002475a2d3b40_0;
     %inv;
@@ -239,4 +305,8 @@ T_1.1 ;
 :file_names 3;
     "N/A";
     "<interactive>";
+<<<<<<< HEAD
     "e:\RV32IM\Mezuniyet_Projesi\CPU\PERIPHERAL\SPI\SPI_master.V";
+=======
+    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/PERIPHERAL/SPI/sclk_gen.v";
+>>>>>>> 444ab9a5027b768973833f17068640771120a905
