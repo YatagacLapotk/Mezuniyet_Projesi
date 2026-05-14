@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "sabit_veriler.vh"
 
 module SPI_master_tb();
 

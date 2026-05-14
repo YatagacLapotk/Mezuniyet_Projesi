@@ -1,5 +1,5 @@
 
-`include "sabit_veriler.vh"
+`include "CPU/SABIT_VERILER/sabit_veriler.vh"
 
 module REG_FILE (
     input           clk,
