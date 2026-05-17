@@ -1,4 +1,4 @@
-`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "sabit_veriler.vh"
 
 module SPI_master (
     input wire clk,
