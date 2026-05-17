@@ -34,7 +34,4 @@ end
 //assign inst_out = (|r_addr) ? i_cache[r_addr] : 32'b0;
 assign inst_out = i_cache[r_addr[31:2]];
 
-
-
-    
 endmodule
