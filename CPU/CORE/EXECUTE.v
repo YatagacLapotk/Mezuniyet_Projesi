@@ -25,6 +25,7 @@ module EXECUTE (
     input jump,
     input [1:0] forwardA,
     input [1:0] forwardB,
+    input [`FUNCT3_WIDTH-1:0] funct3_in,
     output reg [`DATA_WIDTH-1:0] pc_4_out,
     output reg [`DATA_WIDTH-1:0] mem_write_data,
     output [`ADDRESS_WIDTH-1:0] rs1_addr_outE, // Bu çıkışlara atama yapılmamış teset yaparken hata verdi oradan gördüm. rs1 ve rs2'leri atadım kotrol edersin.
@@ -37,6 +38,7 @@ module EXECUTE (
     output reg mem_writeM,
     output reg [`WB_CNTRL-1:0] wb_controlM,
     output wb_contorlZ,
+    output reg [`FUNCT3_WIDTH-1:0] funct3_out,
     output reg [`DATA_WIDTH-1:0]result_out
 );
 
@@ -115,6 +117,7 @@ always @(posedge clk) begin
         mem_writeM <= 0;
         wb_controlM <= 0;
         pc_4_out<= 0;
+        funct3_out <= 0;
     end
     else begin
         result_out <= result_out_reg; 
@@ -124,6 +127,7 @@ always @(posedge clk) begin
         mem_writeM <= mem_writeD;
         wb_controlM <= wb_controlD;
         pc_4_out <= pc_4;
+        funct3_out <= funct3_in;
     end
 end
 

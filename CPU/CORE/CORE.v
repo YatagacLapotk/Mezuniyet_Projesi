@@ -43,6 +43,7 @@ wire [`DATA_WIDTH-1:0] csr_mtvec;
 wire [`DATA_WIDTH-1:0] csr_mepc;
 wire [`DATA_WIDTH-1:0] imm;
 wire [`WB_CNTRL-1:0] wb_cntrl;
+wire [`FUNCT3_WIDTH-1:0] funct3_out_decode;
 wire isa_slct;
 wire exception_type;
 wire reg_writeD;
@@ -63,6 +64,7 @@ wire mem_writeM;
 wire [`WB_CNTRL-1:0] wb_cntrlM;
 wire wb_controlZ;
 wire [`DATA_WIDTH-1:0] result_out;
+wire [`FUNCT3_WIDTH-1:0] funct3_out_execute;
 
 //MEM wiring
 wire [`ADDRESS_WIDTH-1:0] rdM_hazard_out;
@@ -143,6 +145,7 @@ DECODE DECODE(
    .imm(imm),
    .wb_cntrl(wb_cntrl),
    .isa_slct(isa_slct),
+   .funct3_out(funct3_out_decode),
    .exception_type(exception_type),
    .reg_write(reg_writeD),
    .mem_write(mem_writeD),
@@ -172,6 +175,7 @@ EXECUTE EXECUTE(
     .isa_slct(isa_slct),
     .reg_writeD(reg_writeD),
     .mem_writeD(mem_writeD),
+    .funct3_in(funct3_out_decode),
     .branch(branch),
     .jump(jump),
     .forwardA(forwardA),
@@ -188,7 +192,8 @@ EXECUTE EXECUTE(
     .mem_writeM(mem_writeM),
     .wb_controlM(wb_cntrlM),
     .wb_contorlZ(wb_controlZ), 
-    .result_out(result_out)
+    .result_out(result_out),
+    .funct3_out(funct3_out_execute)
 );
 
 MEM MEM(
@@ -201,6 +206,7 @@ MEM MEM(
     .mem_write(mem_writeM),
     .pc_4(pc_4_outE),
     .rdM(rdM),
+    .funct3_in(funct3_out_execute),
     .rdM_hazard_out(rdM_hazard_out),
     .reg_write_hazard(reg_write_hazard),
     .reg_write_en(reg_write_en),

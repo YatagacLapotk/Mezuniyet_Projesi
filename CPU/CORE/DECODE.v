@@ -14,6 +14,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] pc_4_out,
     output reg [`DATA_WIDTH-1:0] rd1,
     output reg [`DATA_WIDTH-1:0] rd2,
+    output reg [`FUNCT3_WIDTH-1:0] funct3_out,
     output reg [`ADDRESS_WIDTH-1:0] rs1_addr_out,
     output reg [`ADDRESS_WIDTH-1:0] rs2_addr_out,
     output reg [`ADDRESS_WIDTH-1:0] rd_addr_d,
@@ -279,6 +280,7 @@ always @ (posedge clk) begin
         rs1_addr_out <= 0;
         rs2_addr_out <= 0;
         pc_4_out <= 0;
+        funct3_out <= 0;
     end
     else begin
         rd1 <= rd1_wire;
@@ -298,6 +300,7 @@ always @ (posedge clk) begin
         rs1_addr_out <= rs1_addr;
         rs2_addr_out <= rs2_addr;
         pc_4_out <= pc_4;
+        funct3_out <= funct3;
     end
 end
 
