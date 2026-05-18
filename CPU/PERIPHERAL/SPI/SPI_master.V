@@ -12,7 +12,8 @@ module SPI_master (
     input wire sclk,  // Haberleşme için kullanılacak sclk. sclk_gen modülünden gelecek.
     output reg ss, // Slave select 
     input wire enable, // Harici enable sinyali
-    input wire sclk_enable
+    input wire sclk_enable,
+    input wire clear
 );
 
 
@@ -42,7 +43,7 @@ always @ (posedge clk or posedge reset) begin
         sclk_prev <= sclk;
         case (state) 
         IDLE: begin
-            data_ready <= 1'b0;
+            if (clear) data_ready <= 1'b0;
             busy <= 1'b0;
             mosi <= 1'b0;
             ss <= 1'b1; 

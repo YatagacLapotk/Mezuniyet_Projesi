@@ -2,6 +2,7 @@
 `define sabit_veriler_VH
 
 `define FIRST_ADDR 32'h00000000
+`define UART_ADDR 32'h00000600
 
 `define ADDRESS_WIDTH       5
 `define DATA_WIDTH         32

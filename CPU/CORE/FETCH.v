@@ -11,6 +11,11 @@ module FETCH (
     input [`DATA_WIDTH-1:0] exception_handler_address,                          
     input [`DATA_WIDTH-1:0] cache_input,  
     input [`DATA_WIDTH-1:0] branch_target,
+    // Program loader interface
+    input loader_we,
+    input [`DATA_WIDTH-1:0] loader_addr,
+    input [`DATA_WIDTH-1:0] loader_data,
+    input cpu_halt,
     output reg [`DATA_WIDTH-1:0] instruction_out, 
     output reg [`DATA_WIDTH-1:0] pc_4_out, 
     output reg [`DATA_WIDTH-1:0] pc_out 
@@ -21,13 +26,16 @@ module FETCH (
     wire [31:0] instruction_out_reg;
     reg [31:0] pc_out_reg;
 
-    
+    wire cache_we    = loader_we | exception;
+    wire [`DATA_WIDTH-1:0] cache_w_addr = (loader_we) ? loader_addr : exception_handler_address;
+    wire [`DATA_WIDTH-1:0] cache_w_data = (loader_we) ? loader_data : cache_input;
+
     I_CACHE I_CACHE(
         .clk(clk),
         .reset(reset),
-        .we(exception),
-        .inst_in(cache_input),
-        .w_addr(exception_handler_address),
+        .we(cache_we),
+        .inst_in(cache_w_data),
+        .w_addr(cache_w_addr),
         .r_addr(pc_out_reg),
         .inst_out(instruction_out_reg)
     );
