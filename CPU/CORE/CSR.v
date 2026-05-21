@@ -59,6 +59,7 @@ always @(posedge clk) begin
                     `MSTATUS: mstatus <= csr_data_in;
                     `MIE:     mie     <= csr_data_in;
                     `MTVEC:   mtvec   <= csr_data_in;
+                    `MCAUSE:  mcause  <= csr_data_in;
                     `MTVAL:   mtval   <= csr_data_in;
                 endcase
             end
@@ -67,6 +68,7 @@ always @(posedge clk) begin
                     `MSTATUS: mstatus <= mstatus | csr_data_in;
                     `MIE:     mie     <= mie     | csr_data_in;
                     `MTVEC:   mtvec   <= mtvec   | csr_data_in;
+                    `MCAUSE:  mcause  <= mcause  | csr_data_in;
                     `MTVAL:   mtval   <= mtval   | csr_data_in;
                 endcase
             end
@@ -75,6 +77,7 @@ always @(posedge clk) begin
                     `MSTATUS: mstatus <= mstatus & ~csr_data_in;
                     `MIE:     mie     <= mie     & ~csr_data_in;
                     `MTVEC:   mtvec   <= mtvec   & ~csr_data_in;
+                    `MCAUSE:  mcause  <= mcause  & ~csr_data_in;
                     `MTVAL:   mtval   <= mtval   & ~csr_data_in;
                 endcase
             end
@@ -113,6 +116,7 @@ always @(posedge clk) begin
 end
 
 assign csr_mtvec = {mtvec[31:2], 2'b00};
+
 assign csr_data_out = (csr_rd) ? 
     (csr_addr == `MSTATUS) ? mstatus :
     (csr_addr == `MIE) ? mie :

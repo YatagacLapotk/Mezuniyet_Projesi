@@ -29,6 +29,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] imm,
     output reg [`WB_CNTRL-1:0] wb_cntrl,
     output reg isa_slct,
+    output reg csr_read_en,
     output reg [7:0] exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
     output reg reg_write,
     output reg mem_write,
@@ -239,7 +240,8 @@ always @ (*) begin
                     | (opcode == 7'b0010111) 
                     | (opcode == 7'b0110111) 
                     | (opcode == 7'b1101111) 
-                    | (opcode == 7'b1100111); 
+                    | (opcode == 7'b1100111)
+                    | ((opcode == sys_logic) & (funct3 != 3'b000)); 
 
     mem_write_reg   = (opcode == s_logic);
 
@@ -256,10 +258,10 @@ always @ (*) begin
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]);
     exception       = (opcode==sys_logic) & (funct3==3'b000);
     exception_type  = {7'b0,{instruction[20] & exception}};
-    csr_data        = csr_imm_en ? csr_imm : rd1;
+    csr_data        = csr_imm_en ? csr_imm : rd1_wire;
     csr_addr        = instruction[31:20];
-    csr_rd          = (opcode==sys_logic) & funct3[1];
-    csr_wr          = (opcode==sys_logic) & funct3[0];
+    csr_rd          = (opcode == sys_logic) & (funct3 != 3'b000);
+    csr_wr          = (opcode == sys_logic) & (funct3 != 3'b000) & ~((funct3[1] == 1'b1) & (rs1_addr == 5'b0));
 end
 
 //harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. //Tamamdır.
@@ -274,6 +276,7 @@ always @ (posedge clk) begin
         mdu_control <= 3'b0;
         wb_cntrl <= 0;
         isa_slct <= 0;
+        csr_read_en <= 1'b0;
         reg_write <= 1'b0;
         mem_write <= 1'b0;
         branch <= 1'b0;
@@ -294,6 +297,7 @@ always @ (posedge clk) begin
         mdu_control <= mdu_control_reg;
         wb_cntrl <= wb_cntrl_reg;
         isa_slct <= isa_slct_reg;
+        csr_read_en <= csr_rd;
         reg_write <= reg_write_reg;
         mem_write <= mem_write_reg;
         branch <= branch_reg;

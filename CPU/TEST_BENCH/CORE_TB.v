@@ -65,6 +65,22 @@ module CORE_TB ();
     end
 
     // -------------------------------------------
+    // Diagnostic Debug Block
+    // -------------------------------------------
+    always @(posedge clk) begin
+        if ($time >= 13250 && $time <= 13550) begin
+            $display("[DBG] Time=%0d PC_fetch=%0h PC_decode=%0h PC_execute=%0h PC_mem=%0h", 
+                     $time, uut.FETCH.pc_out_reg, uut.DECODE.pc_out, uut.EXECUTE.pc, uut.MEM.pc_4-4);
+            $display("      Decode: instr=%0h, csr_rd=%b, csr_wr=%b, csr_addr=%0h, csr_data_out=%0h, csr_read_en=%b, reg_write=%b, rd_addr_d=%0d", 
+                     uut.DECODE.instruction, uut.DECODE.csr_rd, uut.DECODE.csr_wr, uut.DECODE.csr_addr, uut.csr_data_out, uut.DECODE.csr_read_en, uut.DECODE.reg_write, uut.DECODE.rd_addr_d);
+            $display("      Execute: csr_read_en=%b, csr_data_in=%0h, result_out_reg=%0h, result_out=%0h, rdE=%0d, reg_writeM=%b", 
+                     uut.EXECUTE.csr_read_en, uut.EXECUTE.csr_data_in, uut.EXECUTE.result_out_reg, uut.EXECUTE.result_out, uut.EXECUTE.rdE, uut.EXECUTE.reg_writeM);
+            $display("      Mem: execute_result_in=%0h, wb_result_out=%0h, rdW=%0d, reg_write_en=%b, wb_out=%0h", 
+                     uut.MEM.execute_result_in, uut.MEM.wb_result_out, uut.MEM.rdW, uut.MEM.reg_write_en, uut.wb_out);
+        end
+    end
+
+    // -------------------------------------------
     // Hierarchical access helpers
     // -------------------------------------------
     function [31:0] read_reg;
@@ -1037,6 +1053,131 @@ module CORE_TB ();
 
         check_reg("MUL chain: x2=9",  2, 32'd9);
         check_reg("MUL chain: x3=27", 3, 32'd27);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 22: CSR Zicsr Instructions
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 22: CSR Zicsr Instructions");
+        $display("============================================================");
+        // [0] LUI x1, 1          -> x1 = 0x00001000
+        // [1] ADDI x10, x0, 8    -> x10 = 8 (mask for MIE)
+        // [2-5] NOP
+        // [6] CSRRW x2, mtvec, x1 -> writes x1 to mtvec, reads old mtvec to x2 (x2 = 0)
+        // [7] CSRRS x3, mstatus, x10 -> sets MIE bit, reads old mstatus to x3 (x3 = 0)
+        // [8] CSRRC x4, mstatus, x10 -> clears MIE bit, reads old mstatus to x4 (x4 = 8)
+        // [9] CSRRWI x5, mie, 0x1F  -> writes 0x1F to mie, reads old mie to x5 (x5 = 0)
+        // [10] CSRRSI x6, mie, 0x02  -> sets bit 1, reads old mie to x6 (x6 = 0x1F)
+        // [11] CSRRCI x7, mie, 0x02  -> clears bit 1, reads old mie to x7 (x7 = 0x1F)
+        // [12-15] NOP
+        program_mem[0]  = 32'h000010B7;  // LUI x1, 1
+        program_mem[1]  = 32'h00800513;  // ADDI x10, x0, 8
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = 32'h30509173;  // CSRRW x2, mtvec, x1
+        program_mem[7]  = 32'h300521F3;  // CSRRS x3, mstatus, x10
+        program_mem[8]  = 32'h30053273;  // CSRRC x4, mstatus, x10
+        program_mem[9]  = 32'h304FD2F3;  // CSRRWI x5, mie, 0x1F
+        program_mem[10] = 32'h30416373;  // CSRRSI x6, mie, 0x02
+        program_mem[11] = 32'h304173F3;  // CSRRCI x7, mie, 0x02
+        program_mem[12] = `NOP;
+        program_mem[13] = `NOP;
+        program_mem[14] = `NOP;
+        program_mem[15] = `NOP;
+        program_len = 16;
+
+        load_program;
+        wait_cycles(30);
+        halt_cpu;
+
+        check_reg("CSRRW mtvec read old",  2, 32'h00000000);
+        check_reg("CSRRS mstatus read old",3, 32'h00000000);
+        check_reg("CSRRC mstatus read old",4, 32'h00000008);
+        check_reg("CSRRWI mie read old",   5, 32'h00000000);
+        check_reg("CSRRSI mie read old",   6, 32'h0000001F);
+        check_reg("CSRRCI mie read old",   7, 32'h0000001F);
+
+        // Check CSR final values inside CSR module using hierarchical paths
+        if (uut.CSR.mtvec === 32'h00001000) begin
+            $display("[PASS] mtvec final value = 0x00001000");
+            test_pass = test_pass + 1;
+        end else begin
+            $display("[FAIL] mtvec final value = 0x%08X (expected 0x00001000)", uut.CSR.mtvec);
+            test_fail = test_fail + 1;
+        end
+        test_num = test_num + 1;
+
+        if (uut.CSR.mstatus === 32'h00000000) begin
+            $display("[PASS] mstatus final value = 0x00000000");
+            test_pass = test_pass + 1;
+        end else begin
+            $display("[FAIL] mstatus final value = 0x%08X (expected 0x00000000)", uut.CSR.mstatus);
+            test_fail = test_fail + 1;
+        end
+        test_num = test_num + 1;
+
+        if (uut.CSR.mie === 32'h0000001D) begin
+            $display("[PASS] mie final value = 0x0000001D");
+            test_pass = test_pass + 1;
+        end else begin
+            $display("[FAIL] mie final value = 0x%08X (expected 0x0000001D)", uut.CSR.mie);
+            test_fail = test_fail + 1;
+        end
+        test_num = test_num + 1;
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 23: Exception Handling (ECALL)
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 23: Exception Handling (ECALL)");
+        $display("============================================================");
+        program_mem[0]  = 32'h000010B7;  // LUI x1, 1 (0x1000)
+        program_mem[1]  = 32'h40008093;  // ADDI x1, x1, 1024 (0x1400)
+        program_mem[2]  = 32'h40008093;  // ADDI x1, x1, 1024 (0x1800)
+        program_mem[3]  = 32'h05408093;  // ADDI x1, x1, 84   (0x1854)
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = `NOP;
+        program_mem[7]  = `NOP;
+        program_mem[8]  = 32'h30509073;  // CSRRW x0, mtvec, x1 (writes 0x1854 to mtvec)
+        program_mem[9]  = 32'h00800113;  // ADDI x2, x0, 8
+        program_mem[10] = `NOP;
+        program_mem[11] = `NOP;
+        program_mem[12] = `NOP;
+        program_mem[13] = `NOP;
+        program_mem[14] = 32'h30011073;  // CSRRW x0, mstatus, x2 (writes 8 to mstatus)
+        program_mem[15] = `NOP;
+        program_mem[16] = `NOP;
+        program_mem[17] = `NOP;
+        program_mem[18] = 32'h00000073;  // ECALL (at PC = 0x1848)
+        program_mem[19] = 32'h0AA00193;  // ADDI x3, x0, 0xAA (should be flushed)
+        program_mem[20] = 32'h0BB00213;  // ADDI x4, x0, 0xBB (should be flushed)
+        program_mem[21] = 32'h0CC00293;  // ADDI x5, x0, 0xCC (Exception Handler starts here)
+        program_mem[22] = 32'h34101373;  // CSRRW x6, mepc, x0
+        program_mem[23] = 32'h34201373;  // CSRRW x7, mcause, x0
+        program_mem[24] = `NOP;
+        program_mem[25] = `NOP;
+        program_mem[26] = `NOP;
+        program_mem[27] = `NOP;
+        program_len = 28;
+
+        load_program;
+        wait_cycles(45);
+        halt_cpu;
+
+        check_reg("ECALL handler executes (x5=0xCC)", 5, 32'h000000CC);
+        check_reg("ECALL flushed instr 1 (x3=0)",     3, 32'h00000000);
+        check_reg("ECALL flushed instr 2 (x4=0)",     4, 32'h00000000);
+        check_reg("mepc saved correct PC (x6)",        6, `UART_ADDR + 32'd72);
+        check_reg("mcause saved correct code (x7)",    7, 32'h00000000);
 
         dump_regs;
         do_reset;

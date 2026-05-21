@@ -13,6 +13,7 @@ module HAZARD_UNIT (
     input result_srcE_zer,
     input cpu_halt,
     input pc_src,
+    input exception,
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
     output stallF,
@@ -41,7 +42,7 @@ assign stallD = lwstall;
 assign stallF = lwstall; 
 
 //Flushing
-assign flushE = lwstall|pc_src;
-assign flushD = pc_src; 
+assign flushE = lwstall | pc_src | exception;
+assign flushD = pc_src | exception; 
     
 endmodule

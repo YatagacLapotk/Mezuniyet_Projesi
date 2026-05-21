@@ -45,12 +45,14 @@ wire [`DATA_WIDTH-1:0] csr_data;
 wire csr_rd;
 wire csr_wr;
 wire [`DATA_WIDTH-1:0] csr_data_out;
+reg [`DATA_WIDTH-1:0] csr_data_out_E;
 wire [`DATA_WIDTH-1:0] csr_mtvec;
 wire [`DATA_WIDTH-1:0] csr_mepc;
 wire [`DATA_WIDTH-1:0] imm;
 wire [`WB_CNTRL-1:0] wb_cntrl;
 wire [`FUNCT3_WIDTH-1:0] funct3_out_decode;
 wire isa_slct;
+wire csr_read_en;
 wire [7:0] exception_type;
 wire reg_writeD;
 wire mem_writeD;
@@ -104,9 +106,10 @@ HAZARD_UNIT HAZARD_UNIT(
     .reg_writeW(reg_write_en),
     .result_srcE_zer(wb_controlZ),
     .cpu_halt(cpu_halt),
+    .pc_src(pc_src),
+    .exception(exception),
     .forwardA(forwardA),
     .forwardB(forwardB),
-    .pc_src(pc_src),
     .stallF(stallF),
     .stallD(stallD),
     .flushD(flushD),
@@ -159,6 +162,7 @@ DECODE DECODE(
    .imm(imm),
    .wb_cntrl(wb_cntrl),
    .isa_slct(isa_slct),
+   .csr_read_en(csr_read_en),
    .csr_data(csr_data),
    .csr_rd(csr_rd),
    .csr_wr(csr_wr),
@@ -190,7 +194,8 @@ EXECUTE EXECUTE(
     .alu_imm_en(alu_imm_en),
     .mdu_control(mdu_control),
     .wb_controlD(wb_cntrl),
-    .csr_data_in(csr_data_out),
+    .csr_data_in(csr_data_out_E),
+    .csr_read_en(csr_read_en),
     .isa_slct(isa_slct),
     .reg_writeD(reg_writeD),
     .mem_writeD(mem_writeD),
@@ -260,5 +265,12 @@ CSR CSR(
     .csr_mtvec(csr_mtvec),
     .csr_mepc(csr_mepc)
 );
+always @(posedge clk) begin
+    if (reset || flushE) begin
+        csr_data_out_E <= 32'b0;
+    end else begin
+        csr_data_out_E <= csr_data_out;
+    end
+end
     
 endmodule
