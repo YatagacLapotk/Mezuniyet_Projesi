@@ -748,6 +748,300 @@ module CORE_TB ();
         do_reset;
 
         // =================================================================
+        // TEST GROUP 14: Basic MUL, DIV, REM
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 14: Basic MUL, DIV, REM");
+        $display("============================================================");
+        // x1=7, x2=6, then MUL/DIV/REM/DIVU/REMU
+        program_mem[0]  = 32'h00700093;  // ADDI x1, x0, 7
+        program_mem[1]  = 32'h00600113;  // ADDI x2, x0, 6
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = 32'h022081B3;  // MUL  x3, x1, x2  -> 42
+        program_mem[7]  = 32'h0220C233;  // DIV  x4, x1, x2  -> 1
+        program_mem[8]  = 32'h0220E2B3;  // REM  x5, x1, x2  -> 1
+        program_mem[9]  = 32'h0220D333;  // DIVU x6, x1, x2  -> 1
+        program_mem[10] = 32'h0220F3B3;  // REMU x7, x1, x2  -> 1
+        program_mem[11] = `NOP;
+        program_mem[12] = `NOP;
+        program_mem[13] = `NOP;
+        program_mem[14] = `NOP;
+        program_len = 15;
+
+        load_program;
+        wait_cycles(30);
+        halt_cpu;
+
+        check_reg("MUL  x3=7*6=42",   3, 32'd42);
+        check_reg("DIV  x4=7/6=1",    4, 32'd1);
+        check_reg("REM  x5=7%6=1",    5, 32'd1);
+        check_reg("DIVU x6=7/6=1",    6, 32'd1);
+        check_reg("REMU x7=7%6=1",    7, 32'd1);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 15: MULH — Upper 32 bits
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 15: MULH (upper 32 bits)");
+        $display("============================================================");
+        // x1=0x10000, x2=0x10000 -> product=0x1_00000000
+        // MUL  -> lower 32 = 0x00000000
+        // MULH -> upper 32 = 0x00000001
+        program_mem[0]  = 32'h000100B7;  // LUI x1, 0x00010 -> x1=0x10000
+        program_mem[1]  = 32'h00010137;  // LUI x2, 0x00010 -> x2=0x10000
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = 32'h022081B3;  // MUL  x3, x1, x2
+        program_mem[7]  = 32'h02209233;  // MULH x4, x1, x2
+        program_mem[8]  = `NOP;
+        program_mem[9]  = `NOP;
+        program_mem[10] = `NOP;
+        program_mem[11] = `NOP;
+        program_len = 12;
+
+        load_program;
+        wait_cycles(25);
+        halt_cpu;
+
+        check_reg("MUL  lower=0",  3, 32'h00000000);
+        check_reg("MULH upper=1",  4, 32'h00000001);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 16: Signed MUL/DIV with negatives
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 16: Signed MUL/DIV with negatives");
+        $display("============================================================");
+        // x1=-7 (0xFFFFFFF9), x2=6
+        // MUL -> (-7)*6 = -42 = 0xFFFFFFD6
+        // DIV -> -7/6  = -1  = 0xFFFFFFFF
+        // REM -> -7%6  = -1  = 0xFFFFFFFF
+        program_mem[0]  = 32'hFF900093;  // ADDI x1, x0, -7
+        program_mem[1]  = 32'h00600113;  // ADDI x2, x0, 6
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = 32'h022081B3;  // MUL x3, x1, x2
+        program_mem[7]  = 32'h0220C233;  // DIV x4, x1, x2
+        program_mem[8]  = 32'h0220E2B3;  // REM x5, x1, x2
+        program_mem[9]  = `NOP;
+        program_mem[10] = `NOP;
+        program_mem[11] = `NOP;
+        program_mem[12] = `NOP;
+        program_len = 13;
+
+        load_program;
+        wait_cycles(25);
+        halt_cpu;
+
+        check_reg("MUL (-7)*6=-42", 3, 32'hFFFFFFD6);
+        check_reg("DIV -7/6=-1",    4, 32'hFFFFFFFF);
+        check_reg("REM -7%6=-1",    5, 32'hFFFFFFFF);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 17: Division by zero
+        // =================================================================
+        $display("\n============================================================");
+        $display("  TEST GROUP 17: Division by zero");
+        $display("============================================================");
+        // x1=42, x0=0 (hardwired)
+        // DIV  x3,x1,x0 -> 0xFFFFFFFF (per MDU impl)
+        // DIVU x4,x1,x0 -> 0xFFFFFFFE (per MDU impl)
+        // REM  x5,x1,x0 -> x1=42
+        // REMU x6,x1,x0 -> x1=42
+        // Encoding: rs2=x0=00000
+        // DIV  x3,x1,x0: 0000001_00000_00001_100_00011_0110011 = 0x0200C1B3
+        // DIVU x4,x1,x0: 0000001_00000_00001_101_00100_0110011 = 0x0200D233
+        // REM  x5,x1,x0: 0000001_00000_00001_110_00101_0110011 = 0x0200E2B3
+        // REMU x6,x1,x0: 0000001_00000_00001_111_00110_0110011 = 0x0200F333
+        program_mem[0]  = 32'h02A00093;  // ADDI x1, x0, 42
+        program_mem[1]  = `NOP;
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = 32'h0200C1B3;  // DIV  x3, x1, x0
+        program_mem[6]  = 32'h0200D233;  // DIVU x4, x1, x0
+        program_mem[7]  = 32'h0200E2B3;  // REM  x5, x1, x0
+        program_mem[8]  = 32'h0200F333;  // REMU x6, x1, x0
+        program_mem[9]  = `NOP;
+        program_mem[10] = `NOP;
+        program_mem[11] = `NOP;
+        program_mem[12] = `NOP;
+        program_len = 13;
+
+        load_program;
+        wait_cycles(25);
+        halt_cpu;
+
+        check_reg("DIV/0  -> 0xFFFFFFFF", 3, 32'hFFFFFFFF);
+        check_reg("DIVU/0 -> 0xFFFFFFFE", 4, 32'hFFFFFFFE);
+        check_reg("REM/0  -> x1=42",      5, 32'd42);
+        check_reg("REMU/0 -> x1=42",      6, 32'd42);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 18: MUL with EX-EX Forwarding
+        // =================================================================
+        // Back-to-back: ADDI produces x1, MUL immediately uses x1.
+        // Tests that MDU source muxes use forwarding correctly.
+        $display("\n============================================================");
+        $display("  TEST GROUP 18: MUL with EX-EX Forwarding");
+        $display("============================================================");
+        // [0] ADDI x1, x0, 7
+        // [1] MUL  x2, x1, x1  -> 7*7=49 (EX-EX fwd on both ports)
+        // [2-5] NOP
+        // MUL x2,x1,x1: 0000001_00001_00001_000_00010_0110011 = 0x02108133
+        program_mem[0]  = 32'h00700093;  // ADDI x1, x0, 7
+        program_mem[1]  = 32'h02108133;  // MUL  x2, x1, x1
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_len = 6;
+
+        load_program;
+        wait_cycles(20);
+        halt_cpu;
+
+        check_reg("MUL EX-EX fwd: x1=7",   1, 32'd7);
+        check_reg("MUL EX-EX fwd: x2=49",  2, 32'd49);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 19: Load-Use Hazard Stall
+        // =================================================================
+        // LW followed immediately by an instruction that uses the loaded
+        // register. The hazard unit must insert a 1-cycle stall.
+        $display("\n============================================================");
+        $display("  TEST GROUP 19: Load-Use Hazard Stall");
+        $display("============================================================");
+        // [0] ADDI x2, x0, 0x100   -> base addr
+        // [1] ADDI x4, x0, 5       -> operand
+        // [2] ADDI x5, x0, 0x42    -> store value
+        // [3-6] NOP
+        // [7] SW   x5, 0(x2)       -> mem[0x100] = 0x42
+        // [8-9] NOP
+        // [10] LW  x1, 0(x2)       -> x1 = 0x42 (load)
+        // [11] ADD x3, x1, x4      -> x3 = 0x42+5 = 0x47 (LOAD-USE!)
+        // [12-15] NOP
+        program_mem[0]  = 32'h10000113;  // ADDI x2, x0, 0x100
+        program_mem[1]  = 32'h00500213;  // ADDI x4, x0, 5
+        program_mem[2]  = 32'h04200293;  // ADDI x5, x0, 0x42
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = `NOP;
+        program_mem[7]  = 32'h00512023;  // SW x5, 0(x2)
+        program_mem[8]  = `NOP;
+        program_mem[9]  = `NOP;
+        program_mem[10] = 32'h00012083;  // LW x1, 0(x2)
+        program_mem[11] = 32'h004081B3;  // ADD x3, x1, x4  (load-use)
+        program_mem[12] = `NOP;
+        program_mem[13] = `NOP;
+        program_mem[14] = `NOP;
+        program_mem[15] = `NOP;
+        program_len = 16;
+
+        load_program;
+        wait_cycles(35);
+        halt_cpu;
+
+        check_reg("LW-USE: x1=0x42",      1, 32'h00000042);
+        check_reg("LW-USE: x3=0x42+5=71", 3, 32'h00000047);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 20: Dual Forwarding (both srcA & srcB)
+        // =================================================================
+        // Two back-to-back ADDIs, then ADD using both results.
+        // Tests that forwardA and forwardB both activate simultaneously.
+        $display("\n============================================================");
+        $display("  TEST GROUP 20: Dual Forwarding (both A & B)");
+        $display("============================================================");
+        // [0] ADDI x1, x0, 10
+        // [1] ADDI x2, x0, 20
+        // [2] ADD  x3, x1, x2  -> x1 via MEM-EX, x2 via EX-EX
+        // [3-6] NOP
+        // ADD x3,x1,x2 = 0x002081B3
+        program_mem[0]  = 32'h00A00093;  // ADDI x1, x0, 10
+        program_mem[1]  = 32'h01400113;  // ADDI x2, x0, 20
+        program_mem[2]  = 32'h002081B3;  // ADD  x3, x1, x2
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = `NOP;
+        program_mem[6]  = `NOP;
+        program_len = 7;
+
+        load_program;
+        wait_cycles(20);
+        halt_cpu;
+
+        check_reg("DUAL FWD: x1=10", 1, 32'd10);
+        check_reg("DUAL FWD: x2=20", 2, 32'd20);
+        check_reg("DUAL FWD: x3=30", 3, 32'd30);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
+        // TEST GROUP 21: MUL chain with forwarding
+        // =================================================================
+        // Tests MUL -> MUL dependency chain through forwarding paths.
+        $display("\n============================================================");
+        $display("  TEST GROUP 21: MUL chain with forwarding");
+        $display("============================================================");
+        // [0] ADDI x1, x0, 3
+        // [1-4] NOP
+        // [5] MUL  x2, x1, x1  -> 3*3=9
+        // [6] MUL  x3, x2, x1  -> 9*3=27 (EX-EX fwd x2)
+        // [7-10] NOP
+        // MUL x2,x1,x1 = 0x02108133
+        // MUL x3,x2,x1: 0000001_00001_00010_000_00011_0110011 = 0x021101B3
+        program_mem[0]  = 32'h00300093;  // ADDI x1, x0, 3
+        program_mem[1]  = `NOP;
+        program_mem[2]  = `NOP;
+        program_mem[3]  = `NOP;
+        program_mem[4]  = `NOP;
+        program_mem[5]  = 32'h02108133;  // MUL x2, x1, x1 -> 9
+        program_mem[6]  = 32'h021101B3;  // MUL x3, x2, x1 -> 27
+        program_mem[7]  = `NOP;
+        program_mem[8]  = `NOP;
+        program_mem[9]  = `NOP;
+        program_mem[10] = `NOP;
+        program_len = 11;
+
+        load_program;
+        wait_cycles(25);
+        halt_cpu;
+
+        check_reg("MUL chain: x2=9",  2, 32'd9);
+        check_reg("MUL chain: x3=27", 3, 32'd27);
+
+        dump_regs;
+        do_reset;
+
+        // =================================================================
         // SUMMARY
         // =================================================================
         $display("\n============================================================");
