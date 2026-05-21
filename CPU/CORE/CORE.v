@@ -5,7 +5,13 @@ module CORE (
     input reset,
     input interrupt,
     input [`DATA_WIDTH-1:0] comm_data_in,
-    output [`DATA_WIDTH-1:0] comm_data_out
+    output [`DATA_WIDTH-1:0] comm_data_out,
+    // Program loader interface
+    input loader_we,
+    input load_done,
+    input [`DATA_WIDTH-1:0] loader_addr,
+    input [`DATA_WIDTH-1:0] loader_data,
+    input cpu_halt
 );
 
 //FETCH wiring
@@ -27,9 +33,9 @@ wire [`DATA_WIDTH-1:0] pc_out_decode;
 wire [`DATA_WIDTH-1:0] pc_4_out_decode;
 wire [`DATA_WIDTH-1:0] rd1;
 wire [`DATA_WIDTH-1:0] rd2;
-wire [`DATA_WIDTH-1:0] rs1_addr_out;
-wire [`DATA_WIDTH-1:0] rs2_addr_out;
-wire [`DATA_WIDTH-1:0] rd_addr_d;
+wire [`ADDRESS_WIDTH-1:0] rs1_addr_out;
+wire [`ADDRESS_WIDTH-1:0] rs2_addr_out;
+wire [`ADDRESS_WIDTH-1:0] rd_addr_d;
 wire [`ALU_CNTR-1:0] alu_control;
 wire alu_imm_en;
 wire [`MDU_CNTRL-1:0] mdu_control;
@@ -95,6 +101,7 @@ HAZARD_UNIT HAZARD_UNIT(
     .reg_writeM(reg_writeM),
     .reg_writeW(reg_write_hazard),
     .result_srcE_zer(wb_controlZ),
+    .cpu_halt(cpu_halt),
     .forwardA(forwardA),
     .forwardB(forwardB),
     .pc_src(pc_src),
@@ -115,6 +122,11 @@ FETCH FETCH(
     .exception_handler_address(csr_mtvec),
     .cache_input(comm_data_in),
     .branch_target(branch_target),
+    .loader_we(loader_we),
+    .loader_addr(loader_addr),
+    .loader_data(loader_data),
+    .load_done(load_done),
+    .cpu_halt(cpu_halt),
     .instruction_out(instruction_out),
     .pc_4_out(pc_4_out_fetch),
     .pc_out(pc_out_fetch)
@@ -128,7 +140,7 @@ DECODE DECODE(
    .w_addr(rdW),
    .instruction(instruction_out),
    .pc(pc_out_fetch),
-   .pc4(pc_4_out_fetch),
+   .pc_4(pc_4_out_fetch),
    .wd(wb_out),
    .pc_out(pc_out_decode),
    .pc_4_out(pc_4_out_decode),
@@ -145,6 +157,9 @@ DECODE DECODE(
    .imm(imm),
    .wb_cntrl(wb_cntrl),
    .isa_slct(isa_slct),
+   .csr_data(csr_data),
+   .csr_rd(csr_rd),
+   .csr_wr(csr_wr),
    .funct3_out(funct3_out_decode),
    .exception_type(exception_type),
    .reg_write(reg_writeD),
@@ -218,9 +233,9 @@ MEM MEM(
     .pc_4_out(pc_4_outM)
 );
 
-assign wb_out = (wb_cntrlM==2'b00) ? wb_result_out: 
-                (wb_cntrlM==2'b01) ? mem_result_out:
-                (wb_cntrlM==2'b10) ? pc_4_outM 
+assign wb_out = (wb_cntrl_out==2'b00) ? wb_result_out: 
+                (wb_cntrl_out==2'b01) ? mem_result_out:
+                (wb_cntrl_out==2'b10) ? pc_4_outM 
                 : 32'b0;
 
 

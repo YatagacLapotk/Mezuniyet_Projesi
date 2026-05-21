@@ -27,7 +27,7 @@ always @(posedge clk) begin
         end
     end 
     else if (we)begin
-        i_cache[w_addr] = inst_in;
+        i_cache[w_addr] <= inst_in;
     end
 end
 

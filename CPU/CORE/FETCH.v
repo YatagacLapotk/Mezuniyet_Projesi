@@ -7,12 +7,13 @@ module FETCH (
     input stallD,
     input flushD,    
     input exception,
-    input pc_src,                   
+    input pc_src,
     input [`DATA_WIDTH-1:0] exception_handler_address,                          
     input [`DATA_WIDTH-1:0] cache_input,  
     input [`DATA_WIDTH-1:0] branch_target,
     // Program loader interface
     input loader_we,
+    input load_done,                   
     input [`DATA_WIDTH-1:0] loader_addr,
     input [`DATA_WIDTH-1:0] loader_data,
     input cpu_halt,
@@ -35,8 +36,8 @@ module FETCH (
         .reset(reset),
         .we(cache_we),
         .inst_in(cache_w_data),
-        .w_addr(cache_w_addr),
-        .r_addr(pc_out_reg),
+        .w_addr(cache_w_addr>>2),
+        .r_addr(pc_out_reg>>2),
         .inst_out(instruction_out_reg)
     );
     
@@ -47,6 +48,9 @@ module FETCH (
     always @(posedge clk) begin
         if (reset) begin
             pc_out_reg <= `FIRST_ADDR;
+        end
+        else if(load_done)begin
+            pc_out_reg <= `UART_ADDR; 
         end
         else if (~stallF) begin
             pc_out_reg <= pc;

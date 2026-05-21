@@ -12,9 +12,9 @@ module HAZARD_UNIT (
     input reg_writeW,
     input result_srcE_zer,
     input cpu_halt,
+    input pc_src,
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
-    output pc_src,
     output stallF,
     output stallD,
     output flushD,
@@ -25,18 +25,18 @@ wire lwstall;
 //A
 always @(*) begin
     if((rs1E==rdM) && reg_writeM && (rs1E!=0))  forwardA = 2'b01;
-    if((rs1E==rdW) && reg_writeW && (rs1E!=0))  forwardA = 2'b10;
+    else if((rs1E==rdW) && reg_writeW && (rs1E!=0))  forwardA = 2'b10;
     else                                        forwardA = 2'b00;
 end
 //B
 always @(*) begin
     if((rs2E==rdM) && reg_writeM && (rs2E!=0))  forwardB = 2'b01;
-    if((rs2E==rdW) && reg_writeW && (rs2E!=0))  forwardB = 2'b10;
+    else if((rs2E==rdW) && reg_writeW && (rs2E!=0))  forwardB = 2'b10;
     else                                        forwardB = 2'b00;
 end
 
 //Stalling
-assign lwstall = result_srcE_zer & ((rs1D==rdE)|(rs2D==rdE)) & cpu_halt;
+assign lwstall = result_srcE_zer & ((rs1D==rdE)|(rs2D==rdE)) | cpu_halt;
 assign stallD = lwstall; 
 assign stallF = lwstall; 
 

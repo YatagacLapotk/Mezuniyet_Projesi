@@ -69,7 +69,7 @@ wire [`DATA_WIDTH-1:0] immu_u;
 wire [`DATA_WIDTH-1:0] immu_j;
 wire [`DATA_WIDTH-1:0] csr_imm;
 wire csr_imm_en;
-wire un_sign;
+reg un_sign;
 
 
 wire [`DATA_WIDTH-1:0] rd1_wire;
@@ -123,7 +123,7 @@ assign immu_u = {instruction[31:12], 12'b0};
 
 //Antigravity'e sordum düzelt dedi onları ayarladım o yüzden
 always@(*) begin
-    casez (insturction)
+    casez (instruction)
         `SLTIU : un_sign =1; 
         `LHU : un_sign =1; 
         `LBU : un_sign =1; 
@@ -250,7 +250,7 @@ always @ (*) begin
                       (opcode==l_logic) ? 2'b01 :
                       ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
                       2'b00;  
-    
+    rd_addr_reg     = rd_addr;
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]);
     exception       = (opcode==sys_logic) & (funct3==3'b000);
     exception_type  = instruction[20] & exception;
