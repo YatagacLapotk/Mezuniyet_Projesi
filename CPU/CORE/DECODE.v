@@ -34,7 +34,9 @@ module DECODE (
     output reg mem_write,
     output reg exception,
     output reg branch,
-    output reg jump
+    output reg jump,
+    output [`ADDRESS_WIDTH-1:0] rs1D,
+    output [`ADDRESS_WIDTH-1:0] rs2D
 );
 
 localparam [6:0] r_logic   = 7'b0110011;
@@ -303,6 +305,7 @@ always @ (posedge clk) begin
         funct3_out <= funct3;
     end
 end
-
+assign rs1D = rs1_addr;
+assign rs2D = rs2_addr;
 
 endmodule

@@ -89,17 +89,19 @@ wire [`DATA_WIDTH-1:0] wb_out;
 //HAZARD UNIT
 wire [1:0] forwardA;
 wire [1:0] forwardB;
+wire [`ADDRESS_WIDTH-1:0] rs1D_wire;
+wire [`ADDRESS_WIDTH-1:0] rs2D_wire;
 
 HAZARD_UNIT HAZARD_UNIT(
-    .rs1D(rs1_addr_out),
-    .rs2D(rs2_addr_out),
+    .rs1D(rs1D_wire),
+    .rs2D(rs2D_wire),
     .rs1E(rs1_addr_outE),
     .rs2E(rs2_addr_outE),
     .rdE(rdE),
     .rdM(rdM),
     .rdW(rdW),
     .reg_writeM(reg_writeM),
-    .reg_writeW(reg_write_hazard),
+    .reg_writeW(reg_write_en),
     .result_srcE_zer(wb_controlZ),
     .cpu_halt(cpu_halt),
     .forwardA(forwardA),
@@ -166,7 +168,9 @@ DECODE DECODE(
    .mem_write(mem_writeD),
    .exception(exception),
    .branch(branch),
-   .jump(jump)
+   .jump(jump),
+   .rs1D(rs1D_wire),
+   .rs2D(rs2D_wire)
 );
 
 EXECUTE EXECUTE(
