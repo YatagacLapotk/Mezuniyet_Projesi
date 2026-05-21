@@ -1,4 +1,4 @@
-`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "sabit_veriler.vh"
 module I_CACHE(
 input clk,
 input reset,
@@ -19,10 +19,10 @@ initial begin
     i_cache[0] = 32'h0000;
 end
 
-
+integer i;
 always @(posedge clk) begin
     if (reset)begin
-        for(integer i = 0; i<`CACHE_SIZE;i=i+1)begin
+        for(i = 0; i<`CACHE_SIZE;i=i+1)begin
             i_cache[i]<= 0;
         end
     end 

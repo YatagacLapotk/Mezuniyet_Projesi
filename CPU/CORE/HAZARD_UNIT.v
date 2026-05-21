@@ -1,4 +1,4 @@
-`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "sabit_veriler.vh"
 
 module HAZARD_UNIT (  
     input [`ADDRESS_WIDTH-1:0] rs1D,

@@ -1,4 +1,3 @@
-
 `include "sabit_veriler.vh"
 
 module REG_FILE (
@@ -15,9 +14,10 @@ module REG_FILE (
 
 reg [`DATA_WIDTH-1:0] REG32[`REG_FILE_DEPTH-1:0] ;
 
+integer i;
 always @(posedge clk) begin
     if(res)begin 
-        for (integer i=0; i<`REG_FILE_DEPTH; i = i + 1) begin
+        for (i=0; i<`REG_FILE_DEPTH; i = i + 1) begin
             REG32[i] <= {`DATA_WIDTH{1'b0}};
         end
     end
