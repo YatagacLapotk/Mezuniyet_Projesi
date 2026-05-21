@@ -29,7 +29,7 @@ module DECODE (
     output reg [`DATA_WIDTH-1:0] imm,
     output reg [`WB_CNTRL-1:0] wb_cntrl,
     output reg isa_slct,
-    output reg exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
+    output reg [7:0] exception_type, //ecall ve ebreak için ayırılmış bittir. 0 olursa ecall 1 olursa ebreak oluyor. 
     output reg reg_write,
     output reg mem_write,
     output reg exception,
@@ -180,8 +180,9 @@ always @  (*) begin
         endcase
     end
     else if ((opcode == i_logic)) begin
-        if(funct7[5]) begin
-            alu_control_reg = 4'b0111; 
+        if(funct3 == 3'b101) begin
+            if(funct7[5]) alu_control_reg = 4'b0111; 
+            else alu_control_reg = 4'b0110;
         end
         else begin
             case (funct3)
@@ -190,7 +191,6 @@ always @  (*) begin
                 3'b010: alu_control_reg = 4'b1000; //SLTI
                 3'b011: alu_control_reg = 4'b1001; //SLTIU
                 3'b100: alu_control_reg = 4'b0100; //XORI
-                3'b101: alu_control_reg = 4'b0110; //SRLI
                 3'b110: alu_control_reg = 4'b0010; //ORI
                 3'b111: alu_control_reg = 4'b0011; //ANDI
             endcase  
@@ -250,10 +250,10 @@ always @ (*) begin
                       (opcode==l_logic) ? 2'b01 :
                       ((opcode == 7'b1101111)|(opcode == 7'b1100111)) ? 2'b10:
                       2'b00;  
-    rd_addr_reg     = rd_addr;
+    rd_addr_d_reg   = rd_addr;
     isa_slct_reg    = (opcode==r_logic) & (funct7[0]);
     exception       = (opcode==sys_logic) & (funct3==3'b000);
-    exception_type  = instruction[20] & exception;
+    exception_type  = {7'b0,{instruction[20] & exception}};
     csr_data        = csr_imm_en ? csr_imm : rd1;
     csr_addr        = instruction[31:20];
     csr_rd          = (opcode==sys_logic) & funct3[1];

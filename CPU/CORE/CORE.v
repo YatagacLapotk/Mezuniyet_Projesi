@@ -51,7 +51,7 @@ wire [`DATA_WIDTH-1:0] imm;
 wire [`WB_CNTRL-1:0] wb_cntrl;
 wire [`FUNCT3_WIDTH-1:0] funct3_out_decode;
 wire isa_slct;
-wire exception_type;
+wire [7:0] exception_type;
 wire reg_writeD;
 wire mem_writeD;
 wire exception;
@@ -123,9 +123,9 @@ FETCH FETCH(
     .cache_input(comm_data_in),
     .branch_target(branch_target),
     .loader_we(loader_we),
+    .load_done(load_done),
     .loader_addr(loader_addr),
     .loader_data(loader_data),
-    .load_done(load_done),
     .cpu_halt(cpu_halt),
     .instruction_out(instruction_out),
     .pc_4_out(pc_4_out_fetch),
@@ -233,9 +233,9 @@ MEM MEM(
     .pc_4_out(pc_4_outM)
 );
 
-assign wb_out = (wb_cntrl_out==2'b00) ? wb_result_out: 
-                (wb_cntrl_out==2'b01) ? mem_result_out:
-                (wb_cntrl_out==2'b10) ? pc_4_outM 
+assign wb_out = (wb_control_out==2'b00) ? wb_result_out: 
+                (wb_control_out==2'b01) ? mem_result_out:
+                (wb_control_out==2'b10) ? pc_4_outM 
                 : 32'b0;
 
 
