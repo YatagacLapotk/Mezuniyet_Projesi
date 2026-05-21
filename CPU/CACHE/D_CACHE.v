@@ -44,7 +44,7 @@ end
 
 always @(posedge clk) begin
     if (reset)begin
-        for(integer i = 0; i<`CACHE_SIZE;i+=1)begin
+        for(integer i = 0; i<`CACHE_SIZE; i = i + 1)begin
             d_cache[i]<= 0;
         end
     end 

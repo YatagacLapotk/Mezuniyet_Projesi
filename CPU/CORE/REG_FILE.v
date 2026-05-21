@@ -17,7 +17,7 @@ reg [`DATA_WIDTH-1:0] REG32[`REG_FILE_DEPTH-1:0] ;
 
 always @(posedge clk) begin
     if(res)begin 
-        for (integer i=0;i<`REG_FILE_DEPTH;i+=1) begin
+        for (integer i=0; i<`REG_FILE_DEPTH; i = i + 1) begin
             REG32[i] <= {`DATA_WIDTH{1'b0}};
         end
     end

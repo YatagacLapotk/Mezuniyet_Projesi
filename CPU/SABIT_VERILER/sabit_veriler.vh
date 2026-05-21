@@ -23,7 +23,7 @@
 `define NOP 32'h00000013
 `define CLK 100000000
 `define BAUD_RATE 115200
-`define ISA_SLCT 2'b00      2
+`define ISA_SLCT            2
 
 // CSR Addresses
 `define MSTATUS        12'h300
