@@ -1,5 +1,3 @@
-`include "sabit_veriler.vh"
-
 module SPI (
     input wire clk,
     input wire reset,
@@ -7,7 +5,6 @@ module SPI (
     input wire enable,
     input wire sclk_enable,
     input wire miso,
-    input wire clear,
     output wire data_ready,
     output wire busy,
     output wire ss,
@@ -37,7 +34,6 @@ SPI_master SPI_master (
     .data_ready(data_ready),
     .busy(busy),
     .ss(ss),
-    .sclk_enable(sclk_enable),
-    .clear(clear) //UART'la aynı program loader'ı kullanmak için ekledim.
-);                //UART clear sinyaliyle sıfırladığı için buraya da bir tane ekleyerek ikisiyle de uyumlu olmasını sağladım.                   
-endmodule         //Sıkıntı olursa değiştiririz.
+    .sclk_enable(sclk_enable)
+);                
+endmodule

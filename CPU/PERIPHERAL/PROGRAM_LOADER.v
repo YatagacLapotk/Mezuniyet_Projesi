@@ -4,7 +4,9 @@ module PROGRAM_LOADER (
     input reset,
     input data_ready,
     input busy,
-    input [7:0] data_in,
+    input comm_slct, // 1 ise spi 0 ise uart
+    input [7:0] data_in_uart,
+    input [7:0] data_in_spi,
     output reg done,
     output reg cpu_halt,
     output reg clear,
@@ -49,19 +51,29 @@ always @(posedge clk) begin
             end
             DATA : begin
                 if(data_ready) begin
-                    case (wait_for_data)        //8 bit datalrın 32 bite çevirimi
-                        2'd0 : data_temp[7:0] <= data_in;
-                        2'd1 : data_temp[15:8] <= data_in;
-                        2'd2 : data_temp[23:16] <= data_in;
-                        2'd3 : data_temp[31:24] <= data_in;
-                    endcase
+                    if (comm_slct)begin
+                        case (wait_for_data)        //8 bit dataların 32 bite çevirimi
+                            2'd0 : data_temp[7:0] <= data_in_spi;
+                            2'd1 : data_temp[15:8] <= data_in_spi;
+                            2'd2 : data_temp[23:16] <= data_in_spi;
+                            2'd3 : data_temp[31:24] <= data_in_spi;
+                        endcase
+                    end
+                    else begin
+                        case (wait_for_data)        //8 bit dataların 32 bite çevirimi
+                            2'd0 : data_temp[7:0] <= data_in_uart;
+                            2'd1 : data_temp[15:8] <= data_in_uart;
+                            2'd2 : data_temp[23:16] <= data_in_uart;
+                            2'd3 : data_temp[31:24] <= data_in_uart;
+                        endcase
+                    end
                     wait_for_data <= wait_for_data + 1;
-                    clear <= 1;
+                    if(~comm_slct) clear <= 1;
                     state <= WAIT_ACK;
                 end
             end
             WAIT_ACK : begin
-                clear <= 0;
+                if (~comm_slct) clear <= 0;
                 if(!data_ready) begin
                     // wait_for_data wraps 3+1=0 when all 4 bytes collected
                     if(wait_for_data == 0) state <= LOAD;

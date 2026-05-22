@@ -3,9 +3,6 @@
 module CORE (
     input clk,
     input reset,
-    input interrupt,
-    input [`DATA_WIDTH-1:0] comm_data_in,
-    output [`DATA_WIDTH-1:0] comm_data_out,
     // Program loader interface
     input loader_we,
     input load_done,
@@ -19,7 +16,6 @@ wire stallF;
 wire stallD;
 wire flushD;
 wire pc_src;
-//comm_data_in kullanılabilir.
 wire [`DATA_WIDTH-1:0] branch_target;
 //-----output------
 wire [`DATA_WIDTH-1:0] instruction_out;
@@ -125,7 +121,6 @@ FETCH FETCH(
     .exception(exception),
     .pc_src(pc_src),
     .exception_handler_address(csr_mtvec),
-    .cache_input(comm_data_in),
     .branch_target(branch_target),
     .loader_we(loader_we),
     .load_done(load_done),
@@ -255,7 +250,7 @@ CSR CSR(
     .instr(instruction_out),
     .csr_addr(csr_addr),
     .exception(exception),
-    .interrupt(interrupt),
+    .interrupt(cpu_halt),
     .exception_code(exception_type),
     .csr_data_in(csr_data),
     .csr_cntrl(csr_control),
