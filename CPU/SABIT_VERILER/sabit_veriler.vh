@@ -3,6 +3,7 @@
 
 `define FIRST_ADDR 32'h00000000
 `define UART_ADDR 32'h00001800
+`define SPI_ADDR 32'h00001C00
 
 `define ADDRESS_WIDTH       5
 `define DATA_WIDTH         32

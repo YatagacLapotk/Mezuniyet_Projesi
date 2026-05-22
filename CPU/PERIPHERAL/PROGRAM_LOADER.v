@@ -38,7 +38,10 @@ always @(posedge clk) begin
             STALL : begin
                 we <= 0;
                 done <= 0;
-                if(data_ready|busy) state <= START;
+                if(data_ready|busy) begin 
+                    state <= START;
+                    if(comm_slct) write_ptr <= `SPI_ADDR; 
+                end
                 else begin
                     state <= STALL;
                     cpu_halt <= 0;
@@ -47,7 +50,7 @@ always @(posedge clk) begin
             end
             START : begin
                 state <= DATA;
-                cpu_halt <= 1; 
+                cpu_halt <= 1;  
             end
             DATA : begin
                 if(data_ready) begin

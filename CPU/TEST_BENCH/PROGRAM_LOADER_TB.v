@@ -16,7 +16,7 @@ module PROGRAM_LOADER_TB ();
     wire [`DATA_WIDTH-1:0] w_data;
 
     // Simulated I_CACHE memory (to verify writes)
-    reg [`DATA_WIDTH-1:0] fake_cache [0:8191];
+    reg [`DATA_WIDTH-1:0] fake_cache [0:20000];
 
     // Track test results
     integer test_pass = 0;
@@ -269,8 +269,8 @@ module PROGRAM_LOADER_TB ();
         repeat (15) @(posedge clk);
 
         $display("  Verifying cache contents (SPI):");
-        check("cache[UART_ADDR+0]", fake_cache[`UART_ADDR],     32'hAAAABBBB);
-        check("cache[UART_ADDR+4]", fake_cache[`UART_ADDR + 4], 32'hCCCCDDDD);
+        check("cache[SPI_ADDR+0]", fake_cache[`SPI_ADDR],     32'hAAAABBBB);
+        check("cache[SPI_ADDR+4]", fake_cache[`SPI_ADDR + 4], 32'hCCCCDDDD);
         check_1bit("done_seen", done_seen, 1'b1);
 
         // =============================================
@@ -297,7 +297,7 @@ module PROGRAM_LOADER_TB ();
 
         $display("  Verifying cache contents (mixed):");
         check("cache[UART_ADDR+0]", fake_cache[`UART_ADDR],     32'h11223344);
-        check("cache[UART_ADDR+4]", fake_cache[`UART_ADDR + 4], 32'h55667788);
+        check("cache[SPI_ADDR+4]", fake_cache[`SPI_ADDR + 4], 32'h55667788);
 
         // =============================================
         // TEST 6: write_ptr resets after session

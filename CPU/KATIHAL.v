@@ -1,10 +1,9 @@
 `include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
-module KATIHAL (
+module top (
     input clk,
     input reset,
     input rx_enable,
     input uart_in,
-    input [7:0] spi_in,
     input spi_enable,
     input sclk_enable,
     input miso,
@@ -63,7 +62,7 @@ UART UART(
 SPI SPI(
     .clk(clk),
     .reset(reset),
-    .data_out(spi_in),
+    .data_out(spi_output_buffer),
     .enable(spi_enable),
     .sclk_enable(sclk_enable),
     .miso(miso),
@@ -90,5 +89,11 @@ PROGRAM_LOADER PROGRAM_LOADER(
     .w_addr(loader_addr),
     .w_data(loader_data)
 );
+
+always @(*) begin
+    if(data_ready_uart) begin
+        data_ready = data_ready_uart;
+    end
+end
     
 endmodule
