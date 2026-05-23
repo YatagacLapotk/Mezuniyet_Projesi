@@ -22,6 +22,7 @@ localparam STALL = 0, START_U = 1,START_S = 7, DATA_U = 2, DATA_S = 8, WAIT_ACK_
 reg [1:0] wait_for_data;
 reg [3:0] state;
 reg [`DATA_WIDTH-1:0] data_temp;
+reg [15:0] timeout_counter;
 
 always @(posedge clk) begin
     if(reset) begin
@@ -33,6 +34,7 @@ always @(posedge clk) begin
         wait_for_data <= 0;
         data_temp <= 0;
         done <= 0;
+        timeout_counter <= 0;
     end
     else begin
         case (state)
@@ -104,12 +106,14 @@ always @(posedge clk) begin
                 w_addr <= write_ptr;
                 w_data <= data_temp;
                 we <= 1;
+                timeout_counter <= 0;
                 state <= PC_TRANSFER_U;
             end
             LOAD_S : begin
                 w_addr <= write_ptr;
                 w_data <= data_temp;
                 we <= 1;
+                timeout_counter <= 0;
                 state <= PC_TRANSFER_S;
             end
             PC_TRANSFER_U : begin
@@ -118,8 +122,11 @@ always @(posedge clk) begin
                     state <= DATA_U;
                     write_ptr <= write_ptr + 4;
                 end 
-                else begin //Gelmezse sistem normal konumuna dönüyor
+                else if(timeout_counter >= 5000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
                     state <= DONE;
+                end
+                else begin
+                    timeout_counter <= timeout_counter + 1;
                 end
             end
             PC_TRANSFER_S : begin
@@ -128,8 +135,11 @@ always @(posedge clk) begin
                     state <= DATA_S;
                     write_ptr <= write_ptr + 4;
                 end 
-                else begin //Gelmezse sistem normal konumuna dönüyor
+                else if(timeout_counter >= 5000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
                     state <= DONE;
+                end
+                else begin
+                    timeout_counter <= timeout_counter + 1;
                 end
             end
             DONE : begin

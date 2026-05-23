@@ -403,7 +403,7 @@ module KATIHAL_TB ();
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
-        uart_send_word(32'h00208A63);  // [6] BEQ x1, x2, +12 (-> [10])
+        uart_send_word(32'h00208863);  // [6] BEQ x1, x2, +16 (-> [10])
         uart_send_word(32'h0FF00193);  // [7] ADDI x3, x0, 0xFF (flushed)
         uart_send_word(32'h0EE00213);  // [8] ADDI x4, x0, 0xEE (flushed)
         uart_send_word(`NOP);          // [9] NOP x4
