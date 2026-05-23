@@ -9,8 +9,7 @@ module top (
     input miso,
     output mosi,
     output ss,
-    output busy,
-    output out
+    output busy
 );
 
 wire [`DATA_WIDTH-1:0] write_ptr;
@@ -88,4 +87,6 @@ PROGRAM_LOADER PROGRAM_LOADER(
     .w_addr(loader_addr),
     .w_data(loader_data)
 );  
+
+assign busy = cpu_halt;
 endmodule
