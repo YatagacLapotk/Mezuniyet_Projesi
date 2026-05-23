@@ -1,5 +1,5 @@
 
-`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`include "sabit_veriler.vh"
 module DECODE (
     input clk,
     input reset,
