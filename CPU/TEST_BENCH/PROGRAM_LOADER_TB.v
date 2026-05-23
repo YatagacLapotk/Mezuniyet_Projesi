@@ -2,9 +2,10 @@
 module PROGRAM_LOADER_TB ();
     reg clk;
     reg reset;
-    reg data_ready;
-    reg busy;
-    reg comm_slct;           // 1 = SPI, 0 = UART
+    reg data_ready_uart;
+    reg data_ready_spi;
+    reg busy_uart;
+    reg busy_spi;
     reg [7:0] data_in_uart;
     reg [7:0] data_in_spi;
     wire done;
@@ -14,6 +15,14 @@ module PROGRAM_LOADER_TB ();
     wire [`DATA_WIDTH-1:0] write_ptr;
     wire [`DATA_WIDTH-1:0] w_addr;
     wire [`DATA_WIDTH-1:0] w_data;
+
+    // State localparams (mirror PROGRAM_LOADER)
+    localparam STALL = 0, START_U = 1, START_S = 7,
+               DATA_U = 2, DATA_S = 8,
+               WAIT_ACK_U = 3, WAIT_ACK_S = 9,
+               LOAD_U = 4, LOAD_S = 10,
+               PC_TRANSFER_U = 5, PC_TRANSFER_S = 11,
+               DONE_ST = 6;
 
     // Simulated I_CACHE memory (to verify writes)
     reg [`DATA_WIDTH-1:0] fake_cache [0:20000];
@@ -25,7 +34,7 @@ module PROGRAM_LOADER_TB ();
     // Sticky done flag — captures the 1-cycle done pulse
     reg done_seen;
     always @(posedge clk) begin
-        if (reset || (uut.state == 1)) // clear on reset or entering START
+        if (reset || (uut.state == START_U) || (uut.state == START_S))
             done_seen <= 0;
         else if (done)
             done_seen <= 1;
@@ -34,9 +43,10 @@ module PROGRAM_LOADER_TB ();
     PROGRAM_LOADER uut (
         .clk(clk),
         .reset(reset),
-        .data_ready(data_ready),
-        .busy(busy),
-        .comm_slct(comm_slct),
+        .data_ready_uart(data_ready_uart),
+        .data_ready_spi(data_ready_spi),
+        .busy_uart(busy_uart),
+        .busy_spi(busy_spi),
         .data_in_uart(data_in_uart),
         .data_in_spi(data_in_spi),
         .done(done),
@@ -63,70 +73,80 @@ module PROGRAM_LOADER_TB ();
     end
 
     // -------------------------------------------------------
-    // Task: simulate UART delivering one byte (comm_slct = 0)
-    //   Uses clear handshake
+    // Task: simulate UART delivering one byte
+    //   DATA_U unconditionally transitions to WAIT_ACK_U
+    //   in ONE cycle (increments wait_for_data, asserts clear).
+    //   data_ready_uart MUST already be high when DATA_U executes.
+    //   WAIT_ACK_U waits for !data_ready_uart, then clear<=0.
+    //
+    //   Strategy:
+    //     1. Assert data + data_ready_uart BEFORE the FSM can
+    //        enter DATA_U (the FSM needs at least 1 cycle to
+    //        transition from wherever it is).
+    //     2. Wait for FSM to reach WAIT_ACK_U (state 3).
+    //     3. Deassert data_ready_uart so WAIT_ACK_U can proceed.
+    //     4. Wait for FSM to leave WAIT_ACK_U.
     // -------------------------------------------------------
     task send_byte_uart;
         input [7:0] byte_val;
         begin
             @(negedge clk);
             data_in_uart = byte_val;
-            data_ready = 1;
-            busy = 1;
+            data_ready_uart = 1;
+            busy_uart = 1;
 
-            // Wait for FSM to acknowledge (clear goes high in DATA->WAIT_ACK)
-            wait (clear == 1);
-            @(posedge clk);
+            // Wait for FSM to reach WAIT_ACK_U (it passed through DATA_U)
+            wait (uut.state == WAIT_ACK_U);
 
-            // Now deassert data_ready
+            // Deassert data_ready so WAIT_ACK_U proceeds
             @(negedge clk);
-            data_ready = 0;
+            data_ready_uart = 0;
 
-            // Wait for FSM to finish WAIT_ACK (clear goes low)
-            wait (clear == 0);
+            // Wait for FSM to leave WAIT_ACK_U
             @(posedge clk);
+            while (uut.state == WAIT_ACK_U) begin
+                @(posedge clk);
+            end
         end
     endtask
 
     // -------------------------------------------------------
-    // Task: simulate SPI delivering one byte (comm_slct = 1)
-    //   No clear handshake.
-    //   FSM: DATA sees data_ready=1 -> latches -> WAIT_ACK
-    //        WAIT_ACK sees !data_ready -> proceed
-    //   We wait until FSM is in DATA state (state==2) before
-    //   pulsing data_ready.
+    // Task: simulate SPI delivering one byte
+    //   DATA_S unconditionally transitions to WAIT_ACK_S
+    //   in ONE cycle (increments wait_for_data).
+    //   data_ready_spi MUST already be high when DATA_S executes.
+    //   WAIT_ACK_S waits for !data_ready_spi then proceeds.
+    //
+    //   Strategy: same as UART but without clear.
     // -------------------------------------------------------
     task send_byte_spi;
         input [7:0] byte_val;
         begin
-            // Place data on the bus
+            @(negedge clk);
             data_in_spi = byte_val;
-            busy = 1;
+            data_ready_spi = 1;
+            busy_spi = 1;
 
-            // Wait until FSM is in DATA state (state 2) and ready to latch
+            // Wait for FSM to reach WAIT_ACK_S
+            wait (uut.state == WAIT_ACK_S);
+
+            // Deassert data_ready so WAIT_ACK_S proceeds
             @(negedge clk);
-            while (uut.state != 2) begin
-                @(negedge clk);
+            data_ready_spi = 0;
+
+            // Wait for FSM to leave WAIT_ACK_S
+            @(posedge clk);
+            while (uut.state == WAIT_ACK_S) begin
+                @(posedge clk);
             end
-
-            // Assert data_ready — FSM will see it on the next posedge
-            data_ready = 1;
-
-            // posedge: DATA latches the byte, transitions to WAIT_ACK
-            @(posedge clk);
-
-            // Deassert data_ready on the following negedge
-            @(negedge clk);
-            data_ready = 0;
-
-            // posedge: WAIT_ACK sees !data_ready, transitions to DATA or LOAD
-            @(posedge clk);
-            @(posedge clk); // one extra for state transition to settle
         end
     endtask
 
     // -------------------------------------------------------
     // Task: send a 32-bit word as 4 little-endian bytes (UART)
+    //   PC_TRANSFER_U checks data_ready_uart|busy_uart.
+    //   If more words follow, keep busy_uart=1.
+    //   For last word, deassert busy so FSM goes to DONE.
     // -------------------------------------------------------
     task send_word_uart;
         input [31:0] word_val;
@@ -137,19 +157,22 @@ module PROGRAM_LOADER_TB ();
             send_byte_uart(word_val[23:16]);
             send_byte_uart(word_val[31:24]);
 
-            // After 4th byte: FSM goes LOAD -> PC_TRANSFER.
-            // PC_TRANSFER checks data_ready|busy.
+            // After 4th byte: FSM goes LOAD_U -> PC_TRANSFER_U.
+            // PC_TRANSFER_U checks data_ready_uart|busy_uart.
             // For the last word: deassert busy so FSM goes to DONE.
             if (is_last_word) begin
                 @(negedge clk);
-                busy = 0;
-                data_ready = 0;
+                busy_uart = 0;
+                data_ready_uart = 0;
             end
         end
     endtask
 
     // -------------------------------------------------------
     // Task: send a 32-bit word as 4 little-endian bytes (SPI)
+    //   PC_TRANSFER_S checks data_ready_spi|busy_spi.
+    //   If more words follow, keep busy_spi=1.
+    //   For last word, deassert busy so FSM goes to DONE.
     // -------------------------------------------------------
     task send_word_spi;
         input [31:0] word_val;
@@ -162,8 +185,8 @@ module PROGRAM_LOADER_TB ();
 
             if (is_last_word) begin
                 @(negedge clk);
-                busy = 0;
-                data_ready = 0;
+                busy_spi = 0;
+                data_ready_spi = 0;
             end
         end
     endtask
@@ -206,12 +229,13 @@ module PROGRAM_LOADER_TB ();
     // -------------------------------------------------------
     initial begin
         // Initialize
-        reset       = 1;
-        data_ready  = 0;
-        busy        = 0;
-        comm_slct   = 0;   // default UART
-        data_in_uart = 8'h00;
-        data_in_spi  = 8'h00;
+        reset           = 1;
+        data_ready_uart = 0;
+        data_ready_spi  = 0;
+        busy_uart       = 0;
+        busy_spi        = 0;
+        data_in_uart    = 8'h00;
+        data_in_spi     = 8'h00;
 
         repeat (4) @(posedge clk);
         @(negedge clk);
@@ -227,8 +251,7 @@ module PROGRAM_LOADER_TB ();
         // =============================================
         // TEST 1: Load 3 instructions via UART
         // =============================================
-        $display("\n--- TEST 1: Load 3 instructions via UART (comm_slct=0) ---");
-        comm_slct = 0;
+        $display("\n--- TEST 1: Load 3 instructions via UART ---");
 
         send_word_uart(32'hDEADBEEF, 0);  // word 0
         repeat (5) @(posedge clk);
@@ -248,7 +271,7 @@ module PROGRAM_LOADER_TB ();
         check_1bit("done_seen", done_seen, 1'b1);
 
         // =============================================
-        // TEST 2: cpu_halt deasserts after burst
+        // TEST 2: cpu_halt deasserts after UART burst
         // =============================================
         $display("\n--- TEST 2: cpu_halt deasserts after UART burst ---");
         repeat (5) @(posedge clk);
@@ -257,8 +280,7 @@ module PROGRAM_LOADER_TB ();
         // =============================================
         // TEST 3: Load 2 instructions via SPI
         // =============================================
-        $display("\n--- TEST 3: Load 2 instructions via SPI (comm_slct=1) ---");
-        comm_slct = 1;
+        $display("\n--- TEST 3: Load 2 instructions via SPI ---");
 
         send_word_spi(32'hAAAABBBB, 0);   // word 0
         repeat (5) @(posedge clk);
@@ -281,30 +303,96 @@ module PROGRAM_LOADER_TB ();
         check_1bit("cpu_halt", cpu_halt, 1'b0);
 
         // =============================================
-        // TEST 5: Mixed — load first word via UART,
-        //         then switch to SPI for second word
+        // TEST 5: Sequential — UART session then SPI session
+        //   (mid-session switching is not supported in the
+        //    new split-FSM design, so we test two back-to-back
+        //    sessions instead)
         // =============================================
-        $display("\n--- TEST 5: Mixed UART then SPI session ---");
-        comm_slct = 0;
-        send_word_uart(32'h11223344, 0);  // word 0 via UART
-        repeat (5) @(posedge clk);
+        $display("\n--- TEST 5: Sequential UART then SPI sessions ---");
 
-        // Switch to SPI mid-session
-        comm_slct = 1;
-        send_word_spi(32'h55667788, 1);   // word 1 via SPI (last)
-
+        // First: one word via UART
+        send_word_uart(32'h11223344, 1);  // word 0 via UART (last)
         repeat (15) @(posedge clk);
 
-        $display("  Verifying cache contents (mixed):");
-        check("cache[UART_ADDR+0]", fake_cache[`UART_ADDR],     32'h11223344);
-        check("cache[SPI_ADDR+4]", fake_cache[`SPI_ADDR + 4], 32'h55667788);
+        $display("  Verifying UART session:");
+        check("cache[UART_ADDR+0]", fake_cache[`UART_ADDR], 32'h11223344);
+        check_1bit("done_seen", done_seen, 1'b1);
+        check_1bit("cpu_halt", cpu_halt, 1'b0);
+
+        // Then: one word via SPI
+        send_word_spi(32'h55667788, 1);   // word 0 via SPI (last)
+        repeat (15) @(posedge clk);
+
+        $display("  Verifying SPI session:");
+        check("cache[SPI_ADDR+0]", fake_cache[`SPI_ADDR], 32'h55667788);
+        check_1bit("done_seen", done_seen, 1'b1);
+        check_1bit("cpu_halt", cpu_halt, 1'b0);
 
         // =============================================
-        // TEST 6: write_ptr resets after session
+        // TEST 6: write_ptr resets for new session
+        //   After DONE -> STALL, if UART triggers,
+        //   write_ptr should be UART_ADDR.
         // =============================================
-        $display("\n--- TEST 6: write_ptr resets for new session ---");
+        $display("\n--- TEST 6: write_ptr resets for new UART session ---");
         repeat (5) @(posedge clk);
+        // Start a new UART byte to trigger STALL -> START_U
+        @(negedge clk);
+        data_in_uart = 8'hAA;
+        data_ready_uart = 1;
+        busy_uart = 1;
+        // Wait for FSM to enter START_U
+        wait (uut.state == START_U);
+        @(posedge clk);
         check("write_ptr", write_ptr, `UART_ADDR);
+        // Clean up — deassert and let FSM settle
+        @(negedge clk);
+        data_ready_uart = 0;
+        busy_uart = 0;
+        // Force reset to get clean state for next test
+        @(negedge clk);
+        reset = 1;
+        repeat (4) @(posedge clk);
+        @(negedge clk);
+        reset = 0;
+        repeat (2) @(posedge clk);
+
+        // =============================================
+        // TEST 7: UART has priority when both trigger
+        //   In STALL, UART `if` is checked before SPI
+        //   `else if`, so UART wins when both assert.
+        // =============================================
+        $display("\n--- TEST 7: UART priority when both assert simultaneously ---");
+        @(negedge clk);
+        data_in_spi  = 8'hFF;
+        data_in_uart = 8'h00;
+        data_ready_uart = 1;
+        data_ready_spi  = 1;
+        busy_uart = 1;
+        busy_spi  = 1;
+        @(posedge clk); // STALL evaluates: UART if hits first
+        @(posedge clk); // now in START_U
+        check("write_ptr (UART wins)", write_ptr, `UART_ADDR);
+        // Verify FSM took the UART path
+        if (uut.state == START_U || uut.state == DATA_U) begin
+            $display("[PASS] FSM entered UART path (state=%0d)", uut.state);
+            test_pass = test_pass + 1;
+        end else begin
+            $display("[FAIL] FSM did not enter UART path (state=%0d, expected %0d or %0d)", uut.state, START_U, DATA_U);
+            test_fail = test_fail + 1;
+        end
+
+        // Clean up
+        @(negedge clk);
+        data_ready_uart = 0;
+        data_ready_spi  = 0;
+        busy_uart = 0;
+        busy_spi  = 0;
+        @(negedge clk);
+        reset = 1;
+        repeat (4) @(posedge clk);
+        @(negedge clk);
+        reset = 0;
+        repeat (2) @(posedge clk);
 
         // =============================================
         // Summary
@@ -319,7 +407,7 @@ module PROGRAM_LOADER_TB ();
 
     // Timeout watchdog
     initial begin
-        #500000;
+        #1000000;
         $display("[TIMEOUT] Simulation exceeded time limit");
         $finish;
     end

@@ -9,6 +9,7 @@ module top (
     input miso,
     output mosi,
     output ss,
+    output busy,
     output out
 );
 
@@ -18,19 +19,16 @@ wire [`DATA_WIDTH-1:0] loader_data;
 wire cpu_halt;
 wire loader_done;
 wire loader_we;
-wire busy;
 wire uart_busy;
 wire spi_busy;
-wire data_ready;
 wire data_ready_uart;
 wire data_ready_spi;
 wire clear;
-wire [`DATA_WIDTH-1:0] data_in_uart;
-wire [`DATA_WIDTH-1:0] data_in_spi;
-wire comm_slct;
+wire [7:0] data_in_uart;
+wire [7:0] data_in_spi;
 
-wire [`DATA_WIDTH-1:0] uart_out_buffer;
-wire [`DATA_WIDTH-1:0] spi_output_buffer;
+wire [7:0] uart_out_buffer;
+wire [7:0] spi_output_buffer;
 wire tx_enable;
 wire uart_output;
 wire spi_output;
@@ -39,7 +37,7 @@ CORE CORE (
     .clk(clk),
     .reset(reset),
     .loader_we(loader_we),
-    .loader_done(loader_done),
+    .load_done(loader_done),
     .loader_addr(loader_addr),
     .loader_data(loader_data),
     .cpu_halt(cpu_halt)
@@ -76,9 +74,10 @@ SPI SPI(
 PROGRAM_LOADER PROGRAM_LOADER(
     .clk(clk),
     .reset(reset),
-    .data_ready(data_ready),
-    .busy(busy),
-    .comm_slct(comm_slct),
+    .data_ready_uart(data_ready_uart),
+    .data_ready_spi(data_ready_spi),
+    .busy_uart(uart_busy),
+    .busy_spi(spi_busy),
     .data_in_uart(data_in_uart),
     .data_in_spi(data_in_spi),
     .done(loader_done),
@@ -88,12 +87,5 @@ PROGRAM_LOADER PROGRAM_LOADER(
     .write_ptr(write_ptr),
     .w_addr(loader_addr),
     .w_data(loader_data)
-);
-
-always @(*) begin
-    if(data_ready_uart) begin
-        data_ready = data_ready_uart;
-    end
-end
-    
+);  
 endmodule
