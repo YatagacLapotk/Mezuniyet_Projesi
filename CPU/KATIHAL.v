@@ -9,7 +9,9 @@ module top (
     input miso,
     output mosi,
     output ss,
-    output busy
+    output busy,
+    output uart_output
+    
 );
 
 wire [`DATA_WIDTH-1:0] write_ptr;
@@ -29,7 +31,6 @@ wire [7:0] data_in_spi;
 wire [7:0] uart_out_buffer;
 wire [7:0] spi_output_buffer;
 wire tx_enable;
-wire uart_output;
 wire spi_output;
 
 CORE CORE (
