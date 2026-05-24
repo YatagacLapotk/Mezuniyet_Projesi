@@ -3,10 +3,10 @@ import time
 
 # Configure the serial port (Replace 'COM3' or '/dev/ttyUSB1' with your actual port)
 # Match the baud rate to your FPGA's UART baud rate
-ser = serial.Serial('COM3', 115200, timeout=1)
+ser = serial.Serial('COM4', 115200, timeout=1)
 time.sleep(2) # Wait for connection to stabilize
 
-with open("instructions.txt", "r") as file:
+with open("E:\RV32IM\Mezuniyet_Projesi\CPU\BOOT\instructions.txt", "r") as file:
     for line in file:
         clean_line = line.strip()
         if not clean_line:
