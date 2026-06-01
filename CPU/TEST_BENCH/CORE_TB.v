@@ -24,10 +24,6 @@ module CORE_TB ();
     // -------------------------------------------
     reg clk;
     reg reset;
-    reg interrupt;
-    reg [`DATA_WIDTH-1:0] comm_data_in;
-    wire [`DATA_WIDTH-1:0] comm_data_out;
-
     // Program loader interface
     reg loader_we;
     reg load_done;
@@ -46,9 +42,6 @@ module CORE_TB ();
     CORE uut (
         .clk(clk),
         .reset(reset),
-        .interrupt(interrupt),
-        .comm_data_in(comm_data_in),
-        .comm_data_out(comm_data_out),
         .loader_we(loader_we),
         .load_done(load_done),
         .loader_addr(loader_addr),
@@ -229,8 +222,6 @@ module CORE_TB ();
         // Initialization
         // -----------------------------------------------
         reset       = 1;
-        interrupt   = 0;
-        comm_data_in = 0;
         loader_we   = 0;
         load_done   = 0;
         loader_addr = 0;

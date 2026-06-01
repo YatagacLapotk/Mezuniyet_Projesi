@@ -124,6 +124,9 @@ module UART_TOP_TB(input wire start, output reg done);
     // Main Test Sequence
     // -------------------------------------------------------
     initial begin
+        done = 0;
+        wait(start);
+
         // For waveform viewing (optional depending on simulator)
         $dumpfile("uart_tb.vcd");
         $dumpvars(0, UART_TOP_TB);
@@ -293,8 +296,10 @@ module UART_TOP_TB(input wire start, output reg done);
     initial begin
         wait(start);
         #(BIT_PERIOD * 100); 
-        $display("\nERROR: Simulation timeout! State machine stuck.");
-        done = 1;
+        if (!done) begin
+            $display("\nERROR: Simulation timeout! State machine stuck.");
+            done = 1;
+        end
     end
 
 endmodule
@@ -771,8 +776,10 @@ module UART_TX_TB(input wire start, output reg done);
     initial begin
         wait(start);
         #(CLK_PERIOD * 500000);
-        $display("ERROR: Simulation timeout!");
-        done = 1;
+        if (!done) begin
+            $display("ERROR: Simulation timeout!");
+            done = 1;
+        end
     end
 
 endmodule
@@ -1417,8 +1424,10 @@ module UART_RX_TB(input wire start, output reg done);
     initial begin
         wait(start);
         #(CLK_PERIOD * 5000000);
-        $display("ERROR: Simulation timeout!");
-        done = 1;
+        if (!done) begin
+            $display("ERROR: Simulation timeout!");
+            done = 1;
+        end
     end
 
 endmodule
@@ -1520,42 +1529,35 @@ module BAUD_GEN_TB(input wire start, output reg done);
 
         // ---- Release reset ----
         reset = 0;
-        @(posedge clk);
+        @(negedge clk);
 
         // ---- TEST 2: RX enable period ----
         $display("----------------------------------------------");
         $display("TEST 2: RX enable tick period (expected %0d clocks)", RX_DIVISOR);
         $display("----------------------------------------------");
 
-        // Wait for first rx_enable tick after reset, then measure next ones
-        // Skip the first tick (may be partial from reset release)
-        @(posedge clk);  // one cycle after reset release
+        // Wait until we see rx_enable == 1
+        while (rx_enable !== 1'b1) @(negedge clk);
+        // Skip first tick's measurement to be clean
         rx_tick_count = 0;
         rx_ticks_seen = 0;
-
-        // Wait until we see a rising edge of rx_enable
-        wait (rx_enable == 1'b0);   // wait for it to go low first
-        wait (rx_enable == 1'b1);   // now catch the next tick
-        @(posedge clk);
-        rx_tick_count = 0;
+        @(negedge clk);
 
         // Measure period: count clocks until next rx_enable
-        while (rx_ticks_seen < 3) begin
-            @(posedge clk);
+        while (rx_ticks_seen < 2) begin
             rx_tick_count = rx_tick_count + 1;
-            if (rx_enable) begin
-                if (rx_ticks_seen > 0) begin
-                    rx_period = rx_tick_count;
-                    if (rx_period == RX_DIVISOR)
-                        $display("  PASS: RX tick #%0d period = %0d clocks", rx_ticks_seen, rx_period);
-                    else begin
-                        $display("  FAIL: RX tick #%0d period = %0d clocks (expected %0d)", rx_ticks_seen, rx_period, RX_DIVISOR);
-                        errors = errors + 1;
-                    end
+            if (rx_enable === 1'b1) begin
+                rx_period = rx_tick_count;
+                if (rx_period == RX_DIVISOR)
+                    $display("  PASS: RX tick #%0d period = %0d clocks", rx_ticks_seen + 1, rx_period);
+                else begin
+                    $display("  FAIL: RX tick #%0d period = %0d clocks (expected %0d)", rx_ticks_seen + 1, rx_period, RX_DIVISOR);
+                    errors = errors + 1;
                 end
                 rx_tick_count = 0;
                 rx_ticks_seen = rx_ticks_seen + 1;
             end
+            @(negedge clk);
         end
 
         // ---- TEST 3: TX enable period ----
@@ -1567,34 +1569,29 @@ module BAUD_GEN_TB(input wire start, output reg done);
         reset = 1;
         repeat (3) @(posedge clk);
         reset = 0;
-        @(posedge clk);
+        @(negedge clk);
 
+        // Wait until we see tx_enable == 1
+        while (tx_enable !== 1'b1) @(negedge clk);
         tx_tick_count = 0;
         tx_ticks_seen = 0;
-
-        // Wait for tx_enable to deassert then reassert
-        wait (tx_enable == 1'b0);
-        wait (tx_enable == 1'b1);
-        @(posedge clk);
-        tx_tick_count = 0;
+        @(negedge clk);
 
         // Measure 2 full TX periods
-        while (tx_ticks_seen < 3) begin
-            @(posedge clk);
+        while (tx_ticks_seen < 2) begin
             tx_tick_count = tx_tick_count + 1;
-            if (tx_enable) begin
-                if (tx_ticks_seen > 0) begin
-                    tx_period = tx_tick_count;
-                    if (tx_period == TX_DIVISOR)
-                        $display("  PASS: TX tick #%0d period = %0d clocks", tx_ticks_seen, tx_period);
-                    else begin
-                        $display("  FAIL: TX tick #%0d period = %0d clocks (expected %0d)", tx_ticks_seen, tx_period, TX_DIVISOR);
-                        errors = errors + 1;
-                    end
+            if (tx_enable === 1'b1) begin
+                tx_period = tx_tick_count;
+                if (tx_period == TX_DIVISOR)
+                    $display("  PASS: TX tick #%0d period = %0d clocks", tx_ticks_seen + 1, tx_period);
+                else begin
+                    $display("  FAIL: TX tick #%0d period = %0d clocks (expected %0d)", tx_ticks_seen + 1, tx_period, TX_DIVISOR);
+                    errors = errors + 1;
                 end
                 tx_tick_count = 0;
                 tx_ticks_seen = tx_ticks_seen + 1;
             end
+            @(negedge clk);
         end
 
         // ---- TEST 4: TX/RX ratio ----
@@ -1606,20 +1603,19 @@ module BAUD_GEN_TB(input wire start, output reg done);
         reset = 1;
         repeat (3) @(posedge clk);
         reset = 0;
+        @(negedge clk);
 
-        // Wait for first TX tick after reset
-        wait (tx_enable == 1'b0);
-        wait (tx_enable == 1'b1);
-        @(posedge clk);
+        // Wait for first TX tick
+        while (tx_enable !== 1'b1) @(negedge clk);
+        @(negedge clk);
 
         // Count RX ticks until next TX tick
         rx_ticks_seen = 0;
-        begin : ratio_block
-            forever begin
-                @(posedge clk);
-                if (rx_enable) rx_ticks_seen = rx_ticks_seen + 1;
-                if (tx_enable) disable ratio_block;
+        while (tx_enable !== 1'b1) begin
+            if (rx_enable === 1'b1) begin
+                rx_ticks_seen = rx_ticks_seen + 1;
             end
+            @(negedge clk);
         end
 
         // TX_DIVISOR / RX_DIVISOR = 868/54 = 16 (integer division)
@@ -1640,10 +1636,10 @@ module BAUD_GEN_TB(input wire start, output reg done);
 
         // Assert reset
         reset = 1;
-        @(posedge clk);
-        @(posedge clk);
+        @(negedge clk);
+        @(negedge clk);
 
-        // Check that counters are zeroed (enables should be high)
+        // Check that counters are zeroed (enables should be high at negedge as reset is active)
         if (tx_enable !== 1'b1 || rx_enable !== 1'b1) begin
             $display("  FAIL: Enables should be 1 after mid-operation reset");
             errors = errors + 1;
@@ -1675,8 +1671,10 @@ module BAUD_GEN_TB(input wire start, output reg done);
     initial begin
         wait(start);
         #(CLK_PERIOD * 100000);
-        $display("ERROR: Simulation timeout!");
-        done = 1;
+        if (!done) begin
+            $display("ERROR: Simulation timeout!");
+            done = 1;
+        end
     end
 
 endmodule
