@@ -8,7 +8,8 @@ module CORE (
     input load_done,
     input [`DATA_WIDTH-1:0] loader_addr,
     input [`DATA_WIDTH-1:0] loader_data,
-    input cpu_halt
+    input cpu_halt,
+    output [`DATA_WIDTH-1:0] mem_out_data
 );
 
 //FETCH wiring
@@ -267,5 +268,7 @@ always @(posedge clk) begin
         csr_data_out_E <= csr_data_out;
     end
 end
-    
+
+assign mem_out_data = mem_result_out;
+
 endmodule

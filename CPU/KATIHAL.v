@@ -10,8 +10,8 @@ module top (
     output mosi,
     output ss,
     output busy,
-    output uart_output
-    
+    output uart_output,
+    output [15:0] data_mem_out
 );
 
 wire [`DATA_WIDTH-1:0] write_ptr;
@@ -33,6 +33,8 @@ wire [7:0] spi_output_buffer;
 wire tx_enable;
 wire spi_output;
 
+wire [15:0] mem_out_data_temp;
+
 CORE CORE (
     .clk(clk),
     .reset(reset),
@@ -40,7 +42,8 @@ CORE CORE (
     .load_done(loader_done),
     .loader_addr(loader_addr),
     .loader_data(loader_data),
-    .cpu_halt(cpu_halt)
+    .cpu_halt(cpu_halt),
+    .mem_out_data({mem_out_data_temp,data_mem_out})
 );
 
 UART UART(
