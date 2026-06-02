@@ -43,7 +43,7 @@ CORE CORE (
     .loader_addr(loader_addr),
     .loader_data(loader_data),
     .cpu_halt(cpu_halt),
-    .mem_out_data({mem_out_data_temp,data_mem_out})
+    .mem_out_data(data_mem_out)
 );
 
 UART UART(
