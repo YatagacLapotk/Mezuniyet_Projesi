@@ -14,7 +14,7 @@ module D_CACHE (
     output reg [`DATA_WIDTH-1:0] data_out
 );
 
-reg [`DATA_WIDTH-1:0] d_cache [0:`CACHE_SIZE];
+reg [`DATA_WIDTH-1:0] d_cache [0:`D_CACHE_SIZE];
 reg [`DATA_WIDTH-1:0] merged_data;
 reg [7:0]  selected_byte;
 reg [15:0] selected_half;

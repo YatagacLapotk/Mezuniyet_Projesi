@@ -20,7 +20,8 @@
 `define SHAMT_WIDTH         5
 `define WB_CNTRL            2
 `define CACHE_ADDRESS       32 
-`define CACHE_SIZE         2048 // 8KB 
+`define I_CACHE_SIZE        2048 // 8KB 
+`define D_CACHE_SIZE        256 // 1KB  
 `define NOP 32'h00000013
 `define CLK 100000000
 `define BAUD_RATE 115200

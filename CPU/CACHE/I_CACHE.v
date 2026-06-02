@@ -13,7 +13,7 @@ input [`CACHE_ADDRESS-1:0] r_addr,
 output [`INSTRUCTION_WIDTH-1:0] inst_out
 );
 
-reg [`INSTRUCTION_WIDTH-1:0] i_cache [0:`CACHE_SIZE]; // cache boyutunu 8kb olara ayarladım sonrasında konuşur değişiriz.
+reg [`INSTRUCTION_WIDTH-1:0] i_cache [0:`I_CACHE_SIZE]; // cache boyutunu 8kb olara ayarladım sonrasında konuşur değişiriz.
 
 initial begin
     i_cache[0] = 32'h0000;
