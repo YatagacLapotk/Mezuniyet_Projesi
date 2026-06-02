@@ -22,7 +22,7 @@ end
 integer i;
 always @(posedge clk) begin
     if (reset)begin
-        for(i = 0; i<`CACHE_SIZE;i=i+1)begin
+        for(i = 0; i<`I_CACHE_SIZE;i=i+1)begin
             i_cache[i]<= 0;
         end
     end 
