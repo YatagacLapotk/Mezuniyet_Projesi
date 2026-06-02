@@ -1,6 +1,6 @@
 
-`define CLK 100000000
-`define BAUD_RATE 115200
+`define CLK 5000000
+`define BAUD_RATE 5760
 
 module baudrate (
     input wire clk,

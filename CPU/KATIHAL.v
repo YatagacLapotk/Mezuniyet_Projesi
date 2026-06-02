@@ -13,7 +13,7 @@ module top (
     output uart_output,
     output [15:0] data_mem_out
 );
-
+wire clk_out;
 wire [`DATA_WIDTH-1:0] write_ptr;
 wire [`DATA_WIDTH-1:0] loader_addr;
 wire [`DATA_WIDTH-1:0] loader_data;
@@ -35,8 +35,13 @@ wire spi_output;
 
 wire [15:0] mem_out_data_temp;
 
+clk_wiz_0 clk_wiz_0 (
+    .clk_in1(clk),
+    .reset(reset),
+    .clk_out1(clk_out)                  
+);
 CORE CORE (
-    .clk(clk),
+    .clk(clk_out),
     .reset(reset),
     .loader_we(loader_we),
     .load_done(loader_done),
@@ -47,7 +52,7 @@ CORE CORE (
 );
 
 UART UART(
-    .clk(clk),
+    .clk(clk_out),
     .reset(reset),
     .tx_enable(tx_enable), //Harici sinyal
     .rx_enable(rx_enable), //Harici sinyal
@@ -61,7 +66,7 @@ UART UART(
 );
 
 SPI SPI(
-    .clk(clk),
+    .clk(clk_out),
     .reset(reset),
     .data_out(spi_output_buffer),
     .enable(spi_enable),
@@ -75,7 +80,7 @@ SPI SPI(
 );
 
 PROGRAM_LOADER PROGRAM_LOADER(
-    .clk(clk),
+    .clk(clk_out),
     .reset(reset),
     .data_ready_uart(data_ready_uart),
     .data_ready_spi(data_ready_spi),

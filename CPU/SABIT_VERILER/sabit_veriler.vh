@@ -20,11 +20,11 @@
 `define SHAMT_WIDTH         5
 `define WB_CNTRL            2
 `define CACHE_ADDRESS       32 
-`define I_CACHE_SIZE        256 // 1KB 
-`define D_CACHE_SIZE        256 // 1KB  
+`define I_CACHE_SIZE        300 //  
+`define D_CACHE_SIZE        300 //   
 `define NOP 32'h00000013
-`define CLK 100000000
-`define BAUD_RATE 115200
+`define CLK 5000000
+`define BAUD_RATE 5760
 `define ISA_SLCT            2
 
 // CSR Addresses

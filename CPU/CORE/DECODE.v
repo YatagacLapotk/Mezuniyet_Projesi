@@ -159,6 +159,7 @@ always @  (*) begin
             mdu_control_reg = funct3; 
         end
         else begin
+            mdu_control_reg = 3'b000;
             case (funct3)
                 3'b000: alu_control_reg = 4'b0000; //ADD
                 3'b001: alu_control_reg = 4'b0101; //SLL
@@ -168,6 +169,7 @@ always @  (*) begin
                 3'b101: alu_control_reg = 4'b0110; //SRL
                 3'b110: alu_control_reg = 4'b0010; //OR
                 3'b111: alu_control_reg = 4'b0011; //AND
+                default: alu_control_reg = 4'b0000;
             endcase    
         end
     end 
@@ -180,6 +182,7 @@ always @  (*) begin
             3'b101: alu_control_reg = 4'b1011; //BGE
             3'b110: alu_control_reg = 4'b1110; //BLTU 
             3'b111: alu_control_reg = 4'b1111; //BGEU 
+            default: alu_control_reg = 4'b0000;
         endcase
     end
     else if ((opcode == i_logic)) begin
@@ -196,6 +199,7 @@ always @  (*) begin
                 3'b100: alu_control_reg = 4'b0100; //XORI
                 3'b110: alu_control_reg = 4'b0010; //ORI
                 3'b111: alu_control_reg = 4'b0011; //ANDI
+                default: alu_control_reg = 4'b0000;
             endcase  
         end 
     end
