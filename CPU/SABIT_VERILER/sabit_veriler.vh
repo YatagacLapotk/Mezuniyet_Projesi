@@ -2,8 +2,8 @@
 `define sabit_veriler_VH
 
 `define FIRST_ADDR 32'h00000000
-`define UART_ADDR 32'h00001800
-`define SPI_ADDR 32'h00001C00
+`define UART_ADDR  32'h00000000
+`define SPI_ADDR   32'h00000000
 
 `define ADDRESS_WIDTH       5
 `define DATA_WIDTH         32
@@ -20,7 +20,7 @@
 `define SHAMT_WIDTH         5
 `define WB_CNTRL            2
 `define CACHE_ADDRESS       32 
-`define I_CACHE_SIZE        2048 // 8KB 
+`define I_CACHE_SIZE        256 // 1KB 
 `define D_CACHE_SIZE        256 // 1KB  
 `define NOP 32'h00000013
 `define CLK 100000000
