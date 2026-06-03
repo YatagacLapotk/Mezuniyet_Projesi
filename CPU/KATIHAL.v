@@ -37,7 +37,6 @@ wire [15:0] mem_out_data_temp;
 
 clk_wiz_0 clk_wiz_0 (
     .clk_in1(clk),
-    .reset(reset),
     .clk_out1(clk_out)                  
 );
 CORE CORE (
