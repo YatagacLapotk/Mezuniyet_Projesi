@@ -27,6 +27,7 @@ module KATIHAL_TB ();
     wire mosi;
     wire ss;
     wire busy;
+    wire [15:0] data_mem_out;
 
     // Test takip değişkenleri
     integer test_pass = 0;
@@ -54,7 +55,8 @@ module KATIHAL_TB ();
         .miso(miso),
         .mosi(mosi),
         .ss(ss),
-        .busy(busy)
+        .busy(busy),
+        .data_mem_out(data_mem_out)
     );
 
     // -------------------------------------------
