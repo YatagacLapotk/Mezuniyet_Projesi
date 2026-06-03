@@ -9,16 +9,17 @@ module SPI (
     output wire busy,
     output wire ss,
     output wire mosi,
-    output wire [7:0] data_in
+    output wire [7:0] data_in,
+    output wire sclk
 );
 
-wire sclk_w;
+
 
 sclk_gen sclk_gen (
     .clk(clk),
     .reset(reset),
     .sclk_enable(sclk_enable),
-    .sclk(sclk_w)
+    .sclk(sclk)
 );
 
 
@@ -27,7 +28,7 @@ SPI_master SPI_master (
     .reset(reset),
     .miso(miso),
     .data_out(data_out),
-    .sclk(sclk_w),
+    .sclk(sclk),
     .enable(enable),
     .mosi(mosi),
     .data_in(data_in),

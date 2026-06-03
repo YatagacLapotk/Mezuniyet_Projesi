@@ -11,7 +11,8 @@ module top (
     output ss,
     output busy,
     output uart_output,
-    output [15:0] data_mem_out
+    output [15:0] data_mem_out,
+    output wire sclk
 );
 wire clk_out;
 wire [`DATA_WIDTH-1:0] write_ptr;
@@ -75,7 +76,8 @@ SPI SPI(
     .busy(spi_busy),
     .ss(ss),
     .mosi(mosi),
-    .data_in(data_in_spi)
+    .data_in(data_in_spi),
+    .sclk(sclk)
 );
 
 PROGRAM_LOADER PROGRAM_LOADER(

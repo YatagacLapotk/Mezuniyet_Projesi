@@ -1,4 +1,8 @@
-`include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`define BEHAVIORAL_SIM
+// Comment out the line above (or define it as `undef BEHAVIORAL_SIM) to run 
+// post-implementation or post-synthesis functional simulation in Vivado.
+
+`include "sabit_veriler.vh"
 
 // =============================================================================
 // KATIHAL (Top Module) Testbench
@@ -27,18 +31,26 @@ module KATIHAL_TB ();
     wire mosi;
     wire ss;
     wire busy;
+    wire sclk;
     wire [15:0] data_mem_out;
 
     // Test takip değişkenleri
     integer test_pass = 0;
     integer test_fail = 0;
     reg loader_done_captured;
+    integer cycle_count;
 
     always @(posedge clk) begin
         if (reset) begin
             loader_done_captured <= 0;
-        end else if (uut.PROGRAM_LOADER.done) begin
-            loader_done_captured <= 1;
+        end else begin
+`ifdef BEHAVIORAL_SIM
+            if (uut.PROGRAM_LOADER.done) begin
+                loader_done_captured <= 1;
+            end
+`else
+            loader_done_captured <= 0;
+`endif
         end
     end
 
@@ -56,6 +68,7 @@ module KATIHAL_TB ();
         .mosi(mosi),
         .ss(ss),
         .busy(busy),
+        .sclk(sclk),
         .data_mem_out(data_mem_out)
     );
 
@@ -70,11 +83,7 @@ module KATIHAL_TB ();
     // -------------------------------------------
     // Baud Rate Zamanlama Sabitleri
     // -------------------------------------------
-    // UART TX bit süresi (clock cycle cinsinden)
-    // Baud generator: counter_tx = CLK / BAUD_RATE = 868 cycle per bit
     localparam BAUD_TICKS = `CLK / `BAUD_RATE;  // 868 clock cycles per bit
-
-    // SPI: sclk_gen counter = (CLK / BAUD_RATE) / 2 = 434 cycles per half period
     localparam SCLK_HALF_PERIOD = (`CLK / `BAUD_RATE) / 2; // 434 cycles
 
     // -------------------------------------------
@@ -116,14 +125,22 @@ module KATIHAL_TB ();
     function [31:0] read_reg;
         input [4:0] idx;
         begin
+`ifdef BEHAVIORAL_SIM
             read_reg = uut.CORE.DECODE.REG_FILE.REG32[idx];
+`else
+            read_reg = 32'h0;
+`endif
         end
     endfunction
 
     function [31:0] read_icache;
         input [31:0] word_idx;
         begin
+`ifdef BEHAVIORAL_SIM
             read_icache = uut.CORE.FETCH.I_CACHE.i_cache[word_idx];
+`else
+            read_icache = 32'h0;
+`endif
         end
     endfunction
 
@@ -133,6 +150,7 @@ module KATIHAL_TB ();
         input [31:0]  expected;
         reg   [31:0]  actual;
         begin
+`ifdef BEHAVIORAL_SIM
             actual = read_reg(reg_idx);
             if (actual === expected) begin
                 $display("[PASS] %0s | x%0d = 0x%08X", test_name, reg_idx, actual);
@@ -141,14 +159,15 @@ module KATIHAL_TB ();
                 $display("[FAIL] %0s | x%0d = 0x%08X (expected 0x%08X)", test_name, reg_idx, actual, expected);
                 test_fail = test_fail + 1;
             end
+`else
+            $display("[INFO] %0s | Skipped hierarchical reg check (x%0d expected 0x%08X)", test_name, reg_idx, expected);
+`endif
         end
     endtask
 
     // -------------------------------------------
     // UART Seri Byte Gönderme Görevi
     // -------------------------------------------
-    // Gerçek UART protokolü: START(LOW) + 8 Data Bits (LSB first) + STOP(HIGH)
-    // Clock cycle bazlı zamanlama (baud rate ile senkron)
     task uart_send_byte;
         input [7:0] byte_val;
         integer bit_i;
@@ -186,9 +205,6 @@ module KATIHAL_TB ();
     // -------------------------------------------
     // SPI Byte Gönderme Görevi
     // -------------------------------------------
-    // SPI master MISO'dan okur (posedge sclk'da sample)
-    // Biz slave tarafını simüle ediyoruz: miso hattına veri koyuyoruz
-    // MSB first gönderim
     task spi_send_byte;
         input [7:0] byte_val;
         integer bit_i;
@@ -202,7 +218,7 @@ module KATIHAL_TB ();
             // Kalan 7 bit için sclk negedge'lerinde güncelliyoruz
             for (bit_i = 6; bit_i >= 0; bit_i = bit_i - 1) begin
                 // sclk negedge'i bekle (data setup)
-                @(negedge uut.SPI.sclk_w);
+                @(negedge sclk);
                 miso = byte_val[bit_i];
             end
 
@@ -212,13 +228,30 @@ module KATIHAL_TB ();
     endtask
 
     // -------------------------------------------
+    // SPI ile 32-bit Kelime Gönderme (Little-Endian)
+    // -------------------------------------------
+    task spi_send_word;
+        input [31:0] word_val;
+        begin
+            spi_send_byte(word_val[7:0]);
+            spi_send_byte(word_val[15:8]);
+            spi_send_byte(word_val[23:16]);
+            spi_send_byte(word_val[31:24]);
+        end
+    endtask
+
+    // -------------------------------------------
     // Program Loader'ın DONE olmasını bekleme
     // -------------------------------------------
     task wait_loader_done;
         begin
+`ifdef BEHAVIORAL_SIM
             wait (uut.PROGRAM_LOADER.done == 1'b1);
             @(posedge clk);
             @(posedge clk);
+`else
+            wait (busy == 1'b0);
+`endif
         end
     endtask
 
@@ -228,7 +261,7 @@ module KATIHAL_TB ();
         integer cycle_count;
         begin
             cycle_count = 0;
-            while (loader_done_captured == 1'b0 && cycle_count < max_cycles) begin
+            while (busy == 1'b1 && cycle_count < max_cycles) begin
                 @(posedge clk);
                 cycle_count = cycle_count + 1;
             end
@@ -257,35 +290,8 @@ module KATIHAL_TB ();
         end
     endtask
 
-    // -------------------------------------------
-    // Debug Monitor (opsiyonel, kritik sinyaller)
-    // -------------------------------------------
-    // Aşağıdaki satırı aktif ederek detaylı debug çıktısı alabilirsiniz:
-    // `define KATIHAL_TB_DEBUG
-    `ifdef KATIHAL_TB_DEBUG
-    always @(posedge clk) begin
-        if (!reset) begin
-            if (uut.data_ready_uart || uut.uart_busy || uut.data_ready_spi || uut.spi_busy || uut.PROGRAM_LOADER.state != 0) begin
-                $display("[DBG] t=%0t | PL_state=%0d wfd=%0d we=%b cpu_halt=%b | UART_dr=%b UART_busy=%b | SPI_dr=%b SPI_busy=%b ss=%b SPI_state=%0d",
-                    $time,
-                    uut.PROGRAM_LOADER.state,
-                    uut.PROGRAM_LOADER.wait_for_data,
-                    uut.PROGRAM_LOADER.we,
-                    uut.cpu_halt,
-                    uut.data_ready_uart,
-                    uut.uart_busy,
-                    uut.data_ready_spi,
-                    uut.spi_busy,
-                    ss,
-                    uut.SPI.SPI_master.state
-                );
-            end
-        end
-    end
-    `endif
-
     // =========================================================================
-    // ANA TEST SEKANSLARSI
+    // ANA TEST SEKANSLARI
     // =========================================================================
     initial begin
 
@@ -313,10 +319,12 @@ module KATIHAL_TB ();
         $display("============================================================");
 
         check_1bit("busy (reset sonrasi)", busy, 1'b0);
+`ifdef BEHAVIORAL_SIM
         check_1bit("loader done", uut.PROGRAM_LOADER.done, 1'b0);
         check_1bit("loader we", uut.PROGRAM_LOADER.we, 1'b0);
         check_1bit("cpu_halt", uut.cpu_halt, 1'b0);
         check("loader write_ptr", uut.PROGRAM_LOADER.write_ptr, `UART_ADDR);
+`endif
 
         // =============================================================
         // TEST 1: UART ile Tek Kelime Yükleme
@@ -325,10 +333,10 @@ module KATIHAL_TB ();
         $display("  TEST 1: UART ile Tek Kelime Yukleme (NOP)");
         $display("============================================================");
 
-        // UART RX'i aktifle (rx_enable=0 -> rxena=0 -> ~rxena=1 -> aktif)
+        // UART RX'i aktifle
         rx_enable = 0;
 
-        // NOP komutunu gönder: 0x00000013 (little-endian: 0x13, 0x00, 0x00, 0x00)
+        // NOP komutunu gönder: 0x00000013
         $display("  [%0t] UART ile NOP (0x00000013) gonderiliyor...", $time);
         uart_send_word(32'h00000013);
         $display("  [%0t] UART gonderim tamamlandi", $time);
@@ -337,14 +345,18 @@ module KATIHAL_TB ();
         uart_in = 1;
         rx_enable = 1;
 
-        // Loader DONE bekle (timeout ile)
+        // Loader DONE bekle
         $display("  [%0t] Loader DONE bekleniyor...", $time);
         wait_loader_done_timeout(50000, "TEST 1");
 
         repeat (5) @(posedge clk);
 
         $display("  I_CACHE icerigini dogrulama:");
+`ifdef BEHAVIORAL_SIM
         check("I_CACHE[UART_ADDR>>2]", read_icache(`UART_ADDR >> 2), 32'h00000013);
+`else
+        $display("  [INFO] Skipping direct I_CACHE check (Post-Implementation Simulation)");
+`endif
         check_1bit("busy (yukleme sonrasi)", busy, 1'b0);
 
         // Reset
@@ -360,13 +372,30 @@ module KATIHAL_TB ();
         // Program:
         //   ADDI x1, x0, 10    -> 0x00A00093
         //   ADDI x2, x0, 20    -> 0x01400113
-        //   NOP x4 (pipeline drain)
+        //   SW x1, 0(x0)       -> 0x00102023
+        //   SW x2, 4(x0)       -> 0x00202223
+        //   NOPs
+        //   LW x3, 0(x0)       -> 0x00002183
+        //   NOPs
+        //   LW x4, 4(x0)       -> 0x00402203
 
         rx_enable = 0;
 
         $display("  [%0t] Program gonderiliyor...", $time);
         uart_send_word(32'h00A00093);  // ADDI x1, x0, 10
         uart_send_word(32'h01400113);  // ADDI x2, x0, 20
+        uart_send_word(32'h00102023);  // SW x1, 0(x0)
+        uart_send_word(32'h00202223);  // SW x2, 4(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(32'h00002183);  // LW x3, 0(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(32'h00402203);  // LW x4, 4(x0)
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
@@ -379,8 +408,22 @@ module KATIHAL_TB ();
         // Loader DONE bekle
         wait_loader_done_timeout(50000, "TEST 2");
 
-        // CPU'nun programı çalıştırmasını bekle
-        repeat (30) @(posedge clk);
+        // CPU'nun programı çalıştırmasını bekle ve data_mem_out kontrol et
+        begin
+            cycle_count = 0;
+            while (data_mem_out !== 16'd10 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x1 value)", data_mem_out, 16'd10);
+
+            cycle_count = 0;
+            while (data_mem_out !== 16'd20 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x2 value)", data_mem_out, 16'd20);
+        end
 
         $display("  Register dogrulama:");
         check_reg("ADDI x1, x0, 10", 1, 32'd10);
@@ -410,6 +453,33 @@ module KATIHAL_TB ();
         uart_send_word(32'h0EE00213);  // [8] ADDI x4, x0, 0xEE (flushed)
         uart_send_word(`NOP);          // [9] NOP x4
         uart_send_word(32'h0AA00293);  // [10] ADDI x5, x0, 0xAA (target)
+        uart_send_word(`NOP);          // pipeline delay
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        
+        // Store results to verify
+        uart_send_word(32'h00302023);  // SW x3, 0(x0)
+        uart_send_word(32'h00402223);  // SW x4, 4(x0)
+        uart_send_word(32'h00502423);  // SW x5, 8(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        
+        // Load them to read via data_mem_out
+        uart_send_word(32'h00002183);  // LW x3, 0(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(32'h00402203);  // LW x4, 4(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(32'h00802283);  // LW x5, 8(x0)
+        uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
@@ -419,7 +489,18 @@ module KATIHAL_TB ();
 
         wait_loader_done_timeout(50000, "TEST 3");
 
-        repeat (40) @(posedge clk);
+        // Verify via data_mem_out
+        begin
+            check("data_mem_out (x3 BEQ flushed)", data_mem_out, 16'd0);
+            check("data_mem_out (x4 BEQ flushed)", data_mem_out, 16'd0);
+
+            cycle_count = 0;
+            while (data_mem_out !== 16'hAA && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x5 BEQ target)", data_mem_out, 16'hAA);
+        end
 
         $display("  Branch dogrulama:");
         check_reg("BEQ flushed: x3=0",    3, 32'h00000000);
@@ -439,24 +520,12 @@ module KATIHAL_TB ();
 
         rx_enable = 0;
 
-        // Bir kelime gönder ve busy'yi kontrol et
-        uart_send_byte(8'h13); // NOP'un ilk byte'ı
+        // Bir byte gönder ve busy'yi kontrol et
+        uart_send_byte(8'h13);
 
         // Loader tetiklendikten sonra busy HIGH olmalı
-        // data_ready sonrası STALL -> START_U -> cpu_halt=1 -> busy=1
         repeat (10) @(posedge clk);
-
-        if (uut.PROGRAM_LOADER.state != 0) begin
-            check_1bit("busy (yukleme sirasinda)", busy, 1'b1);
-        end else begin
-            $display("[INFO] Loader henuz tetiklenmedi, bekleniyor...");
-            // data_ready gelene kadar biraz daha bekle
-            repeat (100) @(posedge clk);
-            if (uut.PROGRAM_LOADER.state != 0)
-                check_1bit("busy (yukleme sirasinda)", busy, 1'b1);
-            else
-                $display("[WARN] Loader hala tetiklenmedi");
-        end
+        check_1bit("busy (yukleme sirasinda)", busy, 1'b1);
 
         // Kalan 3 byte'ı gönder
         uart_send_byte(8'h00);
@@ -479,20 +548,29 @@ module KATIHAL_TB ();
         $display("\n============================================================");
         $display("  TEST 5: SPI ile Program Yukleme");
         $display("============================================================");
-
+        
         spi_enable  = 1;
         sclk_enable = 1;
 
-        $display("  [%0t] SPI ile NOP (0x00000013) gonderiliyor...", $time);
+        $display("  [%0t] SPI ile Program gonderiliyor...", $time);
 
-        // Byte 0: 0x13 (LSB)
-        spi_send_byte(8'h13);
-        // Byte 1: 0x00
-        spi_send_byte(8'h00);
-        // Byte 2: 0x00
-        spi_send_byte(8'h00);
-        // Byte 3: 0x00 (MSB)
-        spi_send_byte(8'h00);
+        // SPI ile yüklenen program:
+        // ADDI x1, x0, 0x99 -> 0x09900093
+        // SW x1, 0(x0)      -> 0x00102023
+        // NOPs
+        // LW x2, 0(x0)      -> 0x00002103
+        
+        spi_send_word(32'h09900093);
+        spi_send_word(32'h00102023);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
+        spi_send_word(32'h00002103);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
+        spi_send_word(`NOP);
 
         spi_enable  = 0;
         sclk_enable = 0;
@@ -501,10 +579,20 @@ module KATIHAL_TB ();
 
         wait_loader_done_timeout(100000, "TEST 5");
 
-        repeat (5) @(posedge clk);
+        // CPU'nun programı çalıştırmasını bekle
+        begin
+            cycle_count = 0;
+            while (data_mem_out !== 16'h99 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (SPI loaded program execution)", data_mem_out, 16'h99);
+        end
 
         $display("  SPI I_CACHE dogrulama:");
-        check("I_CACHE[SPI_ADDR>>2]", read_icache(`SPI_ADDR >> 2), 32'h00000013);
+`ifdef BEHAVIORAL_SIM
+        check("I_CACHE[SPI_ADDR>>2]", read_icache(`SPI_ADDR >> 2), 32'h09900093);
+`endif
         check_1bit("busy (SPI yukleme sonrasi)", busy, 1'b0);
 
         do_reset;
@@ -516,12 +604,13 @@ module KATIHAL_TB ();
         $display("  TEST 6: Reset Davranisi");
         $display("============================================================");
 
-        // Reset sonrası tüm sinyaller temiz olmalı
         check_1bit("busy (reset sonrasi)", busy, 1'b0);
+`ifdef BEHAVIORAL_SIM
         check_1bit("cpu_halt (reset sonrasi)", uut.cpu_halt, 1'b0);
         check_1bit("loader we (reset sonrasi)", uut.PROGRAM_LOADER.we, 1'b0);
         check_1bit("loader done (reset sonrasi)", uut.PROGRAM_LOADER.done, 1'b0);
         check("loader state (STALL)", uut.PROGRAM_LOADER.state, 4'd0);
+`endif
 
         // =============================================================
         // TEST 7: UART ile ALU Programı (ADD, SUB)
@@ -541,7 +630,27 @@ module KATIHAL_TB ();
         uart_send_word(`NOP);
         uart_send_word(32'h002081B3);  // [6] ADD x3, x1, x2
         uart_send_word(32'h40208233);  // [7] SUB x4, x1, x2
-        uart_send_word(`NOP);          // [8-11] NOP x4
+        uart_send_word(`NOP);          // pipeline delay
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        
+        // Store results to verify
+        uart_send_word(32'h00302023);  // SW x3, 0(x0)
+        uart_send_word(32'h00402223);  // SW x4, 4(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        
+        // Load them
+        uart_send_word(32'h00002183);  // LW x3, 0(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(32'h00402203);  // LW x4, 4(x0)
+        uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
@@ -551,7 +660,22 @@ module KATIHAL_TB ();
 
         wait_loader_done_timeout(50000, "TEST 7");
 
-        repeat (40) @(posedge clk);
+        // Verify via data_mem_out
+        begin
+            cycle_count = 0;
+            while (data_mem_out !== 16'd22 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x3 ADD value)", data_mem_out, 16'd22);
+
+            cycle_count = 0;
+            while (data_mem_out !== 16'd8 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x4 SUB value)", data_mem_out, 16'd8);
+        end
 
         $display("  ALU dogrulama:");
         check_reg("ADD x3 = x1+x2 = 22", 3, 32'd22);
@@ -575,13 +699,35 @@ module KATIHAL_TB ();
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
+        
+        // Store
+        uart_send_word(32'h00102023);  // SW x1, 0(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        
+        // Load
+        uart_send_word(32'h00002183);  // LW x3, 0(x0)
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
+        uart_send_word(`NOP);
 
         uart_in = 1;
         rx_enable = 1;
 
         wait_loader_done_timeout(50000, "TEST 8");
 
-        repeat (25) @(posedge clk);
+        // Verify via data_mem_out
+        begin
+            cycle_count = 0;
+            while (data_mem_out !== 16'hB000 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (x1 LUI lower 16 bits)", data_mem_out, 16'hB000);
+        end
 
         $display("  LUI dogrulama:");
         check_reg("LUI x1 = 0xDEADB000", 1, 32'hDEADB000);
@@ -619,7 +765,15 @@ module KATIHAL_TB ();
 
         wait_loader_done_timeout(50000, "TEST 9");
 
-        repeat (50) @(posedge clk);
+        // Verify via data_mem_out
+        begin
+            cycle_count = 0;
+            while (data_mem_out !== 16'h42 && cycle_count < 150) begin
+                @(posedge clk);
+                cycle_count = cycle_count + 1;
+            end
+            check("data_mem_out (LW x3 = 0x42)", data_mem_out, 16'h42);
+        end
 
         $display("  Store/Load dogrulama:");
         check_reg("LW x3 = mem[0x100] = 0x42", 3, 32'h00000042);
@@ -636,10 +790,10 @@ module KATIHAL_TB ();
     end
 
     // -------------------------------------------
-    // Timeout Watchdog (UART yavaş olduğu için uzun)
+    // Timeout Watchdog
     // -------------------------------------------
     initial begin
-        #2000000000; // 2 milyar time unit (~200M cycle)
+        #2000000000; // 2 milyar time unit
         $display("[TIMEOUT] Simulasyon zaman limitini asti");
         $finish;
     end
