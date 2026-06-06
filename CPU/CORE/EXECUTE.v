@@ -73,7 +73,7 @@ assign pc_target_out = pc + imm; //Branch ve jump işlemleri için hedef adres a
 assign rs1_addr_outE = rs1_addr_in; //rs1 adresini çıkışa atama
 assign rs2_addr_outE = rs2_addr_in; //rs2 adresini çıkışa atama
 
-//Forward işlemleri için atama harris'ten bakarak yaptım burayı
+
 assign alu_src_A = (forwardA==2'b00) ? (rd1):
                    (forwardA==2'b01) ? (exe_result_in):
                    (forwardA==2'b10) ? (wb_result_in) :
@@ -109,7 +109,7 @@ always @ (*) begin
         result_out_reg = mdu_result_out;
 end
 
-assign wb_contorlZ = wb_controlD[0]; //harris kitabından aldım. Hazard unit için bir sinyal.
+assign wb_contorlZ = wb_controlD[0]; 
 
 always @(posedge clk) begin
     if(reset)begin

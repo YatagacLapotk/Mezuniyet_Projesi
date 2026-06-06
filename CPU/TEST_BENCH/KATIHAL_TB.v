@@ -53,10 +53,11 @@ module KATIHAL_TB ();
 `endif
         end
     end
-
+    wire clk_out;
     // -------------------------------------------
     // DUT Bağlantısı
     // -------------------------------------------
+    
     top uut (
         .clk(clk),
         .reset(reset),
@@ -77,7 +78,7 @@ module KATIHAL_TB ();
     // -------------------------------------------
     initial begin
         clk = 0;
-        forever #5 clk = ~clk;
+        forever #100 clk = ~clk;
     end
 
     // -------------------------------------------

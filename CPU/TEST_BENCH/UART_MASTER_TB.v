@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
-`define CLK 100000000
-`define BAUD_RATE 115200
+`define CLK  5000000
+`define BAUD_RATE 5760
 
 module UART_MASTER_TB;
     reg start_baud = 0; wire done_baud;
