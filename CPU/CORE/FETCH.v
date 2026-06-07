@@ -45,6 +45,8 @@ module FETCH (
     always @(posedge clk) begin
         if (reset) begin
             pc_out_reg <= `FIRST_ADDR;
+            pc_4_out <= 0;
+            instruction_out <= 0;
         end
         else if(load_done) begin
             pc_out_reg <= `UART_ADDR;
@@ -55,11 +57,7 @@ module FETCH (
     end 
     assign pc_4_out_reg = pc_out_reg + 4;
     always @(posedge clk) begin
-        if (reset) begin
-            pc_4_out <= 0;
-            pc_out <= `FIRST_ADDR;
-            instruction_out <= 0;
-        end else if (flushD) begin
+        if (flushD) begin
             pc_4_out <= 0;
             pc_out <= 0;
             instruction_out <= 0;
