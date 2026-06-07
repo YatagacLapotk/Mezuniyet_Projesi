@@ -4,6 +4,7 @@
 `define FIRST_ADDR 32'h00000000
 `define UART_ADDR  32'h00000000
 `define SPI_ADDR   32'h00000000
+`define RESET_PC   32'h00000000
 
 `define ADDRESS_WIDTH       5
 `define DATA_WIDTH         32

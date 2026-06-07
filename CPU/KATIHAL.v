@@ -36,10 +36,13 @@ wire spi_output;
 
 wire [15:0] mem_out_data_temp;
 
-clk_wiz_0 clk_wiz_0 (
+/*clk_wiz_0 clk_wiz_0 (
     .clk_in1(clk),
     .clk_out1(clk_out)                  
-);
+);*/
+// Behavioral simülasyon için yorum olarak bırak. Sentez ve implementasyon için ise yorumu kaldır.
+
+assign clk_out = clk; // Simülasyon harici yorum yap.
 CORE CORE (
     .clk(clk_out),
     .reset(reset),

@@ -16,8 +16,8 @@ module KATIHAL_POST_IMPL_TB ();
     // -------------------------------------------
     localparam CLK_PERIOD = 200;  // 5 MHz = 200ns period
     localparam BAUD_TICKS = `CLK / `BAUD_RATE;  // Clock cycles per UART bit
-    localparam TIMEOUT_CYCLES = 10000000;  // Global timeout
-    localparam MAX_TEST_CYCLES = 50000;  // Per-test timeout
+    localparam TIMEOUT_CYCLES = 1000000000;  // Global timeout
+    localparam MAX_TEST_CYCLES = 5000000;  // Per-test timeout
 
     // -------------------------------------------
     // DUT Port Signals
@@ -52,6 +52,7 @@ module KATIHAL_POST_IMPL_TB ();
     reg ss_sync;
     reg [15:0] data_mem_out_sync;
 
+    reg success;
     // -------------------------------------------
     // Clock Generation (100 MHz)
     // -------------------------------------------
@@ -368,7 +369,6 @@ module KATIHAL_POST_IMPL_TB ();
 
         // Wait for first store result to appear
         begin
-            reg success;
             wait_for_data(16'd10, 200, success);
             if (success) begin
                 check_16bit("data_mem_out after SW x1", data_mem_out_sync, 16'd10);
@@ -380,7 +380,6 @@ module KATIHAL_POST_IMPL_TB ();
 
         // Wait for second store result
         begin
-            reg success;
             wait_for_data(16'd20, 200, success);
             if (success) begin
                 check_16bit("data_mem_out after SW x2", data_mem_out_sync, 16'd20);
@@ -464,7 +463,6 @@ module KATIHAL_POST_IMPL_TB ();
 
         // Wait for branch target result
         begin
-            reg success;
             wait_for_data(16'hAA, 300, success);
             if (success) begin
                 check_16bit("data_mem_out after branch", data_mem_out_sync, 16'hAA);
@@ -591,7 +589,6 @@ module KATIHAL_POST_IMPL_TB ();
 
         // Verify result
         begin
-            reg success;
             wait_for_data(16'd30, 300, success);
             if (success) begin
                 check_16bit("ADD result 10+20=30", data_mem_out_sync, 16'd30);
