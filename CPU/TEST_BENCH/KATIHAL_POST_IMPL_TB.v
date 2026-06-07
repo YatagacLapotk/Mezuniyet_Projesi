@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // =============================================================================
 // KATIHAL Post-Implementation Test Bench
 // =============================================================================
@@ -48,17 +49,21 @@ module KATIHAL_POST_IMPL_TB ();
     reg [15:0] captured_data_mem_out;
 
     // Synchronous capture registers - use non-blocking assignment
-    reg busy_sync;
-    reg ss_sync;
-    reg [15:0] data_mem_out_sync;
+    reg busy_sync = 1'b0;
+    reg ss_sync = 1'b1;
+    reg [15:0] data_mem_out_sync = 16'h0000;
+    reg prev_busy_sync = 1'b0;
+    reg prev_ss_sync = 1'b1;
 
     reg success;
     // -------------------------------------------
-    // Clock Generation (100 MHz)
+    // Clock Generation (fast for post-impl sim)
+    // Use a small period so baud counters complete quickly in simulation.
     // -------------------------------------------
+    localparam real CLK_PERIOD_REAL = 0.2; // 0.2 ns period (5 GHz) for faster sim
     initial begin
         clk <= 1'b0;
-        forever #(CLK_PERIOD/2) clk <= ~clk;
+        forever #(CLK_PERIOD_REAL/2.0) clk <= ~clk;
     end
 
     // -------------------------------------------
@@ -69,6 +74,18 @@ module KATIHAL_POST_IMPL_TB ();
         busy_sync        <= busy;
         ss_sync          <= ss;
         data_mem_out_sync <= data_mem_out;
+    end
+
+    // Debug: print when busy or ss change
+    always @(posedge clk) begin
+        if (busy_sync !== prev_busy_sync) begin
+            $display("[DBG] busy_sync changed: %b -> %b at %0t", prev_busy_sync, busy_sync, $time);
+            prev_busy_sync <= busy_sync;
+        end
+        if (ss_sync !== prev_ss_sync) begin
+            $display("[DBG] ss_sync changed: %b -> %b at %0t", prev_ss_sync, ss_sync, $time);
+            prev_ss_sync <= ss_sync;
+        end
     end
 
     // -------------------------------------------
@@ -134,6 +151,7 @@ module KATIHAL_POST_IMPL_TB ();
         input [7:0] data;
         integer i;
         begin
+            $display("[UART TX] Byte start: 0x%02X at %0t", data, $time);
             // Start bit (LOW)
             @(posedge clk);
             uart_in <= 1'b0;
@@ -148,6 +166,7 @@ module KATIHAL_POST_IMPL_TB ();
             // Stop bit (HIGH)
             uart_in <= 1'b1;
             repeat (BAUD_TICKS) @(posedge clk);
+            $display("[UART TX] Byte end:   0x%02X at %0t", data, $time);
         end
     endtask
 
@@ -168,10 +187,18 @@ module KATIHAL_POST_IMPL_TB ();
     // -------------------------------------------
     task spi_send_byte;
         input [7:0] data;
-        integer i;
+        integer i, wait_count;
         begin
-            // Wait for SS to go low (transaction start)
-            wait (ss_sync === 1'b0);
+            // Wait for SS to go low (transaction start) with timeout
+            wait_count = 0;
+            while (ss_sync !== 1'b0 && wait_count < 5000) begin
+                @(posedge clk);
+                wait_count = wait_count + 1;
+            end
+            if (ss_sync !== 1'b0) begin
+                $display("[TIMEOUT] SPI SS didn't assert low within %0d cycles", wait_count);
+                disable spi_send_byte;
+            end
             @(posedge clk);
 
             // MSB first - first bit ready before first clock
@@ -183,8 +210,16 @@ module KATIHAL_POST_IMPL_TB ();
                 miso <= data[i];
             end
 
-            // Wait for SS to go high (transaction end)
-            wait (ss_sync === 1'b1);
+            // Wait for SS to go high (transaction end) with timeout
+            wait_count = 0;
+            while (ss_sync !== 1'b1 && wait_count < 5000) begin
+                @(posedge clk);
+                wait_count = wait_count + 1;
+            end
+            if (ss_sync !== 1'b1) begin
+                $display("[TIMEOUT] SPI SS didn't deassert high within %0d cycles", wait_count);
+                disable spi_send_byte;
+            end
             @(posedge clk);
         end
     endtask
