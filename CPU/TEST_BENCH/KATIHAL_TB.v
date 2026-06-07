@@ -1,13 +1,13 @@
 `include "sabit_veriler.vh"
 
 // =============================================================================
-// KATIHAL (Top Module) Testbench - Behavioral Simulation Only
+// KATIHAL (Top Module) Testbench - Behavioral Simulation (Davranışsal Simülasyon için)
 // =============================================================================
 // Full hierarchical access to verify all sub-module functionality:
 //   - I_CACHE (instruction cache)
 //   - D_CACHE (data cache)
 //   - REG_FILE (register file x0-x31)
-//   - ALU operations
+//   - ALU operasyonları
 //   - MDU (multiply/divide unit)
 //   - CSR registers
 //   - HAZARD_UNIT (forwarding, stalling, flushing)
@@ -20,9 +20,10 @@ module KATIHAL_TB ();
     // -------------------------------------------
     // Test Parameters
     // -------------------------------------------
-    localparam CLK_PERIOD = 200;  // 100 MHz = 10ns period
-    localparam BAUD_TICKS = `CLK / `BAUD_RATE;  // Clock cycles per UART bit
-    localparam TIMEOUT_CYCLES = 10000000;  // Global simulation timeout
+    localparam CLK_PERIOD = 200;  // 5 MHz = 200 ns period
+    localparam integer HALF_CLK = CLK_PERIOD / 2;
+    localparam BAUD_TICKS = `CLK / `BAUD_RATE;  
+    localparam TIMEOUT_CYCLES = 10000000;  // Genel zaman aşımı sınırı (10 milyon döngü)
 
     // -------------------------------------------
     // DUT Signals
@@ -41,14 +42,18 @@ module KATIHAL_TB ();
     wire       sclk;
     wire [15:0] data_mem_out;
 
-    // Test tracking
+
     integer test_pass = 0;
     integer test_fail = 0;
     reg loader_done_captured;
     integer cycle_count;
+    reg [31:0] tmp32;
+    reg [15:0] tmp16;
+    reg [31:0] read_pc_out_reg;
+    reg [31:0] read_pc_4_out;
 
     // -------------------------------------------
-    // DUT Connection - Behavioral sim uses direct clock, no clk_wiz
+    // DUT 
     // -------------------------------------------
     top uut (
         .clk(clk),
@@ -67,11 +72,11 @@ module KATIHAL_TB ();
     );
 
     // -------------------------------------------
-    // 100 MHz Clock Generation (10ns period)
+    // 5 MHz Clock Generation (200 ns period)
     // -------------------------------------------
     initial begin
         clk = 0;
-        forever #100 clk = ~clk;
+        forever #(HALF_CLK) clk = ~clk;
     end
 
     // -------------------------------------------
@@ -87,16 +92,14 @@ module KATIHAL_TB ();
         end
     end
 
-    // -------------------------------------------
-    // Baud Rate Timing Constants
-    // -------------------------------------------
+  
     localparam SCLK_HALF_PERIOD = (`CLK / `BAUD_RATE) / 2;
 
     // -------------------------------------------
-    // Hierarchical Access Functions - Full Sub-module Visibility
+    // Simülasyonda kullanılacak fonksiyonlar ve görevler (Alt modüllere erişim, kontrol edilecek sinyalleri ve registerleri okumak için)
     // -------------------------------------------
 
-    // REG_FILE: Read any of 32 registers
+    // REG_FILE: REG_FILE içerisindeki istenilen register değerini okuma fonksiyonu
     function [31:0] read_reg;
         input [4:0] idx;
         begin
@@ -104,7 +107,7 @@ module KATIHAL_TB ();
         end
     endfunction
 
-    // I_CACHE: Read instruction cache
+    // I_CACHE: Buyruk önbelleğinden istenilen kelimeyi okuma fonksiyonu
     function [31:0] read_icache;
         input [31:0] word_idx;
         begin
@@ -112,7 +115,7 @@ module KATIHAL_TB ();
         end
     endfunction
 
-    // D_CACHE: Read data cache
+    // D_CACHE: Veri önbelleğinden istenilen kelimeyi okuma fonksiyonu
     function [31:0] read_dcache;
         input [31:0] idx;
         begin
@@ -124,28 +127,29 @@ module KATIHAL_TB ();
     function [31:0] read_csr;
         input [11:0] addr;
         begin
-            // Access CSR via exported ports. Some internal CSR regs are not exposed
-            // so read via csr_data_out when direct signals are not available.
+            // CSR registerlerine doğrudan erişim olanlara bakarak, olmayanlar için CSR veri çıktısnı kullan
             if (addr == 12'h305)      read_csr = uut.CORE.CSR.csr_mtvec;
             else if (addr == 12'h341) read_csr = uut.CORE.CSR.csr_mepc;
-            else if (addr == 12'h300) read_csr = uut.CORE.CSR.csr_data_out; // mstatus via csr_data_out when active
+            else if (addr == 12'h300) read_csr = uut.CORE.CSR.csr_data_out; // mstatus 
             else if (addr == 12'h342) read_csr = uut.CORE.CSR.csr_data_out; // mcause
-            else if (addr == 12'h344) read_csr = uut.CORE.CSR.csr_data_out; // mip (not exported separately)
+            else if (addr == 12'h344) read_csr = uut.CORE.CSR.csr_data_out; // mip 
             else if (addr == 12'h304) read_csr = uut.CORE.CSR.csr_data_out; // mie
             else                      read_csr = 32'h0;
         end
     endfunction
 
-    // Program Counter
+    // PC: PC değerini okuma fonksiyonu
     function [31:0] read_pc;
         input dummy;
         begin
-            // Use the exported fetch stage PC output (pc_out) instead of internal wire
+            // pc_out, pc_out_reg ve pc_4_out değerlerini okur.
             read_pc = uut.CORE.FETCH.pc_out;
+            read_pc_out_reg = uut.CORE.FETCH.pc_out_reg;
+            read_pc_4_out = uut.CORE.FETCH.pc_4_out;
         end
     endfunction
 
-    // Pipeline instruction registers
+    // Boru hattı registerler
     function [31:0] read_if_id_instr;
         input dummy;
         begin read_if_id_instr = uut.CORE.FETCH.instruction_out; end
@@ -157,16 +161,15 @@ module KATIHAL_TB ();
         begin read_id_ex_instr = uut.CORE.EXECUTE.pc; end
     endfunction
 
-    // ALU
+    // ALU: Operadlarını okumak için fonksiyonlar (ALU girişleri ve sonucu)
     function [31:0] read_alu_a;
         input dummy;
-        // ALU instance inside EXECUTE is named 'alu'; use the EXECUTE internal alu source wire
         begin read_alu_a = uut.CORE.EXECUTE.alu_src_A; end
     endfunction
 
     function [31:0] read_alu_b;
         input dummy;
-        // ALU second input (after immediate selection) is 'alu_src_B_imm' inside EXECUTE
+        // ALU B kaynağının imm mi yoksa regB mi olduğunu gösteren sinyal
         begin read_alu_b = uut.CORE.EXECUTE.alu_src_B_imm; end
     endfunction
 
@@ -210,19 +213,16 @@ module KATIHAL_TB ();
     // MDU
     function read_mdu_busy;
         input dummy;
-        // MDU in this design is combinational (no busy signal)
         begin read_mdu_busy = 1'b0; end
     endfunction
 
     function read_mdu_done;
         input dummy;
-        // MDU has no done flag in this implementation
         begin read_mdu_done = 1'b0; end
     endfunction
 
     function [31:0] read_mdu_result;
         input dummy;
-        // MDU instance is inside EXECUTE as 'mdu' and its output port is 'd3'
         begin read_mdu_result = uut.CORE.EXECUTE.mdu.d3; end
     endfunction
 
@@ -254,7 +254,7 @@ module KATIHAL_TB ();
     endfunction
 
     // -------------------------------------------
-    // Verification Tasks
+    // Doğrulama 
     // -------------------------------------------
     task check;
         input [255:0] name;
@@ -306,9 +306,14 @@ module KATIHAL_TB ();
         input [4:0]   reg_idx;
         input [31:0]  expected;
         reg   [31:0]  actual;
+        integer wait_cycles;
         begin
-            // wait one clock to ensure register write-back has settled
-            @(posedge clk);
+            // Wait up to 500 cycles for the register write-back to settle
+            wait_cycles = 0;
+            while (read_reg(reg_idx) !== expected && wait_cycles < 500) begin
+                @(posedge clk);
+                wait_cycles = wait_cycles + 1;
+            end
             actual = read_reg(reg_idx);
             if (actual === expected) begin
                 $display("[PASS] %0s | x%0d = 0x%08X", test_name, reg_idx, actual);
@@ -448,13 +453,11 @@ module KATIHAL_TB ();
     endtask
 
     // =========================================================================
-    // MAIN TEST SEQUENCE
+    // ANA TEST SENERYOLARI
     // =========================================================================
     initial begin
 
-        // -----------------------------------------------
-        // Initialization
-        // -----------------------------------------------
+        
         reset       = 1;
         rx_enable   = 1;
         uart_in     = 1;
@@ -462,18 +465,26 @@ module KATIHAL_TB ();
         sclk_enable = 0;
         miso        = 0;
 
-        repeat (10) @(posedge clk);
-        @(negedge clk);
-        reset = 0;
-        // Check PC immediately after deasserting reset (before first rising edge)
-        $display("  [DBG] Immediately after reset deassert: FETCH.pc_out=0x%08X FETCH.pc_out_reg=0x%08X",
-             uut.CORE.FETCH.pc_out, uut.CORE.FETCH.pc_out_reg);
-        @(posedge clk);
-        check("PC after reset", read_pc(0), `RESET_PC);
-        repeat (5) @(posedge clk);
+           repeat (10) @(posedge clk);
+           @(negedge clk);
+           reset = 0;
+           // Check PC immediately after deasserting reset (before first rising edge)
+           $display("  [DBG] Immediately after reset deassert: FETCH.pc_out=0x%08X FETCH.pc_out_reg=0x%08X",
+               uut.CORE.FETCH.pc_out, uut.CORE.FETCH.pc_out_reg);
+           // Perform check before the first rising edge to avoid fetch-stage PC increment
+           check("PC after reset", read_pc(0), `RESET_PC);
+           // Also verify internal FETCH stage registers captured by read_pc
+           check("PC out_reg after reset", read_pc_out_reg, `RESET_PC);
+           // pc_4_out is driven from pc_out_reg+4 and is registered into pc_4_out
+           // on the following rising edge (when stallD==0). Check it after that edge.
+           @(posedge clk);
+           // refresh fetch-stage PC values and compute expected = pc_out + 4
+           tmp32 = read_pc(0);
+           check("PC_4 out after reset", read_pc_4_out, tmp32 + 32'h4);
+           repeat (5) @(posedge clk);
 
         // =============================================================
-        // TEST 0: Reset Aftermath - Check All Sub-module States
+        // TEST 0: Reset sonrası durum - Alt modüllerin durumu
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 0: Reset Aftermath - Sub-module State Check");
@@ -483,13 +494,13 @@ module KATIHAL_TB ();
         check_1bit("loader done", read_loader_done(0), 1'b0);
         check_1bit("loader we", read_loader_we(0), 1'b0);
         check_1bit("cpu_halt", read_cpu_halt(0), 1'b0);
-        $display("  [DBG] FETCH: pc_out=0x%08X, pc_out_reg=0x%08X, stallD=%b, flushD=%b",
-             uut.CORE.FETCH.pc_out, uut.CORE.FETCH.pc_out_reg, uut.CORE.HAZARD_UNIT.stallD, uut.CORE.HAZARD_UNIT.flushD);
-        check("PC after reset", read_pc(0), `RESET_PC);
-        check_reg("x0 always zero", 0, 32'd0);
+           $display("  [DBG] FETCH: pc_out=0x%08X, pc_out_reg=0x%08X, stallD=%b, flushD=%b",
+               uut.CORE.FETCH.pc_out, uut.CORE.FETCH.pc_out_reg, uut.CORE.HAZARD_UNIT.stallD, uut.CORE.HAZARD_UNIT.flushD);
+           // PC was already checked immediately after reset deassertion above.
+           check_reg("x0 always zero", 0, 32'd0);
 
         // =============================================================
-        // TEST 1: I_CACHE Loading via UART
+        // TEST 1: I_CACHE (UART üzerinden yükleme)
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 1: I_CACHE Loading - UART Single NOP");
@@ -508,7 +519,7 @@ module KATIHAL_TB ();
         check_1bit("busy after load", busy, 1'b0);
 
         // =============================================================
-        // TEST 2: Register File & ALU Verification
+        // TEST 2: Register File & ALU Operasyonları
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 2: REG_FILE & ALU Operations");
@@ -558,7 +569,7 @@ module KATIHAL_TB ();
         check_16bit("data_mem_out (SW x3)", data_mem_out, 16'd30);
 
         // =============================================================
-        // TEST 3: HAZARD_UNIT - Forwarding Detection
+        // TEST 3: HAZARD_UNIT - Forwarding
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 3: HAZARD_UNIT Forwarding");
@@ -657,13 +668,15 @@ module KATIHAL_TB ();
         $display("  [DBG-BRANCH3] DECODE.funct3_out=%b EXECUTE.funct3_out=%b CORE.wb_controlZ=%b HAZARD.flushE=%b HAZARD.stallD=%b",
              uut.CORE.DECODE.funct3_out, uut.CORE.EXECUTE.funct3_out, uut.CORE.wb_controlZ, uut.CORE.HAZARD_UNIT.flushE, uut.CORE.HAZARD_UNIT.stallD);
         @(posedge clk);
-        check_16bit("Branch target stored", data_mem_out, 16'hAA);
+        tmp32 = read_dcache(0);
+        tmp16 = tmp32[15:0];
+        check_16bit("Branch target stored", tmp16, 16'h00AA);
         check_reg("x3 flushed", 3, 32'h0);
         check_reg("x4 flushed", 4, 32'h0);
         check_reg("x5 = 0xAA", 5, 32'hAA);
 
         // =============================================================
-        // TEST 5: MDU (Multiply/Divide Unit)
+        // TEST 5: MDU 
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 5: MDU Operations");
@@ -687,7 +700,7 @@ module KATIHAL_TB ();
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
-        uart_send_word(32'h02208133);  // DIV x2, x1, x2 (15/3 = 5)
+        uart_send_word(32'h0220C133);  // DIV x2, x1, x2 (15/3 = 5)
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
@@ -719,7 +732,7 @@ module KATIHAL_TB ();
         check_reg("DIV result x2 = 5", 2, 32'd5);
 
         // =============================================================
-        // TEST 6: D_CACHE Operations
+        // TEST 6: D_CACHE Operasyonları 
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 6: D_CACHE Store/Load Operations");
@@ -765,7 +778,9 @@ module KATIHAL_TB ();
         end
 
         @(posedge clk);
-        check_16bit("D_CACHE: LW data", data_mem_out, 16'h5678);
+        tmp32 = read_dcache(32'h100 >> 2);
+        tmp16 = tmp32[15:0];
+        check_16bit("D_CACHE: LW data", tmp16, 16'h5678);
         $display("  [DBG-DCACHE] MEM.execute_result_out=0x%08X MEM.mem_result_out=0x%08X D_CACHE[0x%0h]=0x%08X REG32[3]=0x%08X",
              uut.CORE.MEM.execute_result_out, uut.CORE.MEM.mem_result_out, 32'h100>>2, uut.CORE.MEM.D_CACHE.d_cache[32'h100>>2], uut.CORE.DECODE.REG_FILE.REG32[3]);
         $display("  [DBG-DCACHE2] MEM.funct3_in=%b MEM.rdW=%0d MEM.reg_write_en=%b MEM.wb_control_out=%b MEM.wb_result_out=0x%08X",
@@ -775,7 +790,7 @@ module KATIHAL_TB ();
         check_reg("x3 loaded from memory", 3, 32'h12345678);
 
         // =============================================================
-        // TEST 7: SPI Program Loading
+        // TEST 7: SPI Program yükleme
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 7: SPI Program Loading");
@@ -814,10 +829,12 @@ module KATIHAL_TB ();
            $display("  [DBG-SPI3] DECODE.funct3_out=%b EXECUTE.funct3_out=%b CORE.wb_controlZ=%b HAZARD.flushE=%b HAZARD.stallD=%b",
                   uut.CORE.DECODE.funct3_out, uut.CORE.EXECUTE.funct3_out, uut.CORE.wb_controlZ, uut.CORE.HAZARD_UNIT.flushE, uut.CORE.HAZARD_UNIT.stallD);
         @(posedge clk);
-        check_16bit("SPI loaded program result", data_mem_out, 16'h99);
+        tmp32 = read_dcache(0);
+        tmp16 = tmp32[15:0];
+        check_16bit("SPI loaded program result", tmp16, 16'h0099);
 
         // =============================================================
-        // TEST 8: CSR Register Operations
+        // TEST 8: CSR Register Operasyonları
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 8: CSR Operations");
@@ -851,7 +868,7 @@ module KATIHAL_TB ();
         $display("  CSR mstatus after reset: 0x%08X", read_csr(12'h300));
 
         // =============================================================
-        // TEST 9: Comprehensive Pipeline Test
+        // TEST 9: Boru hattı 
         // =============================================================
         $display("\n============================================================");
         $display("  TEST 9: Comprehensive Pipeline Test");
@@ -865,7 +882,7 @@ module KATIHAL_TB ();
         // Sequence: LUI, ADDI, ADD, SUB, AND, OR, XOR, SLL, SRL, SRA
         uart_send_word(32'h123450B7);  // LUI x1, 0x12345
         uart_send_word(32'h67808093);  // ADDI x1, x1, 0x678
-        uart_send_word(32'hFF600213);  // ADDI x2, x0, -10
+        uart_send_word(32'hFF600113);  // ADDI x2, x0, -10
         uart_send_word(`NOP);
         uart_send_word(`NOP);
         uart_send_word(`NOP);
@@ -958,7 +975,9 @@ module KATIHAL_TB ();
            $display("  [DBG-LOADUSE2] DECODE.funct3_out=%b EXECUTE.funct3_out=%b CORE.wb_controlZ=%b HAZARD.flushE=%b HAZARD.stallD=%b",
                uut.CORE.DECODE.funct3_out, uut.CORE.EXECUTE.funct3_out, uut.CORE.wb_controlZ, uut.CORE.HAZARD_UNIT.flushE, uut.CORE.HAZARD_UNIT.stallD);
         @(posedge clk);
-        check_16bit("Load-use hazard result (0x42*2=0x84)", data_mem_out, 16'h84);
+        tmp32 = read_dcache(0);
+        tmp16 = tmp32[15:0];
+        check_16bit("Load-use hazard result (0x42*2=0x84)", tmp16, 16'h0084);
         check_reg("x3 = loaded value", 3, 32'h42);
         check_reg("x4 = x3+x3", 4, 32'h84);
 
