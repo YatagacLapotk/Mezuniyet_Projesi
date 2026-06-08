@@ -25,7 +25,7 @@
 `define D_CACHE_SIZE        300 // ~2KB  
 `define NOP                 32'h00000013
 `define CLK                 5000000
-`define BAUD_RATE           5760
+`define BAUD_RATE           57600
 `define ISA_SLCT            2
 
 // CSR Addresses

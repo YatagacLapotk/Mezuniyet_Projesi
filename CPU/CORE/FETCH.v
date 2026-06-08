@@ -45,11 +45,9 @@ module FETCH (
     always @(posedge clk) begin
         if (reset) begin
             pc_out_reg <= `FIRST_ADDR;
-            pc_4_out <= 0;
-            instruction_out <= 0;
         end
-        else if(load_done) begin
-            pc_out_reg <= `UART_ADDR;
+        else if(load_done)begin
+            pc_out_reg <= `UART_ADDR; 
         end
         else if (~stallF) begin
             pc_out_reg <= pc;
@@ -61,7 +59,8 @@ module FETCH (
             pc_4_out <= 0;
             pc_out <= 0;
             instruction_out <= 0;
-        end else if (~stallD) begin
+        end
+        else if(~stallD)begin
             pc_4_out <= pc_4_out_reg;
             pc_out <= pc_out_reg;
             instruction_out <= instruction_out_reg;

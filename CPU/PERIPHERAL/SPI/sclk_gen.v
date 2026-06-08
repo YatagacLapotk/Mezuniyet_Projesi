@@ -1,5 +1,5 @@
 `define CLK 5000000
-`define BAUD_RATE 5760
+`define BAUD_RATE 57600
 
 module sclk_gen(
     input wire clk,
@@ -9,7 +9,7 @@ module sclk_gen(
 );
 
 
-parameter counter_sclk = (`CLK / `BAUD_RATE)/2; // Clock frenkansını SPI frekansına ayarlar. 2'ye bölme sebebi 434 tick LOW 434 tick HIGH olur.
+parameter counter_sclk = (`CLK / `BAUD_RATE)/2; // Clock frenkansını SPI frekansına ayarlar. 2'ye bölme sebebi 43 tick LOW 43 tick HIGH olur.
 reg [9:0] counter = 0; 
 
 always @ (posedge clk or posedge reset) begin
@@ -19,7 +19,7 @@ always @ (posedge clk or posedge reset) begin
     end else if (sclk_enable) begin
         if (counter == counter_sclk-1) begin
             counter <= 0;
-            sclk <= ~sclk; // UART'ın aksine bir enable sinyali üretmiyoruz, haberleşmede kullanılacak olan ayrı bir clock sinyali üretiyoruz dolayısıyla her 434 tikte bir tersliyoruz.
+            sclk <= ~sclk; // UART'ın aksine bir enable sinyali üretmiyoruz, haberleşmede kullanılacak olan ayrı bir clock sinyali üretiyoruz dolayısıyla her 43 tikte bir tersliyoruz.
         end else 
             counter <= counter + 1;
     end else begin
