@@ -269,6 +269,20 @@ always @(posedge clk) begin
     end
 end
 
-assign mem_out_data = mem_result_out[15:0];
+reg [15:0] unconditional_led_reg;
 
+reg [15:0] led_reg;
+
+always @(posedge clk) begin
+    if (reset) begin
+        led_reg <= 16'b0;
+    end 
+    // EĞER Writeback aşamasında bir register'a yazma yapılıyorsa (reg_write_en)
+    // VE yazılan register sıfırıncı register (x0) DEĞİLSE (rdW != 0)
+    else if (reg_write_en && (rdW != 5'd0)) begin
+        led_reg <= wb_out[15:0]; 
+    end
+end
+
+assign mem_out_data = led_reg;
 endmodule

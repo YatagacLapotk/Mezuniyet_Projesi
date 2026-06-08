@@ -22,7 +22,7 @@ localparam STALL = 0, START_U = 1,START_S = 7, DATA_U = 2, DATA_S = 8, WAIT_ACK_
 reg [1:0] wait_for_data;
 reg [3:0] state;
 reg [`DATA_WIDTH-1:0] data_temp;
-reg [15:0] timeout_counter;
+reg [23:0] timeout_counter;
 
 always @(posedge clk) begin
     if(reset) begin
@@ -122,7 +122,7 @@ always @(posedge clk) begin
                     state <= DATA_U;
                     write_ptr <= write_ptr + 4;
                 end 
-                else if(timeout_counter >= 5000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
+                else if(timeout_counter >= 24'd10_000_000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
                     state <= DONE;
                 end
                 else begin
@@ -135,7 +135,7 @@ always @(posedge clk) begin
                     state <= DATA_S;
                     write_ptr <= write_ptr + 4;
                 end 
-                else if(timeout_counter >= 5000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
+                else if(timeout_counter >= 24'd10_000_000) begin // Gelmezse ve timeout aşılırsa sistem normal konumuna dönüyor
                     state <= DONE;
                 end
                 else begin

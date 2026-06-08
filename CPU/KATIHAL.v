@@ -34,7 +34,7 @@ wire [7:0] spi_output_buffer;
 wire tx_enable;
 wire spi_output;
 
-wire [15:0] mem_out_data_temp;
+
 
 clk_wiz_0 clk_wiz_0 (
     .clk_in1(clk),
