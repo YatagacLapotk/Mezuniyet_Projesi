@@ -7,64 +7,64 @@
 :vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_textio.vpi";
 :vpi_module "E:\Programlar\iverilog\lib\ivl\v2005_math.vpi";
 :vpi_module "E:\Programlar\iverilog\lib\ivl\va_math.vpi";
-S_0000018e27d3ee00 .scope module, "sclk_gen" "sclk_gen" 2 4;
+S_000001a603a9ee20 .scope module, "sclk_gen" "sclk_gen" 2 4;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
     .port_info 2 /INPUT 1 "sclk_enable";
     .port_info 3 /OUTPUT 1 "sclk";
-P_0000018e27d860a0 .param/l "counter_sclk" 0 2 12, +C4<00000000000000000000000000101011>;
-o0000018e27d86fb8 .functor BUFZ 1, C4<z>; HiZ drive
-v0000018e27d53130_0 .net "clk", 0 0, o0000018e27d86fb8;  0 drivers
-v0000018e27dcbc20_0 .var "counter", 9 0;
-o0000018e27d87018 .functor BUFZ 1, C4<z>; HiZ drive
-v0000018e27dcbcc0_0 .net "reset", 0 0, o0000018e27d87018;  0 drivers
-v0000018e27dcbd60_0 .var "sclk", 0 0;
-o0000018e27d87078 .functor BUFZ 1, C4<z>; HiZ drive
-v0000018e27dcbe00_0 .net "sclk_enable", 0 0, o0000018e27d87078;  0 drivers
-E_0000018e27d86820 .event posedge, v0000018e27dcbcc0_0, v0000018e27d53130_0;
-    .scope S_0000018e27d3ee00;
+P_000001a603b560e0 .param/l "counter_sclk" 0 2 12, +C4<00000000000000000000000010000010>;
+o000001a603b56fb8 .functor BUFZ 1, C4<z>; HiZ drive
+v000001a603b23130_0 .net "clk", 0 0, o000001a603b56fb8;  0 drivers
+v000001a603b9bc20_0 .var "counter", 9 0;
+o000001a603b57018 .functor BUFZ 1, C4<z>; HiZ drive
+v000001a603b9bcc0_0 .net "reset", 0 0, o000001a603b57018;  0 drivers
+v000001a603b9bd60_0 .var "sclk", 0 0;
+o000001a603b57078 .functor BUFZ 1, C4<z>; HiZ drive
+v000001a603b9be00_0 .net "sclk_enable", 0 0, o000001a603b57078;  0 drivers
+E_000001a603b56be0 .event posedge, v000001a603b9bcc0_0, v000001a603b23130_0;
+    .scope S_000001a603a9ee20;
 T_0 ;
     %pushi/vec4 0, 0, 10;
-    %store/vec4 v0000018e27dcbc20_0, 0, 10;
+    %store/vec4 v000001a603b9bc20_0, 0, 10;
     %end;
     .thread T_0;
-    .scope S_0000018e27d3ee00;
+    .scope S_000001a603a9ee20;
 T_1 ;
-    %wait E_0000018e27d86820;
-    %load/vec4 v0000018e27dcbcc0_0;
+    %wait E_000001a603b56be0;
+    %load/vec4 v000001a603b9bcc0_0;
     %flag_set/vec4 8;
     %jmp/0xz  T_1.0, 8;
     %pushi/vec4 0, 0, 10;
-    %assign/vec4 v0000018e27dcbc20_0, 0;
+    %assign/vec4 v000001a603b9bc20_0, 0;
     %pushi/vec4 0, 0, 1;
-    %assign/vec4 v0000018e27dcbd60_0, 0;
+    %assign/vec4 v000001a603b9bd60_0, 0;
     %jmp T_1.1;
 T_1.0 ;
-    %load/vec4 v0000018e27dcbe00_0;
+    %load/vec4 v000001a603b9be00_0;
     %flag_set/vec4 8;
     %jmp/0xz  T_1.2, 8;
-    %load/vec4 v0000018e27dcbc20_0;
+    %load/vec4 v000001a603b9bc20_0;
     %pad/u 32;
-    %cmpi/e 42, 0, 32;
+    %cmpi/e 129, 0, 32;
     %jmp/0xz  T_1.4, 4;
     %pushi/vec4 0, 0, 10;
-    %assign/vec4 v0000018e27dcbc20_0, 0;
-    %load/vec4 v0000018e27dcbd60_0;
+    %assign/vec4 v000001a603b9bc20_0, 0;
+    %load/vec4 v000001a603b9bd60_0;
     %inv;
-    %assign/vec4 v0000018e27dcbd60_0, 0;
+    %assign/vec4 v000001a603b9bd60_0, 0;
     %jmp T_1.5;
 T_1.4 ;
-    %load/vec4 v0000018e27dcbc20_0;
+    %load/vec4 v000001a603b9bc20_0;
     %addi 1, 0, 10;
-    %assign/vec4 v0000018e27dcbc20_0, 0;
+    %assign/vec4 v000001a603b9bc20_0, 0;
 T_1.5 ;
     %jmp T_1.3;
 T_1.2 ;
     %pushi/vec4 0, 0, 1;
-    %assign/vec4 v0000018e27dcbd60_0, 0;
+    %assign/vec4 v000001a603b9bd60_0, 0;
     %pushi/vec4 0, 0, 10;
-    %assign/vec4 v0000018e27dcbc20_0, 0;
+    %assign/vec4 v000001a603b9bc20_0, 0;
 T_1.3 ;
 T_1.1 ;
     %jmp T_1;

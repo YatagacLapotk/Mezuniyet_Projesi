@@ -1,8 +1,8 @@
 import serial
 import time
 
-# 1. DÜZELTME: Baud rate donanım ile birebir aynı olmalı (57900)
-ser = serial.Serial('COM4', 57900, timeout=1)
+# 1. DÜZELTME: Baud rate donanım ile birebir aynı olmalı 
+ser = serial.Serial('COM4', 19200 , timeout=1)
 time.sleep(2) # Bağlantının oturması için bekle
 
 # Dosya yolunun başına 'r' ekleyerek kaçış karakteri (escape) hatalarını önlüyoruz

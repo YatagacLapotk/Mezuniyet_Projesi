@@ -116,12 +116,12 @@ REG_FILE REG_FILE(
 //Sign extention for immediate values
 assign imms_i = {{20{instruction[31]}}, instruction[31:20]};
 assign imms_s = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
-assign imms_b = {{19{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+assign imms_b = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 assign imms_u = {instruction[31:12], 12'b0};
 
 assign immu_i = {{20{1'b0}}, instruction[31:20]};
 assign immu_s = {{20{1'b0}}, instruction[31:25], instruction[11:7]};
-assign immu_b = {{19{1'b0}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+assign immu_b = {{20{1'b0}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0};
 assign immu_u = {instruction[31:12], 12'b0};
 
 //Antigravity'e sordum düzelt dedi onları ayarladım o yüzden
