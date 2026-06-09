@@ -42,7 +42,7 @@ clk_wiz_0 clk_wiz_0 (
 );
 // Behavioral simülasyon için yorum olarak bırak. Sentez ve implementasyon için ise yorumu kaldır.
 
-//assign clk_out = clk; 
+// assign clk_out = clk; 
 CORE CORE (
     .clk(clk_out),
     .reset(reset),

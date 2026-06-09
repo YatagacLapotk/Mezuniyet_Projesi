@@ -19,5 +19,6 @@ with open(r"E:\RV32IM\Mezuniyet_Projesi\CPU\BOOT\instructions.txt", "r") as file
         # USB üzerinden baytları gönder
         ser.write(instruction_bytes)
         
+        time.sleep(0.001)
 ser.close()
 print("Buyruklar başarıyla gönderildi ve işlemci çalışmaya başladı!")
