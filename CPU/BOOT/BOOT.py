@@ -2,11 +2,11 @@ import serial
 import time
 
 # 1. DÜZELTME: Baud rate donanım ile birebir aynı olmalı 
-ser = serial.Serial('COM4', 19200 , timeout=1)
+ser = serial.Serial(port='/dev/tty.usbserial-210183AA0DDB1', baudrate=19200, timeout=1)
 time.sleep(2) # Bağlantının oturması için bekle
 
 # Dosya yolunun başına 'r' ekleyerek kaçış karakteri (escape) hatalarını önlüyoruz
-with open(r"E:\RV32IM\Mezuniyet_Projesi\CPU\BOOT\instructions.txt", "r") as file:
+with open(r"/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/BOOT/instructions.txt", "r") as file:
     for line in file:
         clean_line = line.strip()
         if not clean_line:
