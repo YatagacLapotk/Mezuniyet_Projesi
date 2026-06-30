@@ -11,5 +11,22 @@ module DATA_LOADER (
 );
 
 localparam STALL = 0, START = 1, DATA = 2,DONE = 3;
+
+reg [3:0] state;
+
+
+always@(posedge clk) begin 
+    if(reset)begin
+        state <= STALL;
+    end
+    else begin
+        case (state)
+            STALL:begin
+                
+            end  
+        endcase
+    end
+
+end
     
 endmodule

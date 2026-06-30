@@ -7,7 +7,7 @@
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
 :vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
-S_0x10396b8d0 .scope module, "DATA_LOADER" "DATA_LOADER" 2 2;
+S_0x100c9d1b0 .scope module, "DATA_LOADER" "DATA_LOADER" 2 2;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
     .port_info 1 /INPUT 1 "reset";
@@ -17,26 +17,51 @@ S_0x10396b8d0 .scope module, "DATA_LOADER" "DATA_LOADER" 2 2;
     .port_info 5 /OUTPUT 1 "spi_enable";
     .port_info 6 /OUTPUT 8 "uart_out";
     .port_info 7 /OUTPUT 8 "spi_out";
-P_0x103968530 .param/l "DATA" 1 2 13, +C4<00000000000000000000000000000010>;
-P_0x103968570 .param/l "DONE" 1 2 13, +C4<00000000000000000000000000000011>;
-P_0x1039685b0 .param/l "STALL" 1 2 13, +C4<00000000000000000000000000000000>;
-P_0x1039685f0 .param/l "START" 1 2 13, +C4<00000000000000000000000000000001>;
-o0xb1ac20010 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10396bb50_0 .net "clk", 0 0, o0xb1ac20010;  0 drivers
-o0xb1ac20040 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0x10396bf50_0 .net "mem_data", 31 0, o0xb1ac20040;  0 drivers
-o0xb1ac20070 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10396c000_0 .net "out_selector", 0 0, o0xb1ac20070;  0 drivers
-o0xb1ac200a0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10396c0c0_0 .net "reset", 0 0, o0xb1ac200a0;  0 drivers
-o0xb1ac200d0 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10396c170_0 .net "spi_enable", 0 0, o0xb1ac200d0;  0 drivers
-o0xb1ac20100 .functor BUFZ 8, c4<zzzzzzzz>; HiZ drive
-v0x10396c250_0 .net "spi_out", 7 0, o0xb1ac20100;  0 drivers
-o0xb1ac20130 .functor BUFZ 1, c4<z>; HiZ drive
-v0x10396c2f0_0 .net "tx_enable", 0 0, o0xb1ac20130;  0 drivers
-o0xb1ac20160 .functor BUFZ 8, c4<zzzzzzzz>; HiZ drive
-v0x10396c3a0_0 .net "uart_out", 7 0, o0xb1ac20160;  0 drivers
+P_0x100c98530 .param/l "DATA" 1 2 13, +C4<00000000000000000000000000000010>;
+P_0x100c98570 .param/l "DONE" 1 2 13, +C4<00000000000000000000000000000011>;
+P_0x100c985b0 .param/l "STALL" 1 2 13, +C4<00000000000000000000000000000000>;
+P_0x100c985f0 .param/l "START" 1 2 13, +C4<00000000000000000000000000000001>;
+o0xbc8c20010 .functor BUFZ 1, c4<z>; HiZ drive
+v0x100c9d430_0 .net "clk", 0 0, o0xbc8c20010;  0 drivers
+o0xbc8c20040 .functor BUFZ 32, c4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
+v0x100c9d7f0_0 .net "mem_data", 31 0, o0xbc8c20040;  0 drivers
+o0xbc8c20070 .functor BUFZ 1, c4<z>; HiZ drive
+v0x100c9d8a0_0 .net "out_selector", 0 0, o0xbc8c20070;  0 drivers
+o0xbc8c200a0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x100c9d960_0 .net "reset", 0 0, o0xbc8c200a0;  0 drivers
+o0xbc8c200d0 .functor BUFZ 1, c4<z>; HiZ drive
+v0x100c9da10_0 .net "spi_enable", 0 0, o0xbc8c200d0;  0 drivers
+o0xbc8c20100 .functor BUFZ 8, c4<zzzzzzzz>; HiZ drive
+v0x100c9daf0_0 .net "spi_out", 7 0, o0xbc8c20100;  0 drivers
+v0x100c9db90_0 .var "state", 3 0;
+o0xbc8c20160 .functor BUFZ 1, c4<z>; HiZ drive
+v0x100c9dc40_0 .net "tx_enable", 0 0, o0xbc8c20160;  0 drivers
+o0xbc8c20190 .functor BUFZ 8, c4<zzzzzzzz>; HiZ drive
+v0x100c9dcf0_0 .net "uart_out", 7 0, o0xbc8c20190;  0 drivers
+E_0x100c9a0a0 .event posedge, v0x100c9d430_0;
+    .scope S_0x100c9d1b0;
+T_0 ;
+    %wait E_0x100c9a0a0;
+    %load/vec4 v0x100c9d960_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.0, 8;
+    %pushi/vec4 0, 0, 4;
+    %assign/vec4 v0x100c9db90_0, 0;
+    %jmp T_0.1;
+T_0.0 ;
+    %load/vec4 v0x100c9db90_0;
+    %dup/vec4;
+    %pushi/vec4 0, 0, 4;
+    %cmp/u;
+    %jmp/1 T_0.2, 6;
+    %jmp T_0.3;
+T_0.2 ;
+    %jmp T_0.3;
+T_0.3 ;
+    %pop/vec4 1;
+T_0.1 ;
+    %jmp T_0;
+    .thread T_0;
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
