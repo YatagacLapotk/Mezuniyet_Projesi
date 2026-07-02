@@ -22,11 +22,14 @@
 `define WB_CNTRL            2
 `define CACHE_ADDRESS       32 
 `define I_CACHE_SIZE        300 // ~1.2KB  
-`define D_CACHE_SIZE        300 // ~1.2KB  
+`define D_CACHE_SIZE        128 // 400B  
+`define CACHE_WIDTH         56 
 `define NOP                 32'h00000013
 `define CLK                 5000000
 `define BAUD_RATE           19200
 `define ISA_SLCT            2
+`define TAG_WIDTH           23
+`define SET_WIDTH           7
 
 // CSR Addresses
 `define MSTATUS        12'h300
