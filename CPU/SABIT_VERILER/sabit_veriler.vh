@@ -2,8 +2,8 @@
 `define sabit_veriler_VH
 
 `define FIRST_ADDR 32'h00000000
-`define UART_ADDR  32'h00000000
-`define SPI_ADDR   32'h00000000
+`define UART_ADDR  32'h00000960
+`define SPI_ADDR   32'h00000E10
 `define RESET_PC   32'h00000000
 
 `define ADDRESS_WIDTH       5

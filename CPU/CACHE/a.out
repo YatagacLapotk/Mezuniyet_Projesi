@@ -1,84 +1,19 @@
-#! /c/Source/iverilog-install/bin/vvp
-:ivl_version "12.0 (devel)" "(s20150603-1110-g18392a46)";
+#! /Users/yatagaclapotk/Programs/oss-cad-suite/bin/vvp
+:ivl_version "13.0 (devel)" "(s20250103-17-g30123f894)";
 :ivl_delay_selection "TYPICAL";
 :vpi_time_precision + 0;
-:vpi_module "E:\Programlar\iverilog\lib\ivl\system.vpi";
-:vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_sys.vpi";
-:vpi_module "E:\Programlar\iverilog\lib\ivl\vhdl_textio.vpi";
-:vpi_module "E:\Programlar\iverilog\lib\ivl\v2005_math.vpi";
-:vpi_module "E:\Programlar\iverilog\lib\ivl\va_math.vpi";
-S_0000027ba3ef3380 .scope module, "I_CACHE" "I_CACHE" 2 2;
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/system.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/v2005_math.vpi";
+:vpi_module "/Users/yatagaclapotk/Programs/oss-cad-suite/lib/ivl/va_math.vpi";
+S_0x1012c9040 .scope module, "CACHE" "CACHE" 2 1;
  .timescale 0 0;
     .port_info 0 /INPUT 1 "clk";
-    .port_info 1 /INPUT 1 "reset";
-    .port_info 2 /INPUT 1 "we";
-    .port_info 3 /INPUT 32 "inst_in";
-    .port_info 4 /INPUT 32 "w_addr";
-    .port_info 5 /INPUT 32 "r_addr";
-    .port_info 6 /OUTPUT 32 "inst_out";
-L_0000027ba3f249b0 .functor BUFZ 32, L_0000027ba3f6b840, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>, C4<00000000000000000000000000000000>;
-v0000027ba3ef3a10_0 .net *"_ivl_0", 31 0, L_0000027ba3f6b840;  1 drivers
-o0000027ba3f27008 .functor BUFZ 1, C4<z>; HiZ drive
-v0000027ba3ef3510_0 .net "clk", 0 0, o0000027ba3f27008;  0 drivers
-v0000027ba3ef35b0_0 .var/i "i", 31 0;
-v0000027ba3ef3650 .array "i_cache", 2048 0, 31 0;
-o0000027ba3f27068 .functor BUFZ 32, C4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0000027ba3ef36f0_0 .net "inst_in", 31 0, o0000027ba3f27068;  0 drivers
-v0000027ba3ef3790_0 .net "inst_out", 31 0, L_0000027ba3f249b0;  1 drivers
-o0000027ba3f270c8 .functor BUFZ 32, C4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0000027ba400bc90_0 .net "r_addr", 31 0, o0000027ba3f270c8;  0 drivers
-o0000027ba3f270f8 .functor BUFZ 1, C4<z>; HiZ drive
-v0000027ba400bd30_0 .net "reset", 0 0, o0000027ba3f270f8;  0 drivers
-o0000027ba3f27128 .functor BUFZ 32, C4<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz>; HiZ drive
-v0000027ba400bdd0_0 .net "w_addr", 31 0, o0000027ba3f27128;  0 drivers
-o0000027ba3f27158 .functor BUFZ 1, C4<z>; HiZ drive
-v0000027ba400bf00_0 .net "we", 0 0, o0000027ba3f27158;  0 drivers
-E_0000027ba3f26230 .event posedge, v0000027ba3ef3510_0;
-L_0000027ba3f6b840 .array/port v0000027ba3ef3650, o0000027ba3f270c8;
-    .scope S_0000027ba3ef3380;
-T_0 ;
-    %pushi/vec4 0, 0, 32;
-    %ix/load 4, 0, 0;
-    %flag_set/imm 4, 0;
-    %store/vec4a v0000027ba3ef3650, 4, 0;
-    %end;
-    .thread T_0;
-    .scope S_0000027ba3ef3380;
-T_1 ;
-    %wait E_0000027ba3f26230;
-    %load/vec4 v0000027ba400bd30_0;
-    %flag_set/vec4 8;
-    %jmp/0xz  T_1.0, 8;
-    %pushi/vec4 0, 0, 32;
-    %store/vec4 v0000027ba3ef35b0_0, 0, 32;
-T_1.2 ;
-    %load/vec4 v0000027ba3ef35b0_0;
-    %cmpi/s 2048, 0, 32;
-    %jmp/0xz T_1.3, 5;
-    %pushi/vec4 0, 0, 32;
-    %ix/getv/s 3, v0000027ba3ef35b0_0;
-    %ix/load 4, 0, 0; Constant delay
-    %assign/vec4/a/d v0000027ba3ef3650, 0, 4;
-    %load/vec4 v0000027ba3ef35b0_0;
-    %addi 1, 0, 32;
-    %store/vec4 v0000027ba3ef35b0_0, 0, 32;
-    %jmp T_1.2;
-T_1.3 ;
-    %jmp T_1.1;
-T_1.0 ;
-    %load/vec4 v0000027ba400bf00_0;
-    %flag_set/vec4 8;
-    %jmp/0xz  T_1.4, 8;
-    %load/vec4 v0000027ba3ef36f0_0;
-    %ix/getv 3, v0000027ba400bdd0_0;
-    %ix/load 4, 0, 0; Constant delay
-    %assign/vec4/a/d v0000027ba3ef3650, 0, 4;
-T_1.4 ;
-T_1.1 ;
-    %jmp T_1;
-    .thread T_1;
+o0xac4c20010 .functor BUFZ 1, c4<z>; HiZ drive
+v0x1012c8500_0 .net "clk", 0 0, o0xac4c20010;  0 drivers
 # The file index is used to find the file name in the following table.
 :file_names 3;
     "N/A";
     "<interactive>";
-    "e:\RV32IM\Mezuniyet_Projesi\CPU\CACHE\I_CACHE.v";
+    "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/CACHE/CACHE.v";
