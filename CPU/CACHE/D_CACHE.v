@@ -20,17 +20,17 @@ module D_CACHE (
 );
 
 parameter IDLE = 0, START = 1, DONE = 2;
-reg state;
+reg [1:0] state;
 
-reg [`CACHE_WIDTH-1:0] way0_cache [0:`D_CACHE_SIZE];
-reg [`CACHE_WIDTH  :0] way1_cache [0:`D_CACHE_SIZE];
+reg [`CACHE_WIDTH-1:0] way0_cache [0:`D_CACHE_SIZE]; // 0. Cache yolu
+reg [`CACHE_WIDTH  :0] way1_cache [0:`D_CACHE_SIZE]; // 1. cache yolu
 wire [`DATA_WIDTH-1:0] way0_data;
 wire [`DATA_WIDTH-1:0] way1_data;
 wire [`TAG_WIDTH-1:0] tag;
 wire [`SET_WIDTH-1:0] set;
 wire [`TAG_WIDTH-1:0] way0_tag;
 wire [`TAG_WIDTH-1:0] way1_tag;
-wire lru;
+wire lru;       //Hangi kısım daha önce değiştirildi.
 wire way0_valid;
 wire way1_valid;
 wire hit0;
@@ -90,6 +90,7 @@ always @(posedge clk) begin
                     end
                     else begin
                         way0_cache[set] <= {valid,tag,data_in};
+                        way1_cache[set][55] <= 1'b1;
                     end
                 end
                 else state <= START; 
