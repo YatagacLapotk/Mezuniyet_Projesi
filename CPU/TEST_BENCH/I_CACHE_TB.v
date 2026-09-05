@@ -6,67 +6,88 @@ module I_CACHE_TB;
     // Clock and Reset
     reg clk;
     reg reset;
-    
-    // Write Interface
-    reg we;
+
+    // Miss/Fill interface
+    reg valid;
+    wire miss;
+    wire stall;
     reg [`INSTRUCTION_WIDTH-1:0] inst_in;
-    reg [`CACHE_ADDRESS-1:0] w_addr;
-    
-    // Read Interface
+
+    // Fetch interface
     reg [`CACHE_ADDRESS-1:0] r_addr;
     wire [`INSTRUCTION_WIDTH-1:0] inst_out;
-    
+
     // Test counters
     integer pass_count = 0;
     integer fail_count = 0;
     integer test_count = 0;
-    
-    // Clock parameters
+    integer miss_count = 0;
+
+    // Backdoor instruction memory model
+    reg [`INSTRUCTION_WIDTH-1:0] mem [0:4095];
+
     localparam CLK_PERIOD = 10;
-    
+
     // Instantiate the Unit Under Test (UUT)
     I_CACHE uut (
         .clk(clk),
         .reset(reset),
-        .we(we),
+        .valid(valid),
+        .miss(miss),
+        .stall(stall),
         .inst_in(inst_in),
-        .w_addr(w_addr),
         .r_addr(r_addr),
         .inst_out(inst_out)
     );
-    
+
     // Clock generation
     initial begin
         clk = 0;
         forever #(CLK_PERIOD/2) clk = ~clk;
     end
-    
+
+    // RTL reset only clears the FSM, not the storage arrays.
+    // Zero them hierarchically so valid/LRU bits are deterministic.
+    integer j;
+    initial begin
+        for (j = 0; j < `I_CACHE_SIZE; j = j + 1) begin
+            uut.way0_cache[j] = 0;
+            uut.way1_cache[j] = 0;
+        end
+    end
+
     // Check task for instruction data
     task check_inst;
+        input [`INSTRUCTION_WIDTH-1:0] expected;
+        input [`INSTRUCTION_WIDTH-1:0] actual;
+        // placeholder, replaced below
+    endtask
+
+    // Re-declared check task (actual proper form)
+    task verify_inst;
         input [`INSTRUCTION_WIDTH-1:0] expected;
         input [`INSTRUCTION_WIDTH-1:0] actual;
         input [200*8:0] test_name;
         begin
             test_count = test_count + 1;
             if (expected === actual) begin
-                $display("[PASS] Test %0d: %s | Expected: 0x%08h, Got: 0x%08h", 
+                $display("[PASS] Test %0d: %s | Expected: 0x%08h, Got: 0x%08h",
                          test_count, test_name, expected, actual);
                 pass_count = pass_count + 1;
             end else begin
-                $display("[FAIL] Test %0d: %s | Expected: 0x%08h, Got: 0x%08h", 
+                $display("[FAIL] Test %0d: %s | Expected: 0x%08h, Got: 0x%08h",
                          test_count, test_name, expected, actual);
                 fail_count = fail_count + 1;
             end
         end
     endtask
-    
-    // Helper task: Reset cache
+
+    // Helper task: apply reset (sample during reset for miss/stall checks)
     task reset_cache;
         begin
             reset = 1;
-            we = 0;
+            valid = 0;
             inst_in = 0;
-            w_addr = 0;
             r_addr = 0;
             @(posedge clk);
             #1;
@@ -75,132 +96,103 @@ module I_CACHE_TB;
             #1;
         end
     endtask
-    
-    // Helper task: Write instruction
-    task write_instruction;
+
+    // Read an instruction, handling the miss/fill handshake automatically.
+    // Returns nothing; reles on verify_inst being called separately.
+    task read_inst;
         input [`CACHE_ADDRESS-1:0] address;
-        input [`INSTRUCTION_WIDTH-1:0] instruction;
         begin
-            we = 1;
-            w_addr = address;
-            inst_in = instruction;
-            @(posedge clk);
+            r_addr = address;
             #1;
-            we = 0;
+            @(posedge clk); #1;        // edge A: IDLE decision (miss -> START)
+            if (stall === 1'b1) begin
+                miss_count = miss_connt + 1;
+                inst_in = mem[address >> 2];
+                valid = 1'b1;
+                @(posedge clk); #1;   // edge B: START -> DONE, line written
+                valid = 1'b 0;
+                @(posedge clk); #1;   // edge C: DONE -> IDLE, miss/stall clear
+            end
+            @(posedge clk); #1;       // edge D: IDLE hit, i_cache captured
         end
     endtask
-    
-    // Helper task: Read and verify instruction
-    task read_verify;
+
+    // Convenience: read and verify in one step
+    task read_verify_inst;
         input [`CACHE_ADDRESS-1:0] address;
         input [`INSTRUCTION_WIDTH-1:0] expected;
         input [200*8:0] test_name;
         begin
-            r_addr = address;
-            #1;
-            check_inst(expected, inst_out, test_name);
+            read_inst(address);
+            verify_inst(expected, inst_out, test_name);
         end
     endtask
-    
+
     // Main test sequence
     initial begin
         $dumpfile("I_CACHE_TB.vcd");
         $dumpvars(0, I_CACHE_TB);
-        
+
         $display("========================================");
-        $display("   Instruction Cache Test Bench");
+        $display("   Instruction Cache Test Bench (FSM)   ");
         $display("========================================");
-        
+
+        // Seed the backdoor memory model
+        mem[32'h0000_0000 >> 2] = 32'hDEAD_BEEF;
+        mem[32'h0000_0004 >> 2] = 32'h1234_5678;
+        mem[32'h0000_0200 >> 2] = 32'hAAAA_AAAA;
+        mem[32'h0000_0080 >> 2] = 32'hCAFE_BABE;
+        mem[32'h0000_0400 >> 2] = 32'h8BAD_F00D;
+
         // Initialize signals
         clk = 0;
         reset = 0;
-        we = 0;
+        valid = 0;
         inst_in = 0;
-        w_addr = 0;
         r_addr = 0;
-        
-        // Wait for initialization
+
         #20;
-        
-        // Test 1: Reset behavior
-        $display("\n--- Test 1: Reset Behavior ---");
-        reset_cache();
-        read_verify(32'h0000_0000, 32'h0000_0000, "Reset - Address 0 should be 0");
-        read_verify(32'h0000_0004, 32'h0000_0000, "Reset - Address 4 should be 0");
-        
-        // Test 2: Basic Write and Read
-        $display("\n--- Test 2: Basic Write and Read ---");
-        write_instruction(32'h0000_0000, 32'hDEAD_BEEF);
-        read_verify(32'h0000_0000, 32'hDEAD_BEEF, "Write/Read address 0");
-        
-        write_instruction(32'h0000_0004, 32'h1234_5678);
-        read_verify(32'h0000_0004, 32'h1234_5678, "Write/Read address 4");
-        
-        // Test 3: Multiple sequential writes
-        $display("\n--- Test 3: Sequential Writes ---");
-        write_instruction(32'h0000_0008, 32'hAAAA_AAAA);
-        write_instruction(32'h0000_000C, 32'h5555_5555);
-        write_instruction(32'h0000_0010, 32'hFFFF_FFFF);
-        
-        read_verify(32'h0000_0008, 32'hAAAA_AAAA, "Sequential write - Address 8");
-        read_verify(32'h0000_000C, 32'h5555_5555, "Sequential write - Address C");
-        read_verify(32'h0000_0010, 32'hFFFF_FFFF, "Sequential write - Address 10");
-        
-        // Test 4: Overwrite existing data
-        $display("\n--- Test 4: Overwrite Data ---");
-        write_instruction(32'h0000_0000, 32'h1111_1111);
-        read_verify(32'h0000_0000, 32'h1111_1111, "Overwrite address 0");
-        
-        // Test 5: Different addresses
-        $display("\n--- Test 5: Various Addresses ---");
-        write_instruction(32'h0000_0100, 32'hCAFE_BABE);
-        write_instruction(32'h0000_0200, 32'hFEED_FACE);
-        write_instruction(32'h0000_0400, 32'h8BAD_F00D);
-        
-        read_verify(32'h0000_0100, 32'hCAFE_BABE, "Address 0x100");
-        read_verify(32'h0000_0200, 32'hFEED_FACE, "Address 0x200");
-        read_verify(32'h0000_0400, 32'h8BAD_F00D, "Address 0x400");
-        
-        // Test 6: Boundary addresses
-        $display("\n--- Test 6: Boundary Addresses ---");
-        write_instruction(32'h0000_0000, 32'h0000_0001);  // First address
-        write_instruction(32'h0000_07FC, 32'hFFFF_FFFE);  // Last address (2047)
-        
-        read_verify(32'h0000_0000, 32'h0000_0001, "First address (0)");
-        read_verify(32'h0000_07FC, 32'hFFFF_FFFE, "Last address (2047)");
-        
-        // Test 7: Read without write (uninitialized after reset)
-        $display("\n--- Test 7: Uninitialized Read ---");
-        reset_cache();
-        read_verify(32'h0000_0500, 32'h0000_0000, "Read uninitialized address");
-        
-        // Test 8: Simultaneous write and read (different addresses)
-        $display("\n--- Test 8: Concurrent Operations ---");
-        write_instruction(32'h0000_0020, 32'h2222_2222);
-        r_addr = 32'h0000_0024;  // Read different address
-        @(posedge clk);
-        #1;
-        write_instruction(32'h0000_0024, 32'h3333_3333);
-        read_verify(32'h0000_0020, 32'h2222_2222, "Concurrent - Read address 0x20");
-        read_verify(32'h0000_0024, 32'h3333_3333, "Concurrent - Read address 0x24");
-        
-        // Test 9: NOP instruction pattern
-        $display("\n--- Test 9: Common Instructions ---");
-        write_instruction(32'h0000_0030, 32'h0000_0013);  // NOP (ADDI x0, x0, 0)
-        write_instruction(32'h0000_0034, 32'h00A00093);  // ADDI x1, x0, 10
-        write_instruction(32'h0000_0038, 32'hFE208EE3);  // BEQ example
-        
-        read_verify(32'h0000_0030, 32'h0000_0013, "NOP instruction");
-        read_verify(32'h0000_0034, 32'h00A00093, "ADDI instruction");
-        read_verify(32'h0000_0038, 32'hFE208EE3, "BEQ instruction");
-        
-        // Test 10: Reset clears previous data
-        $display("\n--- Test 10: Reset Clears Data ---");
-        write_instruction(32'h0000_0040, 32'hABCD_EF01);
-        read_verify(32'h0000_0040, 32'hABCD_EF01, "Before reset");
-        reset_cache();
-        read_verify(32'h0000_0040, 32'h0000_0000, "After reset - should be 0");
-        
+
+        // Test 1: Reset behaviour (sample DURING reset)
+        $display("\n--- Test 1: Reset clears handshake ---");
+        reset = 1;
+        @(posedge clk); #1;
+        test_count = test_count + 1;
+        if (miss === 0 && stall === 0) begin
+            $display("[PASS] Test %0d: Reset clears miss and stall", test_count);
+            pass_count = pass_count + 1;
+        end else begin
+            $display("[FAIL] Test %0d: Reset should clear miss/stall (miss=%b stall=%b)", test_count, miss, stall);
+            fail_count = fail_count + 1;
+        end
+        reset = 0;
+        @(posedge clk); #1;
+
+        // Test 2: First access -> MISS, then fill returns the word
+        $display("\n--- Test 2: Miss + fill handshake ---");
+        read_verify_inst(32'h0000_0000, 32'hDEAD_BEEF, "First Access - Address 0 (miss)");
+
+        // Test 3: Resident re-read -> HIT (no refill, stale value kept)
+        $display("\n--- Test 3: Hit on re-access ---");
+        mem[32'h0000_0000 >> 2] = 32'h1111_1111;  // change backing store
+        read_verify_inst(32'h0000_0000, 32'hDEAD_BEEF, "Re-access - Address 0 (hit, cached)");
+
+        // Test 4: Different set
+        $display("\n--- Test 4: Access another set ---");
+        read_verify_inst(32'h0000_0004, 32'h1234_5678, "Address 4 - set 1 (miss)");
+        read_verify_inst(32'h0000_0004, 32'h1234_5678, "Address 4 - set 1 (hit)");
+
+        // Test 5: Conflict in set 0 (different tag -> LRU replacement)
+        $display("\n--- Test 5: LRU replacement in set 0 ---");
+        read_verify_inst(32'h0000_0200, 32'hAAAA_AAAA, "Address 0x200 - set 0 tag B (miss)");
+        read_verify_inst(32'h0000_0000, 32'hDEAD_BEEF, "Address 0 - set 0 still resident (hit)");
+        read_verify_inst(32'h0000_0200, 32'hAAAA_AAAA, "Address 0x200 - still resident (hit)");
+
+        // Test 6: Another set + third tag in set 0
+        $display("\n--- Test 6: More sets and tags ---");
+        read_verify_inst(32'h0000_0080, 32'hCAFE_BABE, "Address 0x80 - set 0x20 (miss)");
+        read_verify_inst(32'h0000_0400, 32'h8BAD_F00D, "Address 0x400 - set 0 tag C (miss)");
+
         // Final summary
         #20;
         $display("\n========================================");
@@ -209,14 +201,16 @@ module I_CACHE_TB;
         $display("Total Tests: %0d", test_count);
         $display("Passed:      %0d", pass_count);
         $display("Failed:      %0d", fail_count);
+        $display("Misses seen: %0d (expected 6)", miss_count);
+        $display("========================================");
         if (fail_count == 0) begin
-            $display("\n*** ALL TESTS PASSED ***");
+            $display("*** ALL TESTS PASSED ***");
         end else begin
-            $display("\n*** SOME TESTS FAILED ***");
+            $display("*** SOME TESTS FAILED ***");
         end
         $display("========================================\n");
-        
+
         $finish;
     end
-    
+
 endmodule
