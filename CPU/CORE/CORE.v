@@ -251,7 +251,11 @@ CSR CSR(
     .instr(instruction_out),
     .csr_addr(csr_addr),
     .exception(exception),
-    .interrupt(cpu_halt),
+    // FIX: cpu_halt is the program-halted flag, not an interrupt source —
+    // feeding it here made MIE gating track "did the loader halt". No
+    // peripheral interrupt is wired up yet, so pass 0. When a real source
+    // (UART at 0x960, driven via MSIE) is added, feed it here instead.
+    .interrupt(1'b0),
     .exception_code(exception_type),
     .csr_data_in(csr_data),
     .csr_cntrl(csr_control),

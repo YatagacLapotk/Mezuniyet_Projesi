@@ -17,29 +17,32 @@ module CSR (
     output [`DATA_WIDTH-1:0] csr_mepc
 );
 
-wire exception_edge;
+// ---- Trap-context registers (the Zicsr core) ----
+reg [`DATA_WIDTH-1:0] mtvec;   // handler address; consumed by FETCH
+reg [`DATA_WIDTH-1:0] mepc;    // PC of the faulting instruction
+reg [`DATA_WIDTH-1:0] mcause;  // trap cause: bit31=interrupt, low bits=reason
+reg [`DATA_WIDTH-1:0] mtval;   // trap value (fault detail, e.g. faulting instr)
+
+// ---- Interrupt gating ----
+// mstatus[3] = MIE (global interrupt enable). Exceptions (ecall/ebreak) are
+//              ALWAYS honored; only asynchronous interrupts consult MIE.
+// mie        = per-source enable bitmap (e.g. bit4 = MSIE / UART).
+reg [`DATA_WIDTH-1:0] mstatus;
+reg [`DATA_WIDTH-1:0] mie;
+
+// Edge detector. Tracks the EFFECTIVE exception so that an interrupt which
+// arrives while MIE=0 is still caught once MIE is restored (no lost trap).
 reg exception_prev;
+wire exception_edge;
 wire [`DATA_WIDTH-1:0] mtval_tmp;
 wire [`DATA_WIDTH-1:0] mcause_tmp;
 
-reg [`DATA_WIDTH-1:0] mstatus;
-reg [`DATA_WIDTH-1:0] mie;
-reg [`DATA_WIDTH-1:0] mtvec;
-reg [`DATA_WIDTH-1:0] mepc;
-reg [`DATA_WIDTH-1:0] mcause;
-reg [`DATA_WIDTH-1:0] mtval;
-
-// Interrupt masking: exceptions always allowed, interrupts require MIE + specific bit in mie
 wire interrupt_allowed = interrupt ? (mstatus[3] & mie[exception_code]) : 1'b1;
 wire effective_exception = exception & interrupt_allowed;
 
-// mstatus bits: [3]=MIE (global enable), [7]=MPIE (saved MIE), [11:12]=MPP (privilege)
-// mie bits: [4]=MSIE (software/UART interrupt enable)
-
 assign exception_edge = effective_exception & ~exception_prev;
-assign mtval_tmp = (exception_code == 8'h02) ? instr : 32'b0; 
-assign mcause_tmp = {interrupt, 23'b0, exception_code}; 
-
+assign mtval_tmp = (exception_code == 8'h02) ? instr : 32'b0;
+assign mcause_tmp = {interrupt, 23'b0, exception_code};
 
 always @(posedge clk) begin
     if (reset) begin
@@ -52,9 +55,14 @@ always @(posedge clk) begin
         mtval <= 0;
     end
     else begin
-        exception_prev <= exception;
+        // FIX: sample the effective (masked) exception, not the raw input,
+        // so a pending trap that arrived while MIE was 0 is still detected
+        // once MIE is re-enabled.
+        exception_prev <= effective_exception;
+
+        // Software writes: csrw (01), csrs set (10), csrrc clear (11).
         if(csr_wr) begin
-            if(csr_cntrl == 2'b01)begin
+            if(csr_cntrl == 2'b01) begin
                 case (csr_addr)
                     `MSTATUS: mstatus <= csr_data_in;
                     `MIE:     mie     <= csr_data_in;
@@ -82,42 +90,24 @@ always @(posedge clk) begin
                 endcase
             end
         end
+
+        // Trap edge: latch context. MIE is cleared here so only one trap
+        // is serviced at a time (no nested interrupts). MPIE/MPP saving and
+        // the 2-bit privilege ring were removed: nothing in this bare-metal
+        // core enforces them, so they were dead state.
         if(exception_edge) begin
-            mepc <= pc;
-            mcause <= mcause_tmp;
+            mepc  <= pc;
+            mcause<= mcause_tmp;
             mtval <= mtval_tmp;
-            // Save MIE to MPIE, disable MIE, save privilege to MPP
-            mstatus[7] <= mstatus[3];  // MPIE = MIE
-            mstatus[3] <= 1'b0;        // MIE = 0 (disable interrupts in handler)
-            mstatus[12:11] <= 2'b11;   // MPP = 3 (machine mode)
-            if (csr_wr) begin
-                if (csr_cntrl == 2'b01) begin
-                    case (csr_addr)
-                        `MCAUSE : mcause <= csr_data_in;
-                        `MTVAL : mtval  <= csr_data_in;
-                    endcase    
-                end
-                if (csr_cntrl == 2'b10) begin
-                    case (csr_addr)
-                        `MCAUSE : mcause <= mcause | csr_data_in;
-                        `MTVAL : mtval  <= mtval  | csr_data_in;
-                    endcase    
-                end
-                if (csr_cntrl == 2'b11) begin
-                    case (csr_addr)
-                        `MCAUSE : mcause <= mcause & ~csr_data_in;
-                        `MTVAL : mtval  <= mtval  & ~csr_data_in;
-                    endcase    
-                end
-            end
+            mstatus[3] <= 1'b0;   // MIE=0 in handler
         end
     end
-    
 end
 
 assign csr_mtvec = {mtvec[31:2], 2'b00};
+assign csr_mepc  = mepc;
 
-assign csr_data_out = (csr_rd) ? 
+assign csr_data_out = (csr_rd) ?
     (csr_addr == `MSTATUS) ? mstatus :
     (csr_addr == `MIE) ? mie :
     (csr_addr == `MTVEC) ? mtvec :
@@ -125,5 +115,5 @@ assign csr_data_out = (csr_rd) ?
     (csr_addr == `MCAUSE) ? mcause :
     (csr_addr == `MTVAL) ? mtval : 0
     : 0;
-    
+
 endmodule
