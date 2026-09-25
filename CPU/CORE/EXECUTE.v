@@ -24,6 +24,7 @@ module EXECUTE (
     input mem_writeD,
     input branch,
     input jump,
+    input req_dx,
     input [1:0] forwardA,
     input [1:0] forwardB,
     input [`FUNCT3_WIDTH-1:0] funct3_in,
@@ -35,6 +36,7 @@ module EXECUTE (
     output reg [`ADDRESS_WIDTH-1:0] rdM,
     output [`DATA_WIDTH-1:0] pc_target_out,
     output pc_src,
+    output reg req_xm,
     output reg reg_writeM,
     output reg mem_writeM,
     output reg [`WB_CNTRL-1:0] wb_controlM,
@@ -121,6 +123,7 @@ always @(posedge clk) begin
         wb_controlM <= 0;
         pc_4_out<= 0;
         funct3_out <= 0;
+        req_dx <= 0;
     end
     else begin
         result_out <= result_out_reg; 
@@ -131,6 +134,7 @@ always @(posedge clk) begin
         wb_controlM <= wb_controlD;
         pc_4_out <= pc_4;
         funct3_out <= funct3_in;
+        req_xm <= req_dx;
     end
 end
 

@@ -18,7 +18,7 @@ module I_CACHE (
     output reg [`INSTRUCTION_WIDTH-1:0] inst_out
 );
 
-parameter IDLE = 0, START = 1, DONE = 2;
+parameter IDLE = 0, START = 1, DONE = 2, WRITEB = 3;
 reg [1:0] state;
 
 reg [`CACHE_WIDTH-1:0] way0_cache [0:`I_CACHE_SIZE]; // 0. Cache yolu

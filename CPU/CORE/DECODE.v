@@ -36,6 +36,7 @@ module DECODE (
     output reg exception,
     output reg branch,
     output reg jump,
+    output reg req,   //Okuma veya yazma isteği olup olmadığına bakıyor.
     output [`ADDRESS_WIDTH-1:0] rs1D,
     output [`ADDRESS_WIDTH-1:0] rs2D
 );
@@ -91,6 +92,7 @@ reg reg_write_reg;
 reg mem_write_reg;
 reg branch_reg;
 reg jump_reg;
+reg req_reg;
 
 
 assign opcode = instruction[6:0];
@@ -266,30 +268,32 @@ always @ (*) begin
     csr_addr        = instruction[31:20];
     csr_rd          = (opcode == sys_logic) & (funct3 != 3'b000);
     csr_wr          = (opcode == sys_logic) & (funct3 != 3'b000) & ~((funct3[1] == 1'b1) & (rs1_addr == 5'b0));
+    req_reg         = (opcode == l_logic) || (opcode == s_logic);
 end
 
 //harris and  harris'in kitabına göre flushE yaptım çünkü çıkışları sadece sıfırlıyoruz. //Tamamdır.
 always @ (posedge clk) begin
     if (flushE) begin
-        rd1 <= 32'b0;
-        rd2 <= 32'b0;
-        rd_addr_d <= 0;
-        imm <= 32'b0;
-        alu_control <= 4'b0;
-        alu_imm_en <= 1'b0;
-        mdu_control <= 3'b0;
-        wb_cntrl <= 0;
-        isa_slct <= 0;
-        csr_read_en <= 1'b0;
-        reg_write <= 1'b0;
-        mem_write <= 1'b0;
-        branch <= 1'b0;
-        jump <= 1'b0;
-        pc_out <= 0;
-        rs1_addr_out <= 0;
-        rs2_addr_out <= 0;
-        pc_4_out <= 0;
-        funct3_out <= 0;
+        rd1            <= 32'b0;
+        rd2            <= 32'b0;
+        rd_addr_d      <= 0;
+        imm            <= 32'b0;
+        alu_control    <= 4'b0;
+        alu_imm_en     <= 1'b0;
+        mdu_control    <= 3'b0;
+        wb_cntrl       <= 0;
+        isa_slct       <= 0;
+        csr_read_en    <= 1'b0;
+        reg_write      <= 1'b0;
+        mem_write      <= 1'b0;
+        branch         <= 1'b0;
+        jump           <= 1'b0;
+        pc_out         <= 0;
+        rs1_addr_out   <= 0;
+        rs2_addr_out   <= 0;
+        pc_4_out       <= 0;
+        funct3_out     <= 0;
+        req            <= 0;
     end
     else begin
         rd1 <= rd1_wire;
@@ -311,6 +315,7 @@ always @ (posedge clk) begin
         rs2_addr_out <= rs2_addr;
         pc_4_out <= pc_4;
         funct3_out <= funct3;
+        req <= req_reg;
     end
 end
 assign rs1D = rs1_addr;

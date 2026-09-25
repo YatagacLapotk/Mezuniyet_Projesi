@@ -8,6 +8,7 @@ module MEM (
     input [`WB_CNTRL-1:0] wb_controlM,
     input reg_write,
     input mem_write,
+    input req_xm,
     input [`DATA_WIDTH-1:0] pc_4,
     input [`ADDRESS_WIDTH-1:0] rdM,
     input [`FUNCT3_WIDTH-1:0] funct3_in,

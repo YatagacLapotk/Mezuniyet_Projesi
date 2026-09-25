@@ -4,24 +4,31 @@ module D_CACHE (
     input reset,
 
     //Hit Miss and Memory İnterface
-    input valid,
-    output reg miss,
-    output reg stall,
-    input [`DATA_WIDTH-1:0] data_in,
-
-    // comm interface
-    //input we,
-    //input [`CACHE_ADDRESS-1:0] w_addr,
+    input mem_ready,
+    input [`DATA_WIDTH-1:0] mem_rdata, 
+    output [`CACHE_ADDRESS-1:0] memory_addr,
+    output [`DATA_WIDTH-1:0] mem_wdata,
+    output reg mem_req,
+    output reg mem_we,
     
-    //Data Read
-    input [`CACHE_ADDRESS-1:0] r_addr,
-    input [`FUNCT3_WIDTH-1:0] funct3, 
-    output reg [`DATA_WIDTH-1:0] data_out
+    //CPU - CACHE interface
+    input [`DATA_WIDTH-1:0] data_in_cpu,
+    input [`CACHE_ADDRESS-1:0] cpu_addr,
+    input [`FUNCT3_WIDTH-1:0] cpu_funct3, 
+    input cpu_we,
+    input cpu_req,
+    output reg stall,
+    output reg [`DATA_WIDTH-1:0] data_out_cpu
 );
 
-parameter IDLE = 0, START = 1, DONE = 2;
+parameter IDLE = 0, 
+          START = 1, 
+          DONE = 2, 
+          WRITEB = 3;
 reg [1:0] state;
 
+//Write mask
+wire [3:0] byte_mask;
 reg [`CACHE_WIDTH-1:0] way0_cache [0:`D_CACHE_SIZE]; // 0. Cache yolu
 reg [`CACHE_WIDTH  :0] way1_cache [0:`D_CACHE_SIZE]; // 1. cache yolu
 wire [`DATA_WIDTH-1:0] way0_data;
@@ -33,15 +40,62 @@ wire [`TAG_WIDTH-1:0] way1_tag;
 wire lru;       //Hangi kısım daha önce değiştirildi.
 wire way0_valid;
 wire way1_valid;
+wire way0_dirty;      //Daha önce kullanıldı mı?
+wire way1_dirty;      //Daha önce kullanıldı mı?
+wire dirty;           // way0 veya way1 de dirty biti varsa 1 olur.
 wire hit0;
 wire hit1;
 wire hit;
-reg target;
+reg miss;
 wire [`DATA_WIDTH-1:0] data_temp;
 reg [`DATA_WIDTH-1:0] d_cache;
 //reg [`DATA_WIDTH-1:0] merged_data;
 reg [7:0]  selected_byte;
 reg [15:0] selected_half;
+
+
+//MASK
+always @(*) begin
+    case (cpu_funct3)
+        3'b000: begin // SB (Store Byte)
+            case (cpu_addr[1:0])
+                2'b00: byte_mask = 4'b0001;
+                2'b01: byte_mask = 4'b0010;
+                2'b10: byte_mask = 4'b0100;
+                2'b11: byte_mask = 4'b1000;
+            endcase
+        end
+        3'b001: begin // SH (Store Halfword)
+            case (cpu_addr[1])
+                1'b0:  byte_mask = 4'b0011;
+                1'b1:  byte_mask = 4'b1100;
+            endcase
+        end
+        3'b010:  byte_mask = 4'b1111; // SW (Store Word)
+        default: byte_mask = 4'b0000;
+    endcase
+end
+wire [7:0] byte_payload = data_in_cpu[7:0];
+wire [15:0] half_payload = data_in_cpu[15:0];
+
+wire [31:0] aligned_wdata;
+assign aligned_wdata[7:0]   = byte_payload;
+assign aligned_wdata[15:8]  = (cpu_funct3 == 3'b001) ? half_payload[15:8]  : byte_payload;
+assign aligned_wdata[23:16] = (cpu_funct3 == 3'b010) ? data_in_cpu[23:16]    : byte_payload;
+assign aligned_wdata[31:24] = (cpu_funct3 == 3'b010) ? data_in_cpu[31:24]    : 
+                              (cpu_funct3 == 3'b001) ? half_payload[15:8]  : byte_payload;
+
+function [31:0] apply_store;
+        input [31:0] orig_word;
+        input [31:0] new_payload;
+        input [3:0]  mask;
+        begin
+            apply_store[7:0]   = mask[0] ? new_payload[7:0]   : orig_word[7:0];
+            apply_store[15:8]  = mask[1] ? new_payload[15:8]  : orig_word[15:8];
+            apply_store[23:16] = mask[2] ? new_payload[23:16] : orig_word[23:16];
+            apply_store[31:24] = mask[3] ? new_payload[31:24] : orig_word[31:24];
+        end
+endfunction
 
 assign set = r_addr[8:2];
 assign tag = r_addr[31:9];
@@ -51,53 +105,56 @@ assign way1_data = way1_cache[set][`DATA_WIDTH-1:0];
 assign way0_tag = way0_cache[set][54:32];
 assign way1_tag = way1_cache[set][54:32];
 
-assign way0_valid = way0_cache[set][55];
-assign way1_valid = way1_cache[set][56];
+assign way0_valid = way0_cache[set][56];
+assign way1_valid = way1_cache[set][57];
 
 assign hit0 = (tag == way0_tag) ? way0_valid :1'b0;
 assign hit1 = (tag == way1_tag) ? way1_valid :1'b0;
 assign hit = hit0 | hit1;
 
-assign lru = way1_cache[set][55];
+assign lru = way1_cache[set][56];
+assign way0_dirty = way0_cache[set][55];
+assign way1_dirty = way1_cache[set][55];
 
-assign data_temp = (hit1) ? way1_data : way0_data;
+wire victim_dirty = lru ? way1_dirty : way0_dirty;
+wire victim_valid = lru ? way1_valid : way0_valid;
+
+assign stall = cpu_req && (!hit || (state != IDLE));
 
 always @(posedge clk) begin
     if(reset)begin
         miss <= 0;
-        stall <= 0;
-        target <= 0;
         state <= IDLE;
     end
     else begin
         case (state)
             IDLE: begin
-                if(!hit)begin
-                    miss <= 1;
-                    stall <= 1;
-                    state <= START;
+                if(cpu_req)begin
+                    if(hit)begin
+                        if(hit0)begin
+                            
+                        end
+                    end
                 end
-                else begin
-                    d_cache <= data_temp;
-                    miss <= 0;
-                end
+            end
+            WRITEB: begin
+                
             end
             START: begin
                 if (valid)begin
                     state <= DONE;
                     if(lru)begin
-                        way1_cache[set] <= {valid,!lru,tag,data_in};
+                        way1_cache[set] <= {valid,!lru,1'b1,tag,data_in_cpu};
                     end
                     else begin
-                        way0_cache[set] <= {valid,tag,data_in};
-                        way1_cache[set][55] <= 1'b1;
+                        way0_cache[set] <= {valid,1'b1,tag,data_in_cpu};
+                        way1_cache[set][56] <= 1'b1;
                     end
                 end
                 else state <= START; 
             end
             DONE: begin
                 miss <= 0;
-                stall <= 0;
                 state <= IDLE;
             end
         endcase
@@ -105,69 +162,6 @@ always @(posedge clk) begin
 
 end
 
-
-/*
-always @(*) begin
-    merged_data <= d_cache;
-    case (funct3)
-        3'b000: 
-            begin
-                case (w_addr[1:0])
-                    2'b00 : merged_data[7:0] <= data_in[7:0];  
-                    2'b01 : merged_data[15:8] <= data_in[7:0];  
-                    2'b10 : merged_data[23:16] <= data_in[7:0];  
-                    2'b11 : merged_data[31:24] <= data_in[7:0];  
-                endcase
-            end
-        3'b001:
-            begin
-                case (w_addr[1])
-                    1'b0: merged_data[15:0]  <= data_in[15:0];
-                    1'b1: merged_data[31:16] <= data_in[15:0];  
-                endcase
-            end
-        default : merged_data = data_in;
-    endcase
-    d_cache[w_addr[31:2]] <= merged_data;
-end
-
-
-// Eski yazma sistemi artık cache mantığına geçildiği için yazma miss olması durumunda yapılıyor.
-
-integer i;
-always @(posedge clk) begin
-    if (reset)begin
-        for(i = 0; i<`D_CACHE_SIZE; i = i + 1)begin
-            d_cache[i]<= 0;
-        end
-    end 
-    else if (we)begin
-        d_cache[w_addr[31:2]] <= merged_data;
-    end
-end
-*/
-always @(*) begin
-    if(hit)begin
-        case (r_addr[1:0])
-            2'b00: selected_byte = d_cache[7:0];
-            2'b01: selected_byte = d_cache[15:8];
-            2'b10: selected_byte = d_cache[23:16];
-            2'b11: selected_byte = d_cache[31:24];
-        endcase
-        case (r_addr[1])
-            1'b0: selected_half = d_cache[15:0];
-            1'b1: selected_half = d_cache[31:16];
-        endcase
-        case (funct3)
-            3'b000: data_out = {{24{selected_byte[7]}}, selected_byte};  // LB
-            3'b001: data_out = {{16{selected_half[15]}}, selected_half}; // LH
-            3'b010: data_out = d_cache;                                  // LW
-            3'b100: data_out = {24'b0, selected_byte};                   // LBU
-            3'b101: data_out = {16'b0, selected_half};                   // LHU
-            default: data_out = d_cache;
-        endcase
-    end
-end
 
     
 endmodule
