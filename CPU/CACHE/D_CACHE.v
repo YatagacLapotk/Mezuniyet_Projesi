@@ -81,8 +81,8 @@ wire [15:0] half_payload = data_in_cpu[15:0];
 wire [31:0] aligned_wdata;
 assign aligned_wdata[7:0]   = byte_payload;
 assign aligned_wdata[15:8]  = (cpu_funct3 == 3'b001) ? half_payload[15:8]  : byte_payload;
-assign aligned_wdata[23:16] = (cpu_funct3 == 3'b010) ? data_in_cpu[23:16]    : byte_payload;
-assign aligned_wdata[31:24] = (cpu_funct3 == 3'b010) ? data_in_cpu[31:24]    : 
+assign aligned_wdata[23:16] = (cpu_funct3 == 3'b010) ? data_in_cpu[23:16]  : byte_payload;
+assign aligned_wdata[31:24] = (cpu_funct3 == 3'b010) ? data_in_cpu[31:24]  : 
                               (cpu_funct3 == 3'b001) ? half_payload[15:8]  : byte_payload;
 
 function [31:0] apply_store;
@@ -132,7 +132,7 @@ always @(posedge clk) begin
                 if(cpu_req)begin
                     if(hit)begin
                         if(hit0)begin
-                            
+                        // Burası boş mu kalmalı ??
                         end
                     end
                 end

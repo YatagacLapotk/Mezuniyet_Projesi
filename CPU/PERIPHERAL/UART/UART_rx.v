@@ -30,55 +30,54 @@ always @ (posedge clk or posedge reset) begin
         sample_count <= 0;
         data_buffer <= 8'b0;
         data_ready <= 0;
-    end else begin
-    if (clear)
-        data_ready <= 0; // clear sinyali geldiğinde data_ready'ı sıfırlıyoruz.
-    if (~rxena && rx_baudena) begin
-        case (state) 
-            START: begin
-                if (!data_in || sample_count != 0) begin // Start biti LOW olmalı burada start bitinin LOW olduğunu kontrol ediyoruz, sample_count 0. sampledan 15.sample kadar devam edecek.
-                    rx_busy <= 1; // veri alma işlemi başladığında rx_busy sinyalini aktif ediyoruz.
-                    sample_count <= sample_count + 1; // start biti LOW olduğu müddetçe sample_count'u arttırmaya devam ediyoruz.
-                end else begin
-                    rx_busy <= 0;
+    end 
+    else begin
+        if (clear)
+            data_ready <= 0; // clear sinyali geldiğinde data_ready'ı sıfırlıyoruz.
+        if (~rxena && rx_baudena) begin
+            case (state) 
+                START: begin
+                    if (!data_in || sample_count != 0) begin // Start biti LOW olmalı burada start bitinin LOW olduğunu kontrol ediyoruz, sample_count 0. sampledan 15.sample kadar devam edecek.
+                        rx_busy <= 1; // veri alma işlemi başladığında rx_busy sinyalini aktif ediyoruz.
+                        sample_count <= sample_count + 1; // start biti LOW olduğu müddetçe sample_count'u arttırmaya devam ediyoruz.
+                    end else 
+                        rx_busy <= 0;
+                    if (sample_count == 15) begin // 16 tane örnek aldıktan sonra data okumaya başlıyoruz.
+                        state <= DATA;
+                        bit_index <= 0;
+                        sample_count <= 0;
+                        data_buffer <= 0;
+                    end
                 end
-                if (sample_count == 15) begin // 16 tane örnek aldıktan sonra data okumaya başlıyoruz.
-                    state <= DATA;
-                    bit_index <= 0;
-                    sample_count <= 0;
-                    data_buffer <= 0;
-                end
-            end
-            DATA: begin
-                if (sample_count == 15) begin
-                    sample_count <= 0;
-                end else begin
-                    sample_count <= sample_count + 1; // her biti 8. sample'da okuyoruz
-                end
-
-                if (sample_count == 8) begin
-                    data_buffer[bit_index] <= data_in;
-                    bit_index <= bit_index + 1;
-                end else if (bit_index == 8 && sample_count == 15) begin
-                    state <= STOP;
+                DATA: begin
+                    if (sample_count == 15) begin
+                        sample_count <= 0;
+                    end else 
+                        sample_count <= sample_count + 1; // her biti 8. sample'da okuyoruz
+                    if (sample_count == 8) begin
+                        data_buffer[bit_index] <= data_in;
+                        bit_index <= bit_index + 1;
+                    end else if (bit_index == 8 && sample_count == 15) begin
+                        state <= STOP;
+                    end
                 end       
-            end
-            STOP: begin
-                if (sample_count == 15 || (sample_count >= 8 && data_in)) begin
-                    sample_count <= 0;
-                    bit_index <= 0;
-                    rx_in <= data_buffer; // data_buffer'daki veriyi rx_in'e atıyoruz.
-                    data_ready <= 1; // verinin hazır olduğunu belirtiyoruz.
+                
+                STOP: begin
+                    if (sample_count == 15 || (sample_count >= 8 && data_in)) begin
+                        sample_count <= 0;
+                        bit_index <= 0;
+                        rx_in <= data_buffer; // data_buffer'daki veriyi rx_in'e atıyoruz.
+                        data_ready <= 1; // verinin hazır olduğunu belirtiyoruz.
+                        state <= START;
+                        rx_busy <= 0;
+                    end else 
+                        sample_count <= sample_count + 1; // yukarıdaki koşullar sağlanmazsa sample_count'u arttırmaya devam
+                end
+                default: begin
                     state <= START;
-                    rx_busy <= 0;
-                end else
-                    sample_count <= sample_count + 1; // yukarıdaki koşullar sağlanmazsa sample_count'u arttırmaya devam
-            end  
-            default: begin
-                state <= START;
-            end        
-        endcase
-    end
+                end        
+            endcase
+        end
     end
 end
 
