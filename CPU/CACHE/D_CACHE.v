@@ -4,7 +4,6 @@ module D_CACHE (
     input reset,
 
     //Hit Miss and Memory İnterface
-    input mem_ready,
     input mem_ack,
     input [`DATA_WIDTH-1:0] mem_rdata, 
     output [`CACHE_ADDRESS-1:0] memory_addr,
@@ -48,9 +47,9 @@ wire hit0;
 wire hit1;
 wire hit;
 reg miss;
-wire [`DATA_WIDTH-1:0] data_temp;
-reg [`DATA_WIDTH-1:0] d_cache;
-//reg [`DATA_WIDTH-1:0] merged_data;
+reg  [`CACHE_ADDRESS-1:0] cpu_bff_addr; //CPU adres değeri için buffer registerı
+wire [`DATA_WIDTH-1:0]    data_temp;
+reg  [`DATA_WIDTH-1:0]    d_cache;
 
 assign set = cpu_addr[8:2];
 assign tag = cpu_addr[31:9];
@@ -131,15 +130,27 @@ function [31:0] apply_store;
         end
 endfunction
 
+
+// İşlemciden request gelirse işleme başlanır. 
+// Eğer hit alırsa sistem normal düzeninde devam eder.
+// Miss gelirse dirty bit durumuna bakılır.
+// Eğer dirty değeri varsa belleğe geri yazma yapılır.
+// Geri yazma yapıldıysa veya dirty bit yoksa
+// Sistem ana bellekten değerleri cache'e yazar ve ıdle durumuna geri döner.
 always @(posedge clk) begin
     if(reset)begin
-        miss <= 0;
+        miss         <= 1'b0;
+        mem_we       <= 1'b0;
+        mem_reg      <= 1'b0;
+        cpu_bff_addr <= 32'd0;
+        stall        <= 1'b0;
         state <= IDLE;
     end
     else begin
         case (state)
             IDLE: begin
                 if(cpu_req)begin
+                    cpu_bff_addr <= cpu_addr;
                     if(hit)begin
                         if(cpu_we) begin
                             //İşlemciden belleğe yazma durumu STORE
@@ -163,13 +174,28 @@ always @(posedge clk) begin
                             end
                         end
                     end else begin
-                        //Dirty hesaplama 
-                        
+                        //Dirty kontrolü
+                        stall <= 1'b1;
+                        memory_addr <= cpu_bff_addr //Memory write addres atamsı
+                        if (victim_dirty && victim_valid) begin
+                            state       <= WRITEB;
+                            mem_req     <= 1'b1;
+                            mem_we      <= 1'b1;
+                            mem_rdata   <= (way0_dirty) way0_data : way1_data;
+                        end 
+                        else begin
+                            state   <= START;
+                            mem_req <= 1'b1;
+                            mem_we  <= 1'b0;
+                        end     
                     end
                 end
             end
             WRITEB: begin
-                
+                if(mem_ack)begin
+                    mem_we <= 1'b0;
+                    state  <= START;
+                end
             end
             START: begin
                 if (valid)begin
@@ -185,7 +211,8 @@ always @(posedge clk) begin
                 else state <= START; 
             end
             DONE: begin
-                miss <= 0;
+                miss  <= 1'b0;
+                stall <= 1'b0;
                 state <= IDLE;
             end
         endcase
