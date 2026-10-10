@@ -7,9 +7,10 @@ module D_CACHE (
 
     //Hit Miss and Memory İnterface
     input mem_ack,
-    input [`DATA_WIDTH-1:0] mem_rdata, 
-    output [`CACHE_ADDRESS-1:0] memory_addr,
-    output [`DATA_WIDTH-1:0] mem_wdata,
+    input mem_ready,
+    input  [`DATA_WIDTH-1:0] mem_rdata, 
+    output reg [`CACHE_ADDRESS-1:0] memory_addr,
+    output reg [`DATA_WIDTH-1:0] mem_wdata,
     output reg mem_req,
     output reg mem_we,
     
@@ -30,7 +31,7 @@ parameter IDLE = 0,
 reg [1:0] state;
 
 //Write mask
-wire [3:0] store_mask;
+reg  [3:0] store_mask;
 reg  [`CACHE_WIDTH-1:0] way0_cache [0:`D_CACHE_SIZE]; // 0. Cache yolu
 reg  [`CACHE_WIDTH  :0] way1_cache [0:`D_CACHE_SIZE]; // 1. cache yolu
 wire [`DATA_WIDTH-1:0]  way0_data;
@@ -42,8 +43,8 @@ wire [`TAG_WIDTH-1:0]   way1_tag;
 wire lru;       //Hangi kısım daha önce değiştirildi.
 wire way0_valid;
 wire way1_valid;
-wire way0_dirty;      //Daha önce kullanıldı mı?
-wire way1_dirty;      //Daha önce kullanıldı mı?
+wire way0_dirty;      
+wire way1_dirty;      
 wire dirty;           // way0 veya way1 de dirty biti varsa 1 olur.
 wire hit0;
 wire hit1;
@@ -53,8 +54,13 @@ reg  [`CACHE_ADDRESS-1:0] cpu_bff_addr; //CPU adres değeri için buffer registe
 wire [`DATA_WIDTH-1:0]    data_temp;
 reg  [`DATA_WIDTH-1:0]    d_cache;
 
+// Cache içerisinde set ve tag değerleri kullanılarak hangi cache bölümüne gidileceği kontrol edilir.
+// set değeri hangi satırdan alınacağını kontrol ederken
+// tag değeri hangi sütun olduğuna bakar.
 assign set = cpu_addr[8:2];
 assign tag = cpu_addr[31:9];
+
+// Burada cache sütunları belirtilmiştir. 
 assign way0_data = way0_cache[set][`DATA_WIDTH-1:0];
 assign way1_data = way1_cache[set][`DATA_WIDTH-1:0];
 
@@ -68,12 +74,17 @@ assign hit0 = (tag == way0_tag) ? way0_valid :1'b0;
 assign hit1 = (tag == way1_tag) ? way1_valid :1'b0;
 assign hit = hit0 | hit1;
 
+// Last recently used bitini belirler. En son kullanılmayan sütunu belirtir.
 assign lru = way1_cache[set][56];
+
+// Bir sütun dirty ise sütunun daha önce kullanılmış ancak ana belleğin bunu bilmediği anlaşılmaktadır.
+// Buradan da ana bellekteki değer değiştirilir.
+// Bu veri belleği olduğu için ana bellek içerisinde tutulan veri değerinin değişmememsi arada bilgi anlaşmazlıklarına sebep olacaktır.
 assign way0_dirty = way0_cache[set][55];
 assign way1_dirty = way1_cache[set][55];
 
-wire victim_dirty = way1_dirty | way0_dirty;
-wire victim_valid = way1_valid | way0_valid;
+wire victim_dirty = lru ? way1_dirty : way0_dirty;
+wire victim_valid = lru ? way1_valid : way0_valid;
 
 assign stall = cpu_req && (!hit || (state != IDLE));
 
@@ -109,11 +120,11 @@ function  [31:0] aligned_wdata;
         byte_payload = data_in[7:0];
         half_payload = data_in[15:0];
         case (funct)
-            3'b000 : aligned_wdata = {{24{byte_payload[7]}}, byte_payload};  // LB
-            3'b001 : aligned_wdata = {{16{half_payload[15]}}, half_payload}; // LH
+            3'b000 : aligned_wdata = {{24{byte_payload[7]}}, byte_payload};    // LB
+            3'b001 : aligned_wdata = {{16{half_payload[15]}}, half_payload};   // LH
             3'b010 : aligned_wdata = data_in;                                  // LW
-            3'b100 : aligned_wdata = {24'b0, byte_payload};                   // LBU
-            3'b101 : aligned_wdata = {16'b0, half_payload};                   // LHU
+            3'b100 : aligned_wdata = {24'b0, byte_payload};                    // LBU
+            3'b101 : aligned_wdata = {16'b0, half_payload};                    // LHU
             default: aligned_wdata = data_in;
         endcase
     end   
@@ -145,7 +156,6 @@ always @(posedge clk) begin
         mem_we       <= 1'b0;
         mem_req      <= 1'b0;
         cpu_bff_addr <= 32'd0;
-        stall        <= 1'b0;
         state <= IDLE;
     end
     else begin
@@ -157,35 +167,35 @@ always @(posedge clk) begin
                         if(cpu_we) begin
                             //İşlemciden belleğe yazma durumu STORE
                             if(hit0)begin
-                                way0_cache[set] <= apply_store(way0_data,data_in_cpu,store_mask);
+                                way0_cache[set][31:0] <= apply_store(way0_data,data_in_cpu,store_mask);
                                 way0_cache[set][55] <= 1'b1; //dirty bit change
                                 way1_cache[set][56] <= 1'b1; //lru change;
                             end else begin
-                                way1_cache[set] <= apply_store(way1_data,data_in_cpu,store_mask);
+                                way1_cache[set][31:0] <= apply_store(way1_data,data_in_cpu,store_mask);
                                 way1_cache[set][55] <= 1'b1; //dirty bit change
                                 way1_cache[set][56] <= 1'b0; //lru change; 
                             end
                         end else begin
                             //Bellekten işlemciye yazma durumu LOAD
                             if(hit0) begin
-                                data_out_cpu <= aligned_wdata(way0_data,cpu_funct3);
+                                data_out_cpu <= aligned_wdata(way0_data >> (8*cpu_addr[1:0]),cpu_funct3); // Buradaki adres tabirinin sebebi son iki bit bytelar arasında seçimi yapabilmek.
                                 way1_cache[set][56] <= 1'b1;
                             end else begin
-                                data_out_cpu <= aligned_wdata(way1_data,cpu_funct3);
+                                data_out_cpu <= aligned_wdata(way1_data >> (8*cpu_addr[1:0]),cpu_funct3);
                                 way1_cache[set][56] <= 1'b0; 
                             end
                         end
                     end else begin
                         //Dirty kontrolü
-                        stall <= 1'b1;
-                        memory_addr <= cpu_bff_addr; //Memory write addres atamsı
                         if (victim_dirty && victim_valid) begin
+                            memory_addr <= {(lru ? way1_tag : way0_tag), set, 2'b00}; 
                             state       <= WRITEB;
                             mem_req     <= 1'b1;
                             mem_we      <= 1'b1;
-                            mem_rdata   <= (way0_dirty) ? way0_data : way1_data;
+                            mem_wdata   <= lru ? way1_data : way0_data;
                         end 
                         else begin
+                            memory_addr <= cpu_addr;
                             state   <= START;
                             mem_req <= 1'b1;
                             mem_we  <= 1'b0;
@@ -196,25 +206,26 @@ always @(posedge clk) begin
             WRITEB: begin
                 if(mem_ack)begin
                     mem_we <= 1'b0;
+                    memory_addr <= {cpu_addr[31:2], 2'b00};
                     state  <= START;
                 end
             end
             START: begin
-                if (victim_valid)begin
+                if (mem_ready)begin
                     state <= DONE;
+                    mem_req <= 1'b0;
                     if(lru)begin
-                        way1_cache[set] <= {1'b1,!lru,1'b0,tag,data_in_cpu};
+                        way1_cache[set] <= {1'b1,!lru,1'b0,tag,mem_rdata};
                     end
                     else begin
-                        way0_cache[set] <= {1'b1,1'b0,tag,data_in_cpu};
+                        way0_cache[set] <= {1'b1,1'b0,tag,mem_rdata};
                         way1_cache[set][56] <= 1'b1;
                     end
                 end
-                else state <= START; 
             end
             DONE: begin
                 miss  <= 1'b0;
-                stall <= 1'b0;
+                mem_req <= 1'b0;
                 state <= IDLE;
             end
         endcase

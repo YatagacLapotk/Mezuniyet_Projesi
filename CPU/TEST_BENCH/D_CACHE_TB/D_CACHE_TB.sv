@@ -10,7 +10,8 @@ module D_CACHE_tb;
     reg  reset;
 
     // Memory side
-    reg                          mem_ack;
+    reg                          mem_ack;       // write-back accepted by memory
+    reg                          mem_ready;     // read data valid on mem_rdata
     reg  [`DATA_WIDTH-1:0]       mem_rdata;
     wire [`CACHE_ADDRESS-1:0]    memory_addr;
     wire [`DATA_WIDTH-1:0]       mem_wdata;
@@ -30,6 +31,7 @@ module D_CACHE_tb;
         .clk         (clk),
         .reset       (reset),
         .mem_ack     (mem_ack),
+        .mem_ready   (mem_ready),
         .mem_rdata   (mem_rdata),
         .memory_addr (memory_addr),
         .mem_wdata   (mem_wdata),
@@ -47,17 +49,19 @@ module D_CACHE_tb;
     // ------------------------------------------------------------------
     // Backdoor main memory model (word-addressable) + ack generator.
     // While mem_req is high, a 1-cycle mem_ack pulse is produced every
-    // MEM_LAT cycles. On the pulse: mem_we=1 -> write mem_wdata,
-    // mem_we=0 -> return mem[memory_addr] on mem_rdata.
+    // MEM_LAT cycles. On the pulse: mem_we=1 -> write mem_wdata and pulse
+    // mem_ack; mem_we=0 -> return mem[memory_addr] on mem_rdata and pulse
+    // mem_ready.
     // ------------------------------------------------------------------
     localparam MEM_LAT = 2;
-    reg [`DATA_WIDTH-1:0] mem [0:4095];
+    reg [`DATA_WIDTH-1:0] mem [0:16383];  // 64 KB
     integer mem_cnt;
     integer mem_rd_count;
     integer mem_wr_count;
 
     initial begin
         mem_ack      = 0;
+        mem_ready    = 0;
         mem_rdata    = 0;
         mem_cnt      = 0;
         mem_rd_count = 0;
@@ -65,19 +69,21 @@ module D_CACHE_tb;
     end
 
     always @(posedge clk) begin
-        mem_ack <= 1'b0;
+        mem_ack   <= 1'b0;
+        mem_ready <= 1'b0;
         if (reset || !mem_req) begin
             mem_cnt <= 0;
         end else begin
             mem_cnt <= mem_cnt + 1;
             if (mem_cnt == MEM_LAT-1) begin
                 mem_cnt <= 0;
-                mem_ack <= 1'b1;
                 if (mem_we) begin
                     mem[memory_addr[31:2]] <= mem_wdata;
+                    mem_ack <= 1'b1;            // write accepted
                     mem_wr_count = mem_wr_count + 1;
                 end else begin
                     mem_rdata <= mem[memory_addr[31:2]];
+                    mem_ready <= 1'b1;          // read data valid
                     mem_rd_count = mem_rd_count + 1;
                 end
             end
