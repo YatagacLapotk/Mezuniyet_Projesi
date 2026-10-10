@@ -1,4 +1,6 @@
 `include "/Users/yatagaclapotk/Desktop/Genel_Calismalar/Mezuniyet/Mezuniyet_Projesi/CPU/SABIT_VERILER/sabit_veriler.vh"
+`timescale 1ps/1ps
+
 module D_CACHE (
     input clk,
     input reset,
@@ -70,8 +72,8 @@ assign lru = way1_cache[set][56];
 assign way0_dirty = way0_cache[set][55];
 assign way1_dirty = way1_cache[set][55];
 
-wire victim_dirty = lru ? way1_dirty : way0_dirty;
-wire victim_valid = lru ? way1_valid : way0_valid;
+wire victim_dirty = way1_dirty | way0_dirty;
+wire victim_valid = way1_valid | way0_valid;
 
 assign stall = cpu_req && (!hit || (state != IDLE));
 
@@ -141,7 +143,7 @@ always @(posedge clk) begin
     if(reset)begin
         miss         <= 1'b0;
         mem_we       <= 1'b0;
-        mem_reg      <= 1'b0;
+        mem_req      <= 1'b0;
         cpu_bff_addr <= 32'd0;
         stall        <= 1'b0;
         state <= IDLE;
@@ -176,12 +178,12 @@ always @(posedge clk) begin
                     end else begin
                         //Dirty kontrolü
                         stall <= 1'b1;
-                        memory_addr <= cpu_bff_addr //Memory write addres atamsı
+                        memory_addr <= cpu_bff_addr; //Memory write addres atamsı
                         if (victim_dirty && victim_valid) begin
                             state       <= WRITEB;
                             mem_req     <= 1'b1;
                             mem_we      <= 1'b1;
-                            mem_rdata   <= (way0_dirty) way0_data : way1_data;
+                            mem_rdata   <= (way0_dirty) ? way0_data : way1_data;
                         end 
                         else begin
                             state   <= START;
@@ -198,13 +200,13 @@ always @(posedge clk) begin
                 end
             end
             START: begin
-                if (valid)begin
+                if (victim_valid)begin
                     state <= DONE;
                     if(lru)begin
-                        way1_cache[set] <= {valid,!lru,1'b1,tag,data_in_cpu};
+                        way1_cache[set] <= {1'b1,!lru,1'b0,tag,data_in_cpu};
                     end
                     else begin
-                        way0_cache[set] <= {valid,1'b1,tag,data_in_cpu};
+                        way0_cache[set] <= {1'b1,1'b0,tag,data_in_cpu};
                         way1_cache[set][56] <= 1'b1;
                     end
                 end
