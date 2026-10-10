@@ -1,1 +1,22 @@
+# Build / Simulation artifacts
 *.out
+a.out
+*.vvp
+*.vcd
+*.fst
+*.wlf
+*.log
+
+# Verilator output
+obj_dir/
+*.mk
+*.d
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
